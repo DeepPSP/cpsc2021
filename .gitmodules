@@ -1,0 +1,3 @@
+[submodule "official_entry"]
+	path = official_entry
+	url = https://github.com/CPSC-Committee/cpsc2021-python-entry.git
