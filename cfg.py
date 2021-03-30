@@ -10,6 +10,9 @@ from easydict import EasyDict as ED
 
 __all__ = [
     "BaseCfg",
+    "TrainCfg",
+    "ModelCfg",
+    "PlotCfg",
 ]
 
 
@@ -33,4 +36,15 @@ TrainCfg = ED()
 ModelCfg = ED()
 
 
+# configurations for visualization
 PlotCfg = ED()
+# default const for the plot function in dataset.py
+# used only when corr. values are absent
+# all values are time bias w.r.t. corr. peaks, with units in ms
+PlotCfg.p_onset = -40
+PlotCfg.p_offset = 40
+PlotCfg.q_onset = -20
+PlotCfg.s_offset = 40
+PlotCfg.qrs_radius = 60
+PlotCfg.t_onset = -100
+PlotCfg.t_offset = 60
