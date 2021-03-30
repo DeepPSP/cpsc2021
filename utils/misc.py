@@ -10,6 +10,7 @@ from glob import glob
 from copy import deepcopy
 from typing import Union, Optional, List, Dict, Tuple, Sequence, NoReturn, Any
 from numbers import Real, Number
+import json
 
 import numpy as np
 np.set_printoptions(precision=5, suppress=True)
@@ -40,6 +41,7 @@ __all__ = [
     "mask_to_intervals",
     "nildent",
     "list_sum",
+    "save_dict",
 ]
 
 
@@ -788,3 +790,9 @@ def list_sum(l:Sequence[list]) -> list:
     """
     l_sum = reduce(lambda a,b: a+b, l, [])
     return l_sum
+
+
+def save_dict(filename, dic):
+    '''save dict into json file'''
+    with open(filename,'w') as json_file:
+        json.dump(dic, json_file, ensure_ascii=False)
