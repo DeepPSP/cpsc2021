@@ -58,7 +58,7 @@ class CPSC2021Reader(object):
     1. source ECG data are recorded from 12-lead Holter or 3-lead wearable ECG monitoring devices
     2. dataset provides variable-length ECG fragments extracted from lead I and lead II of the long-term source ECG data, each sampled at 200 Hz
     3. AF event is limited to be no less than 5 heart beats
-    4. training set in the 1st stage consists of 716 records, extracted from the Holter records from 12 AF patients and 42 non-AF patients (usually including other abnormal and normal rhythms)
+    4. training set in the 1st stage consists of 716 records, extracted from the Holter records from 12 AF patients and 42 non-AF patients (usually including other abnormal and normal rhythms); training set in the 2nd stage consists of 707 records from 37 AF patients (18 PAF patients) and 14 non-AF patients
     5. test set comprises data from the same source as the training set as well as DIFFERENT data source, which are NOT to be released at any point
     6. annotations are standardized according to PhysioBank Annotations (Ref. [2] or PhysioNetDataBase.helper), and include the beat annotations (R peak location and beat type), the rhythm annotations (rhythm change flag and rhythm type) and the diagnosis of the global rhythm
     7. classification of a record is stored in corresponding .hea file, which can be accessed via the attribute `comments` of a wfdb Record obtained using `wfdb.rdheader`, `wfdb.rdrecord`, and `wfdb.rdsamp`; beat annotations and rhythm annotations can be accessed using the attributes `symbol`, `aux_note` of a wfdb Annotation obtained using `wfdb.rdann`, corresponding indices in the signal can be accessed via the attribute `sample`
@@ -83,6 +83,7 @@ class CPSC2021Reader(object):
     1. if an ECG record is classified as AFf, the provided onset and offset locations should be the first and last record points. If an ECG record is classified as N, the answer should be an empty list
     2. it can be inferred from the classification scoring matrix that the punishment of false negatives of AFf is very heavy, while mixing-up of AFf and AFp is not punished
     3. flag of atrial fibrillation and atrial flutter ("AFIB" and "AFL") in annotated information are seemed as the same type when scoring the method
+    4. initially stage 1 and 2 both have a "RECORDS" file, containing corresponding list of file names, which are merged and overwritten at the instantiation of this class
 
     ISSUES:
     -------
@@ -232,9 +233,18 @@ class CPSC2021Reader(object):
         """
         fn = "RECORDS"
         record_list_fp = os.path.join(self.db_dir, fn)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        record_list_fp_aux = os.path.join(base_dir, "utils", fn)
         if os.path.isfile(record_list_fp):
             with open(record_list_fp, "r") as f:
                 self._all_records = f.read().splitlines()
+        elif os.path.isfile(record_list_fp_aux):
+            with open(record_list_fp_aux, "r") as f:
+                self._all_records = f.read().splitlines()
+        else:
+            self._all_records = []
+        if len(self._all_records) == self.nb_records:
+            return
         else:
             print("Please wait patiently to let the reader find all records...")
             start = time.time()
@@ -243,6 +253,8 @@ class CPSC2021Reader(object):
                 get_record_list_recursive3(self.db_dir, rec_patterns_with_ext)
             print(f"Done in {time.time() - start:.5f} seconds!")
             with open(record_list_fp, "w") as f:
+                f.write("\n".join(self._all_records))
+            with open(record_list_fp_aux, "w") as f:
                 f.write("\n".join(self._all_records))
 
 
