@@ -284,6 +284,8 @@ class CPSC2021Reader(object):
             self._stats["label"] = self._stats["record"].apply(lambda s:self.load_label(s))
             self._stats.to_csv(stats_file_fp, index=False)
             self._stats.to_csv(stats_file_fp_aux, index=False)
+        else:
+            pass  # currently no need to parse the loaded csv file
     
 
     @property
