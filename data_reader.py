@@ -266,6 +266,7 @@ class CPSC2021Reader(object):
                 f.write("\n".join(self._all_records))
             with open(record_list_fp_aux, "w") as f:
                 f.write("\n".join(self._all_records))
+
         self._all_subjects = sorted([rec.split("_")[1] for rec in self._all_records])
         self._subject_records = ED({sid: [rec for rec in self._all_records if rec.split("_")[1]==sid] for sid in self._all_subjects})
 
@@ -278,8 +279,7 @@ class CPSC2021Reader(object):
             self._stats = pd.read_csv(stats_file_fp_aux)
         
         if self._stats.empty or self._stats_columns != set(self._stats.columns):
-            self._stats = pd.DataFrame(self._all_records)
-            self._stats.columns = ["record"]
+            self._stats = pd.DataFrame(self._all_records, columns=["record"])
             self._stats["subject_id"] = self._stats["record"].apply(lambda s:s.split("_")[1])
             self._stats["label"] = self._stats["record"].apply(lambda s:self.load_label(s))
             self._stats.to_csv(stats_file_fp, index=False)
