@@ -148,6 +148,7 @@ class CPSC2021Reader(object):
         self._stats = pd.DataFrame()
         self._stats_columns = {"record", "subject_id", "label",}
         self._ls_rec()
+        self._aggregate_stats()
 
         self._diagnoses_records_list = None
         self._ls_diagnoses_records()
@@ -270,6 +271,12 @@ class CPSC2021Reader(object):
         self._all_subjects = sorted([rec.split("_")[1] for rec in self._all_records])
         self._subject_records = ED({sid: [rec for rec in self._all_records if rec.split("_")[1]==sid] for sid in self._all_subjects})
 
+
+    def _aggregate_stats(self) -> NoReturn:
+        """ finished, checked,
+
+        aggregate stats on the whole dataset
+        """
         stats_file = "stats.csv"
         stats_file_fp = os.path.join(self.db_dir, stats_file)
         stats_file_fp_aux = os.path.join(base_dir, "utils", stats_file)
