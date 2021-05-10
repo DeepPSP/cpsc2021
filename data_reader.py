@@ -401,7 +401,19 @@ class CPSC2021Reader(object):
 
 
     def _get_path(self, rec:str, ext:Optional[str]=None) -> str:
-        """
+        """ finished, checked,
+
+        Parameters:
+        -----------
+        rec: str,
+            name of the record
+        ext: str, optional,
+            file extension of the path
+
+        Returns:
+        --------
+        p: str,
+            path (with or without file extension) of the record
         """
         p = os.path.join(self.db_dirs[self._all_records_inv[rec]], rec)
         if ext:
