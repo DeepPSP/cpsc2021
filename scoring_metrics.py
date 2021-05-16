@@ -164,7 +164,16 @@ def score(data_path, ans_path):
     return score_avg
 
 
-def compute_challenge_metric(class_true:int, class_pred:int, endpoints_pred:Sequence[Sequence[int]], endpoints_true:Sequence[Sequence[int]], onset_score_range:Sequence[float], offset_score_range:Sequence[float]) -> float:
+
+###################################################################
+# custom metric computing function
+
+def compute_challenge_metric(class_true:int,
+                             class_pred:int,
+                             endpoints_pred:Sequence[Sequence[int]],
+                             endpoints_true:Sequence[Sequence[int]],
+                             onset_score_range:Sequence[float],
+                             offset_score_range:Sequence[float]) -> float:
     """ NOT finished, NOT checked,
 
     compute challenge metric for a single record

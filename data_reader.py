@@ -421,7 +421,12 @@ class CPSC2021Reader(object):
         return p
 
 
-    def load_data(self, rec:str, leads:Optional[Union[str, List[str]]]=None, data_format:str="channel_first", units:str="mV", fs:Optional[Real]=None) -> np.ndarray:
+    def load_data(self,
+                  rec:str,
+                  leads:Optional[Union[str, List[str]]]=None,
+                  data_format:str="channel_first",
+                  units:str="mV",
+                  fs:Optional[Real]=None) -> np.ndarray:
         """ finished, checked,
 
         load physical (converted from digital) ecg data,
@@ -630,7 +635,14 @@ class CPSC2021Reader(object):
         return label
 
 
-    def plot(self, rec:str, data:Optional[np.ndarray]=None, ann:Optional[Dict[str, np.ndarray]]=None, ticks_granularity:int=0, leads:Optional[Union[str, List[str]]]=None, waves:Optional[Dict[str, Sequence[int]]]=None, **kwargs) -> NoReturn:
+    def plot(self,
+             rec:str,
+             data:Optional[np.ndarray]=None,
+             ann:Optional[Dict[str, np.ndarray]]=None,
+             ticks_granularity:int=0,
+             leads:Optional[Union[str, List[str]]]=None,
+             waves:Optional[Dict[str, Sequence[int]]]=None,
+             **kwargs) -> NoReturn:
         """ finished, checked, to improve,
 
         plot the signals of a record or external signals (units in μV),
