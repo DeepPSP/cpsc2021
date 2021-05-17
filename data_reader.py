@@ -121,7 +121,7 @@ class CPSC2021Reader(object):
         """
         self.db_name = "CPSC2021"
         self.db_dir_base = db_dir
-        self.db_tranches = ["trainingI", "trainingII",]
+        self.db_tranches = ["training_I", "training_II",]
         self.db_dirs = ED({t:"" for t in self.db_tranches})
         self.working_dir = working_dir or os.getcwd()
         os.makedirs(self.working_dir, exist_ok=True)
@@ -150,11 +150,12 @@ class CPSC2021Reader(object):
         self.nb_records = ED({"training_I":730, "training_II":706})
         self._all_records = ED({t:[] for t in self.db_tranches})
         self.__all_records = None
+        self.__revised_records = []
         self._all_subjects = ED({t:[] for t in self.db_tranches})
         self.__all_subjects = None
         self._subject_records = ED({t:[] for t in self.db_tranches})
         self._stats = pd.DataFrame()
-        self._stats_columns = ["record", "tranche", "subject_id", "record_id", "label", "fs", "sig_len",]
+        self._stats_columns = ["record", "tranche", "subject_id", "record_id", "label", "fs", "sig_len", "revised",]
         self._ls_rec()
         self._aggregate_stats()
 
@@ -255,12 +256,13 @@ class CPSC2021Reader(object):
         self._subject_records = ED({t:[] for t in self.db_tranches})
 
         fn = "RECORDS"
+        rev_fn = "REVISED_RECORDS"
         for t in self.db_tranches:
-            dir_candidate = os.path.join(self.db_dir_base, t, t)
+            dir_candidate = os.path.join(self.db_dir_base, t.replace("training_", "training"), t)
             if os.path.isdir(dir_candidate):
                 dir_tranche = dir_candidate
             else:
-                dir_tranche = os.path.dirname(dir_candidate)
+                dir_tranche = os.path.join(self.db_dir_base, t)
             self.db_dirs[t] = dir_tranche
 
             record_list_fp = os.path.join(dir_tranche, fn)
@@ -280,6 +282,11 @@ class CPSC2021Reader(object):
                 print(f"Done in {time.time() - start:.5f} seconds!")
                 with open(record_list_fp, "w") as f:
                     f.write("\n".join(self._all_records[t]))
+
+            record_list_fp = os.path.join(dir_tranche, rev_fn)
+            if os.path.isfile(record_list_fp):
+                with open(record_list_fp, "r") as f:
+                    self.__revised_records.extend(f.read().splitlines())
 
             self._all_subjects[t] = sorted([rec.split("_")[1] for rec in self._all_records[t]])
             self._subject_records[t] = \
@@ -313,6 +320,7 @@ class CPSC2021Reader(object):
             self._stats["label"] = self._stats["record"].apply(lambda s: self.load_label(s))
             self._stats["fs"] = self.fs
             self._stats["sig_len"] = self._stats["record"].apply(lambda s: wfdb.rdheader(self._get_path(s)).sig_len)
+            self._stats["revised"] = self._stats["record"].apply(lambda s: 1 if s in self.__revised_records else 0)
             self._stats = self._stats.sort_values(by=["subject_id", "record_id"], ignore_index=True)
             self._stats = self._stats[self._stats_columns]
             self._stats.to_csv(stats_file_fp, index=False)
