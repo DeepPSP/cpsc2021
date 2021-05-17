@@ -88,6 +88,8 @@ class CPSC2021Reader(object):
     2. it can be inferred from the classification scoring matrix that the punishment of false negatives of AFf is very heavy, while mixing-up of AFf and AFp is not punished
     3. flag of atrial fibrillation and atrial flutter ("AFIB" and "AFL") in annotated information are seemed as the same type when scoring the method
     4. the 3 classes can coexist in ONE subject (not one record). For example, subject 61 has 6 records with label "N", 1 with label "AFp", and 2 with label "AFf"
+    5. rhythm change annotations ("(AFIB", "(AFL", "(N" in the `aux_note` field or "+" in the `symbol` field of the annotation files) are inserted 0.15s ahead of or behind (onsets or offset resp.) of corresponding R peaks.
+    6. some records are revised if there are heart beats of the AF episode or the pause between adjacent AF episodes less than 5. The id numbers of the revised records are summarized in the attached REVISED_RECORDS
 
     ISSUES:
     -------
@@ -119,7 +121,7 @@ class CPSC2021Reader(object):
         """
         self.db_name = "CPSC2021"
         self.db_dir_base = db_dir
-        self.db_tranches = ["training_I", "training_II",]
+        self.db_tranches = ["trainingI", "trainingII",]
         self.db_dirs = ED({t:"" for t in self.db_tranches})
         self.working_dir = working_dir or os.getcwd()
         os.makedirs(self.working_dir, exist_ok=True)
@@ -425,8 +427,26 @@ class CPSC2021Reader(object):
     def _validate_samp_interval(self,
                                 rec: str,
                                 sampfrom:Optional[int]=None,
-                                sampto:Optional[int]=None,) -> Tuple[int, Union[int, None]]:
-        """
+                                sampto:Optional[int]=None,) -> Tuple[int, int]:
+        """ finished, checked,
+        validate `sampfrom` and `sampto` so that they are reasonable
+
+        Parameters:
+        -----------
+        rec: str,
+            name of the record
+        sampfrom: int, optional,
+            start index of the data to be loaded
+        sampto: int, optional,
+            end index of the data to be loaded
+
+        Returns:
+        --------
+        (sf, st): tuple of int,
+        sf: int,
+            index sampling from
+        st: int,
+            index sampling to
         """
         sf, st = sampfrom or 0, sampto or self.df_stats[self.df_stats.record==rec].iloc[0].sig_len
         if sf >= st:
@@ -543,12 +563,12 @@ class CPSC2021Reader(object):
             "af_episodes": self.load_af_episodes,
             "label": self.load_label,
         }
-        if field.lower() in ["raw", "wfdb",]:
-            return ann
-        elif field is None:
+        if field is None:
             ann = {k: f(rec, ann, sf, st) for k,f in func.items()}
             if kwargs:
                 warnings.warn(f"key word arguments {list(kwargs.keys())} ignored when field is not specified!")
+            return ann
+        elif field.lower() in ["raw", "wfdb",]:
             return ann
 
         try:
@@ -649,10 +669,11 @@ class CPSC2021Reader(object):
         header = wfdb.rdheader(self._get_path(rec))
         label = self._labels_f2a[header.comments[0]]
         siglen = header.sig_len
-        if ann is None or fmt.lower() in ["c_intervals",]:
-            _ann = wfdb.rdann(self._get_path(rec), extension=self.ann_ext)
-        else:
-            _ann = ann
+        # if ann is None or fmt.lower() in ["c_intervals",]:
+        #     _ann = wfdb.rdann(self._get_path(rec), extension=self.ann_ext)
+        # else:
+        #     _ann = ann
+        _ann = wfdb.rdann(self._get_path(rec), extension=self.ann_ext)
         sf, st = self._validate_samp_interval(rec, sampfrom, sampto)
         aux_note = np.array(_ann.aux_note)
         critical_points = _ann.sample
@@ -698,7 +719,12 @@ class CPSC2021Reader(object):
         return af_episodes
 
 
-    def load_label(self, rec:str, ann:Optional[wfdb.Annotation]=None, fmt:str="a") -> str:
+    def load_label(self,
+                   rec:str,
+                   ann:Optional[wfdb.Annotation]=None,
+                   sampfrom:Optional[int]=None,
+                   sampto:Optional[int]=None,
+                   fmt:str="a") -> str:
         """ finished, checked,
 
         load (classifying) label of the record,
@@ -712,6 +738,10 @@ class CPSC2021Reader(object):
         rec: str,
             name of the record
         ann: Annotation, optional,
+            not used, to keep in accordance with other methods
+        sampfrom: int, optional,
+            not used, to keep in accordance with other methods
+        sampto: int, optional,
             not used, to keep in accordance with other methods
         fmt: str, default "a",
             format of the label, case in-sensitive, can be one of:
@@ -882,6 +912,7 @@ class CPSC2021Reader(object):
             _ann = self.load_ann(rec, sampfrom=sampfrom, sampto=sampto)
             rpeaks = _ann["rpeaks"]
             af_episodes = _ann["af_episodes"]
+            af_episodes = [[itv[0]-sf, itv[1]-sf] for itv in af_episodes]
             label = _ann["label"]
         else:
             rpeaks = ann.get("rpeaks", [])
