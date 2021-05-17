@@ -198,44 +198,64 @@ def compute_challenge_metric(class_true:int,
 
 
 def gen_endpoint_score_mask(siglen:int,
-                             rpeaks:Sequence[int],
-                             af_intervals:Sequence[Sequence[int]],
-                             bias:dict={1:1, 2:0.5}) -> Tuple[np.ndarray, np.ndarray]:
-    """ finished, checked (consistency with the scoring scheme to be further checked),
+                            critical_points:Sequence[int],
+                            af_intervals:Sequence[Sequence[int]],
+                            bias:dict={1:1, 2:0.5}) -> Tuple[np.ndarray, np.ndarray]:
+    """ finished, checked,
+
+    generate the scoring mask for the onsets and offsets of af episodes,
 
     Parameters:
     -----------
     siglen: int,
         length of the signal
-    rpeaks: sequence of int,
-        locations (indices in the signal) of the R peaks
+    critical_points: sequence of int,
+        locations (indices in the signal) of the critical points,
+        including R peaks, rhythm annotations, etc,
+        which are stored in the `sample` fields of an wfdb annotation file
+        (corr. beat ann, rhythm ann are in the `symbol`, `aux_note` fields)
     af_intervals: sequence of intervals,
-        intervals of the af episodes
+        intervals of the af episodes in terms of indices in `critical_points`
     bias: dict, default {1:1, 2:0.5},
         keys are bias (with ±) in terms of number of rpeaks
         values are corresponding scores
+
+    NOTE:
+    -----
+    the onsets in `af_intervals` are 0.15s ahead of the corresponding R peaks,
+    while the offsets in `af_intervals` are 0.15s behind the corresponding R peaks,
 
     Returns:
     --------
     (onset_score_mask, offset_score_mask): 2-tuple of ndarray,
         scoring mask for the onset and offsets predictions of af episodes
     """
-    _rpeaks = list(rpeaks)
-    if 0 not in _rpeaks:
-        _rpeaks.insert(0, 0)
+    _critical_points = list(critical_points)
+    if 0 not in _critical_points:
+        _critical_points.insert(0, 0)
         _af_intervals = [[itv[0]+1, itv[1]+1] for itv in af_intervals]
     else:
         _af_intervals = [[itv[0], itv[1]] for itv in af_intervals]
-    if siglen-1 not in _rpeaks:
-        _rpeaks.append(siglen-1)
-    print(_rpeaks)
-    print(_af_intervals)
+    # records with AFf mostly have `critical_points` ending with `siglen-1`
+    # but in some rare case ending with `siglen`
+    if siglen-1 in _critical_points:
+        _critical_points[-1] = siglen
+    elif siglen in _critical_points:
+        pass
+    else:
+        _critical_points.append(siglen)
     onset_score_mask, offset_score_mask = np.zeros((siglen,)), np.zeros((siglen,))
     for b, v in bias.items():
         mask_onset, mask_offset = np.zeros((siglen,)), np.zeros((siglen,))
         for itv in af_intervals:
-            mask_onset[_rpeaks[max(0, itv[0]-b)]: min(siglen, _rpeaks[min(itv[0]+b, len(_rpeaks)-1)]+1)] = v
-            mask_offset[_rpeaks[max(0, itv[1]-b)]: min(siglen, _rpeaks[min(itv[1]+b, len(_rpeaks)-1)]+1)] = v
+            onset_start = _critical_points[max(0, itv[0]-b)]
+            # note that the onsets and offsets in `af_intervals` already occupy positions in `critical_points`
+            onset_end = _critical_points[min(itv[0]+1+b, len(_critical_points)-1)]
+            mask_onset[onset_start: onset_end] = v
+            # note that the onsets and offsets in `af_intervals` already occupy positions in `critical_points`
+            offset_start = _critical_points[max(0, itv[1]-1-b)]
+            offset_end = _critical_points[min(itv[1]+b, len(_critical_points)-1)]
+            mask_offset[offset_start: offset_end] = v
         onset_score_mask = np.maximum(onset_score_mask, mask_onset)
         offset_score_mask = np.maximum(offset_score_mask, mask_offset)
     return onset_score_mask, offset_score_mask
