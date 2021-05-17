@@ -4,7 +4,7 @@ import numpy as np
 import json
 import os
 import sys
-from typing import Union, Optional, List, Sequence, NoReturn
+from typing import Union, Optional, List, Tuple, Sequence, NoReturn
 
 import scipy.io as sio
 import wfdb
@@ -195,6 +195,53 @@ def compute_challenge_metric(class_true:int,
     ue_score = ue_calculate(endpoints_pred, endpoints_true, onset_score_range, offset_score_range)
     u = ur_score + ue_score
     return u
+
+
+def gen_endpoint_score_mask(siglen:int,
+                             rpeaks:Sequence[int],
+                             af_intervals:Sequence[Sequence[int]],
+                             bias:dict={1:1, 2:0.5}) -> Tuple[np.ndarray, np.ndarray]:
+    """ finished, checked (consistency with the scoring scheme to be further checked),
+
+    Parameters:
+    -----------
+    siglen: int,
+        length of the signal
+    rpeaks: sequence of int,
+        locations (indices in the signal) of the R peaks
+    af_intervals: sequence of intervals,
+        intervals of the af episodes
+    bias: dict, default {1:1, 2:0.5},
+        keys are bias (with ±) in terms of number of rpeaks
+        values are corresponding scores
+
+    Returns:
+    --------
+    (onset_score_mask, offset_score_mask): 2-tuple of ndarray,
+        scoring mask for the onset and offsets predictions of af episodes
+    """
+    _rpeaks = list(rpeaks)
+    if 0 not in _rpeaks:
+        _rpeaks.insert(0, 0)
+        _af_intervals = [[itv[0]+1, itv[1]+1] for itv in af_intervals]
+    else:
+        _af_intervals = [[itv[0], itv[1]] for itv in af_intervals]
+    if siglen-1 not in _rpeaks:
+        _rpeaks.append(siglen-1)
+    print(_rpeaks)
+    print(_af_intervals)
+    onset_score_mask, offset_score_mask = np.zeros((siglen,)), np.zeros((siglen,))
+    for b, v in bias.items():
+        mask_onset, mask_offset = np.zeros((siglen,)), np.zeros((siglen,))
+        for itv in af_intervals:
+            mask_onset[_rpeaks[max(0, itv[0]-b)]: min(siglen, _rpeaks[min(itv[0]+b, len(_rpeaks)-1)]+1)] = v
+            mask_offset[_rpeaks[max(0, itv[1]-b)]: min(siglen, _rpeaks[min(itv[1]+b, len(_rpeaks)-1)]+1)] = v
+        onset_score_mask = np.maximum(onset_score_mask, mask_onset)
+        offset_score_mask = np.maximum(offset_score_mask, mask_offset)
+    return onset_score_mask, offset_score_mask
+
+
+gen_endpoint_score_range = gen_endpoint_score_mask  # alias
 
 
 
