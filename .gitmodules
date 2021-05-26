@@ -3,4 +3,4 @@
 	url = https://github.com/CPSC-Committee/cpsc2021-python-entry.git
 [submodule "torch_ecg"]
 	path = torch_ecg
-	url = https://github.com/wenh06/torch_ecg.git
+	url = https://github.com/DeepPSP/torch_ecg.git
