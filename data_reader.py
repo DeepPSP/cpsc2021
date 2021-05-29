@@ -143,8 +143,8 @@ class CPSC2021Reader(object):
         }
         self._labels_f2n = { # fullname to number
             "non atrial fibrillation": 0,
-            "paroxysmal atrial fibrillation": 1,
-            "persistent atrial fibrillation": 2,
+            "paroxysmal atrial fibrillation": 2,
+            "persistent atrial fibrillation": 1,
         }
 
         self.nb_records = ED({"training_I":730, "training_II":706})
