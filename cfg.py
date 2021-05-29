@@ -28,6 +28,19 @@ os.makedirs(BaseCfg.model_dir, exist_ok=True)
 BaseCfg.fs = 200
 BaseCfg.torch_dtype = "float"  # "double"
 
+BaseCfg.class_fn2abbr = { # fullname to abbreviation
+    "non atrial fibrillation": "N",
+    "paroxysmal atrial fibrillation": "AFp",
+    "persistent atrial fibrillation": "AFf",
+}
+BaseCfg.class_abbr2fn = {v:k for k,v in BaseCfg.class_fn2abbr.items()}
+BaseCfg.class_fn_map = { # fullname to number
+    "non atrial fibrillation": 0,
+    "paroxysmal atrial fibrillation": 2,
+    "persistent atrial fibrillation": 1,
+}
+BaseCfg.class_abbr_map = {k: BaseCfg.class_fn_map[v] for k,v in BaseCfg.class_abbr2fn.items()}
+
 
 TrainCfg = ED()
 
