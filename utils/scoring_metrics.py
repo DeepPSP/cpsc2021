@@ -9,6 +9,18 @@ from typing import Union, Optional, List, Tuple, Sequence, NoReturn
 import scipy.io as sio
 import wfdb
 
+
+__all__ = [
+    "compute_challenge_metric",
+    "gen_endpoint_score_mask", "gen_endpoint_score_range",
+]
+
+
+###########################################
+# methods from the file score_2021.py 
+# of the official repository
+###########################################
+
 """
 Written by:  Xingyao Wang, Chengyu Liu
              School of Instrument Science and Engineering
@@ -45,9 +57,9 @@ class RefInfo():
 
         if 'non atrial fibrillation' in sample_descrip:
             class_true = 0
-        elif 'paroxysmal atrial fibrillation' in sample_descrip:
-            class_true = 1
         elif 'persistent atrial fibrillation' in sample_descrip:
+            class_true = 1
+        elif 'paroxysmal atrial fibrillation' in sample_descrip:
             class_true = 2
         else:
             print('Error: the recording is out of range!')
@@ -63,7 +75,7 @@ class RefInfo():
         onset_range = np.zeros((self.len_sig, ),dtype=np.float)
         offset_range = np.zeros((self.len_sig, ),dtype=np.float)
         for i, af_start in enumerate(self.af_starts):
-            if self.class_true == 1:
+            if self.class_true == 2:
                 if max(af_start-1, 0) == 0:
                     onset_range[: self.beat_loc[af_start+2]] += 1
                 elif max(af_start-2, 0) == 0:
@@ -73,11 +85,11 @@ class RefInfo():
                     onset_range[self.beat_loc[af_start-1]: self.beat_loc[af_start+2]] += 1
                     onset_range[self.beat_loc[af_start-2]: self.beat_loc[af_start-1]] += .5
                 onset_range[self.beat_loc[af_start+2]: self.beat_loc[af_start+3]] += .5
-            elif self.class_true == 2:
+            elif self.class_true == 1:
                 onset_range[: self.beat_loc[af_start+2]] += 1
                 onset_range[self.beat_loc[af_start+2]: self.beat_loc[af_start+3]] += .5
         for i, af_end in enumerate(self.af_ends):
-            if self.class_true == 1:
+            if self.class_true == 2:
                 if min(af_end+1, len(self.beat_loc)-1) == len(self.beat_loc)-1:
                     offset_range[self.beat_loc[af_end-2]: ] += 1
                 elif min(af_end+2, len(self.beat_loc)-1) == len(self.beat_loc)-1:
@@ -87,7 +99,7 @@ class RefInfo():
                     offset_range[self.beat_loc[af_end-2]: self.beat_loc[af_end+1]] += 1
                     offset_range[self.beat_loc[af_end+1]: min(self.beat_loc[af_end+2], self.len_sig-1)] += .5
                 offset_range[self.beat_loc[af_end-3]: self.beat_loc[af_end-2]] += .5 
-            elif self.class_true == 2:
+            elif self.class_true == 1:
                 offset_range[self.beat_loc[af_end-2]: ] += 1
                 offset_range[self.beat_loc[af_end-3]: self.beat_loc[af_end-2]] += .5
         
@@ -110,9 +122,6 @@ def ue_calculate(endpoints_pred, endpoints_true, onset_score_range, offset_score
     score = 0
     ma = len(endpoints_true)
     mr = len(endpoints_pred)
-
-    if ma == 0:
-        return score
 
     for [start, end] in endpoints_pred:
         score += onset_score_range[int(start)]
@@ -145,9 +154,9 @@ def score(data_path, ans_path):
         if len(endpoints_pred) == 0:
             class_pred = 0
         elif len(endpoints_pred) == 1 and np.diff(endpoints_pred)[-1] == TrueRef.len_sig - 1:
-            class_pred = 2
-        else:
             class_pred = 1
+        else:
+            class_pred = 2
 
         ur_score = ur_calculate(TrueRef.class_true, class_pred)
 
