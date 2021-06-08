@@ -50,8 +50,8 @@ def get_parser() -> dict:
 def run(action:str) -> NoReturn:
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     action: str,
         git command (action, operation) to be executed
     """

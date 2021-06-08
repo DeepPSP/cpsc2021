@@ -84,8 +84,8 @@ def preprocess_multi_lead_signal(
     perform preprocessing for multi-lead ecg signal (with units in mV),
     preprocessing may include median filter, bandpass filter, and rpeaks detection, etc.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     raw_sig: ndarray,
         the raw ecg signal, with units in mV
     fs: real number,
@@ -110,8 +110,8 @@ def preprocess_multi_lead_signal(
     verbose: int, default 0,
         print verbosity
 
-    Returns:
-    --------
+    Returns
+    -------
     retval: dict,
         with items
         - "filtered_ecg": the array of the processed ecg signal
@@ -174,8 +174,8 @@ def preprocess_single_lead_signal(
     perform preprocessing for single lead ecg signal (with units in mV),
     preprocessing may include median filter, bandpass filter, and rpeaks detection, etc.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     raw_sig: ndarray,
         the raw ecg signal, with units in mV
     fs: real number,
@@ -196,8 +196,8 @@ def preprocess_single_lead_signal(
     verbose: int, default 0,
         print verbosity
 
-    Returns:
-    --------
+    Returns
+    -------
     retval: dict,
         with items
         - "filtered_ecg": the array of the processed ecg signal
@@ -264,8 +264,8 @@ def rpeaks_detect_multi_leads(
 
     detect rpeaks from the filtered multi-lead ecg signal (with units in mV)
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     sig: ndarray,
         the (better be filtered) ecg signal, with units in mV
     fs: real number,
@@ -280,8 +280,8 @@ def rpeaks_detect_multi_leads(
     verbose: int, default 0,
         print verbosity
 
-    Returns:
-    --------
+    Returns
+    -------
     rpeaks: np.ndarray,
         array of indices of the detected rpeaks of the multi-lead ecg signal
     """
@@ -308,8 +308,8 @@ def merge_rpeaks(
     merge rpeaks that are detected from each lead of multi-lead signals (with units in mV),
     using certain criterion merging qrs masks from each lead
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     rpeaks_candidates: list of ndarray,
         each element (ndarray) is the array of indices of rpeaks of corr. lead
     sig: ndarray,
@@ -319,8 +319,8 @@ def merge_rpeaks(
     verbose: int, default 0,
         print verbosity
 
-    Returns:
-    --------
+    Returns
+    -------
     final_rpeaks: np.ndarray
         the final rpeaks obtained by merging the rpeaks from all the leads
     """

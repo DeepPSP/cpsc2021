@@ -35,8 +35,8 @@ def smooth(x:np.ndarray, window_len:int=11, window:str="hanning", mode:str="vali
     (with the window size) in both ends so that transient parts are minimized
     in the begining and end part of the output signal.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     x: ndarray,
         the input signal 
     window_len: int, default 11,
@@ -50,13 +50,13 @@ def smooth(x:np.ndarray, window_len:int=11, window:str="hanning", mode:str="vali
     keep_dtype: bool, default True,
         dtype of the returned value keeps the same with that of `x` or not
 
-    Returns:
-    --------
+    Returns
+    -------
     y: ndarray,
         the smoothed signal
         
-    Example:
-    --------
+    Example
+    -------
     >>> t = linspace(-2, 2, 0.1)
     >>> x = sin(t) + randn(len(t)) * 0.1
     >>> y = smooth(x)
@@ -70,8 +70,8 @@ def smooth(x:np.ndarray, window_len:int=11, window:str="hanning", mode:str="vali
 
     NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
 
-    References:
-    -----------
+    References
+    ----------
     [1] https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html
     """
     radius = min(len(x), window_len)
@@ -111,14 +111,14 @@ class MovingAverage(object):
 
     moving average
 
-    References:
-    -----------
+    References
+    ----------
     [1] https://en.wikipedia.org/wiki/Moving_average
     """
     def __init__(self, data:Sequence, **kwargs):
         """
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data: sequence,
             the series data to compute its moving average
         """
@@ -127,8 +127,8 @@ class MovingAverage(object):
 
     def cal(self, method:str, **kwargs) -> np.ndarray:
         """
-        Parameters:
-        -----------
+        Parameters
+        ----------
         method: str,
             method for computing moving average, can be one of
             - "sma", "simple", "simple moving average"
@@ -153,8 +153,8 @@ class MovingAverage(object):
         """
         simple moving average
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         window: int, default 5,
             window length of the moving average
         center: bool, default False,
@@ -186,8 +186,8 @@ class MovingAverage(object):
         which is also the function used in Tensorboard Scalar panel,
         whose parameter `smoothing` is the `weight` here
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         weight: float, default 0.6,
             weight of the previous data point
         """
@@ -217,8 +217,8 @@ class MovingAverage(object):
         """
         weighted moving average
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         window: int, default 5,
             window length of the moving average
         """
@@ -237,8 +237,8 @@ def resample_irregular_timeseries(s:np.ndarray, output_fs:Real=2, method:str="sp
     resample the 2d irregular timeseries `s` into a 1d or 2d regular time series with frequency `output_fs`,
     elements of `s` are in the form [time, value], where the unit of `time` is ms
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     s: array_like,
         the 2d irregular timeseries
     output_fs: Real, default 2,
@@ -252,8 +252,8 @@ def resample_irregular_timeseries(s:np.ndarray, output_fs:Real=2, method:str="sp
     interp_kw: dict, default {},
         additional options for the corresponding methods in scipy.interpolate
 
-    Returns:
-    --------
+    Returns
+    -------
     np.ndarray, a 1d or 2d regular time series with frequency `output_freq`
 
     NOTE:
@@ -312,8 +312,8 @@ def detect_peaks(x:Sequence,
     """
     Detect peaks in data based on their amplitude and other features.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     x: 1D array_like,
         data
     mph: positive number, optional,
@@ -346,13 +346,13 @@ def detect_peaks(x:Sequence,
         if True (1), plot data in matplotlib figure
     ax: a matplotlib.axes.Axes instance, optional,
 
-    Returns:
-    --------
+    Returns
+    -------
     ind : 1D array_like
         indeces of the peaks in `x`.
 
-    Notes:
-    ------
+    Notes
+    -----
     The detection of valleys instead of peaks is performed internally by simply
     negating the data: `ind_valleys = detect_peaks(-x)`
     
@@ -360,8 +360,8 @@ def detect_peaks(x:Sequence,
 
     See this IPython Notebook [1]_.
 
-    References:
-    -----------
+    References
+    ----------
     [1] http://nbviewer.ipython.org/github/demotu/BMC/blob/master/notebooks/DetectPeaks.ipynb
 
     Examples
@@ -548,8 +548,8 @@ def butter_bandpass(lowcut:Real, highcut:Real, fs:Real, order:int, verbose:int=0
     """
     Butterworth Bandpass Filter Design
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     lowcut: real,
         low cutoff frequency
     highcut: real,
@@ -560,17 +560,17 @@ def butter_bandpass(lowcut:Real, highcut:Real, fs:Real, order:int, verbose:int=0
         order of the filter
     verbose: int, default 0
 
-    Returns:
-    --------
+    Returns
+    -------
     b, a: tuple of ndarray,
         coefficients of numerator and denominator of the filter
 
-    NOTE:
-    -----
+    NOTE
+    ----
     according to `lowcut` and `highcut`, the filter type might fall to lowpass or highpass filter
 
-    References:
-    -----------
+    References
+    ----------
     [2] scipy.signal.butter
     [1] https://scipy-cookbook.readthedocs.io/items/ButterworthBandpass.html
     """
@@ -608,8 +608,8 @@ def butter_bandpass_filter(data:np.ndarray, lowcut:Real, highcut:Real, fs:Real, 
     """
     Butterworth Bandpass
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     data: ndarray,
         data to be filtered
     lowcut: real,
@@ -622,13 +622,13 @@ def butter_bandpass_filter(data:np.ndarray, lowcut:Real, highcut:Real, fs:Real, 
         order of the filter
     verbose: int, default 0
 
-    Returns:
-    --------
+    Returns
+    -------
     y, ndarray,
         the filtered signal
 
-    References:
-    -----------
+    References
+    ----------
     [1] https://scipy-cookbook.readthedocs.io/items/ButterworthBandpass.html
     [2] https://dsp.stackexchange.com/questions/19084/applying-filter-in-scipy-signal-use-lfilter-or-filtfilt
     """
@@ -642,8 +642,8 @@ def ensure_lead_fmt(values:Sequence[Real], n_leads:int=12, fmt:str="lead_first")
 
     ensure the `n_leads`-lead (ECG) signal to be of the format of `fmt`
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     values: sequence,
         values of the `n_leads`-lead (ECG) signal
     n_leads: int, default 12,
@@ -652,8 +652,8 @@ def ensure_lead_fmt(values:Sequence[Real], n_leads:int=12, fmt:str="lead_first")
         format of the output values, can be one of
         "lead_first" (alias "channel_first"), "lead_last" (alias "channel_last")
 
-    Returns:
-    --------
+    Returns
+    -------
     out_values: ndarray,
         ECG signal in the format of `fmt`
     """
@@ -678,8 +678,8 @@ def ensure_siglen(values:Sequence[Real], siglen:int, fmt:str="lead_first") -> np
         the central `siglen` samples will be adopted;
         otherwise, zero padding will be added to both sides
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     values: sequence,
         values of the `n_leads`-lead (ECG) signal
     siglen: int,
@@ -688,8 +688,8 @@ def ensure_siglen(values:Sequence[Real], siglen:int, fmt:str="lead_first") -> np
         format of the input and output values, can be one of
         "lead_first" (alias "channel_first"), "lead_last" (alias "channel_last")
 
-    Returns:
-    --------
+    Returns
+    -------
     out_values: ndarray,
         ECG signal in the format of `fmt` and of fixed length `siglen`
     """
@@ -719,8 +719,8 @@ def ensure_siglen(values:Sequence[Real], siglen:int, fmt:str="lead_first") -> np
 def signal_normalize(sig:np.ndarray, sig_fmt:str="channel_first", mean:float=0.06, std:float=0.2) -> np.ndarray:
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     sig: array,
         1d (single-lead) or 2d (multi-lead) ECG signal, with units in mV,
     sig_fmt: str, default "channel_first",
@@ -733,13 +733,13 @@ def signal_normalize(sig:np.ndarray, sig_fmt:str="channel_first", mean:float=0.0
     std: float, default 0.2,
         standard deviation of the normalized signal
 
-    Returns:
-    --------
+    Returns
+    -------
     normalized_sig: array,
         the normalized signal, of the same shape as the input `sig`
 
-    Usage:
-    ------
+    Usage
+    -----
     1. data augmentation for training models
     2. enhancement (preprocessing) for rpeak detection
 
@@ -764,8 +764,8 @@ def get_ampl(sig:np.ndarray,
 
     get amplitude of a signal (near critical points if given)
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     sig: ndarray,
         (ecg) signal
     fs: real number,
@@ -781,8 +781,8 @@ def get_ampl(sig:np.ndarray,
         positions of critical points near which to compute amplitude,
         e.g. can be rpeaks, t peaks, etc.
 
-    Returns:
-    --------
+    Returns
+    -------
     ampl: float, or ndarray,
         amplitude of the signal
     """

@@ -37,13 +37,13 @@ def remove_spikes_naive(sig:np.ndarray) -> np.ndarray:
     `spikes` here refers to abrupt large bumps with (abs) value larger than 20 mV,
     do NOT confuse with `spikes` in paced rhythm
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     sig: ndarray,
         single-lead ECG signal with potential spikes
     
-    Returns:
-    --------
+    Returns
+    -------
     filtered_sig: ndarray,
         ECG signal with `spikes` removed
     """
@@ -59,8 +59,8 @@ def ecg_denoise_naive(filtered_sig:np.ndarray, fs:Real, config:ED) -> List[List[
 
     a naive function removing non-ECG segments (flat and motion artefact)
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     filtered_sig: ndarray,
         single-lead filtered (typically bandpassed) ECG signal,
     fs: real number,
@@ -68,8 +68,8 @@ def ecg_denoise_naive(filtered_sig:np.ndarray, fs:Real, config:ED) -> List[List[
     config: dict,
         configs of relavant parameters, like window, step, etc.
 
-    Returns:
-    --------
+    Returns
+    -------
     intervals: list of (length 2) list of int,
         list of intervals of non-noise segment of `filtered_sig`
     """

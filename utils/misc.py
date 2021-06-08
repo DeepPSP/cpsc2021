@@ -55,15 +55,15 @@ def get_record_list_recursive(db_dir:str, rec_ext:str) -> List[str]:
     then the output would be "patient1{sep}A0001", ..., "patient2{sep}B0001", ...,
     sep is determined by the system
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     db_dir: str,
         the parent (root) path of the whole database
     rec_ext: str,
         extension of the record files
 
-    Returns:
-    --------
+    Returns
+    -------
     res: list of str,
         list of records, in lexicographical order
     """
@@ -92,15 +92,15 @@ def get_record_list_recursive2(db_dir:str, rec_pattern:str) -> List[str]:
     then the output would be "patient1{sep}A0001", ..., "patient2{sep}B0001", ...,
     sep is determined by the system
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     db_dir: str,
         the parent (root) path of the whole database
     rec_pattern: str,
         pattern of the record filenames, e.g. "A*.mat"
 
-    Returns:
-    --------
+    Returns
+    -------
     res: list of str,
         list of records, in lexicographical order
     """
@@ -130,16 +130,16 @@ def get_record_list_recursive3(db_dir:str, rec_patterns:Union[str,Dict[str,str]]
     then the output would be "patient1{sep}A0001", ..., "patient2{sep}B0001", ...,
     sep is determined by the system
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     db_dir: str,
         the parent (root) path of the whole database
     rec_patterns: str or dict,
         pattern of the record filenames, e.g. "A(?:\d+).mat",
         or patterns of several subsets, e.g. `{"A": "A(?:\d+).mat"}`
 
-    Returns:
-    --------
+    Returns
+    -------
     res: list of str,
         list of records, in lexicographical order
     """
@@ -180,8 +180,8 @@ def dict_to_str(d:Union[dict, list, tuple], current_depth:int=1, indent_spaces:i
     convert a (possibly) nested dict into a `str` of json-like formatted form,
     this nested dict might also contain lists or tuples of dict (and of str, int, etc.)
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     d: dict, or list, or tuple,
         a (possibly) nested `dict`, or a list of `dict`
     current_depth: int, default 1,
@@ -189,8 +189,8 @@ def dict_to_str(d:Union[dict, list, tuple], current_depth:int=1, indent_spaces:i
     indent_spaces: int, default 4,
         the indent spaces of each depth
 
-    Returns:
-    --------
+    Returns
+    -------
     s: str,
         the formatted string
     """
@@ -256,19 +256,19 @@ def str2bool(v:Union[str, bool]) -> bool:
 
     converts a "boolean" value possibly in the format of str to bool
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     v: str or bool,
         the "boolean" value
 
-    Returns:
-    --------
+    Returns
+    -------
     b: bool,
         `v` in the format of bool
 
-    References:
-    -----------
-    https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    References
+    ----------
+    [1] https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     """
     if isinstance(v, bool):
        b = v
@@ -286,16 +286,16 @@ def diff_with_step(a:np.ndarray, step:int=1, **kwargs) -> np.ndarray:
 
     compute a[n+step] - a[n] for all valid n
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     a: ndarray,
         the input data
     step: int, default 1,
         the step to compute the difference
     kwargs: dict,
 
-    Returns:
-    --------
+    Returns
+    -------
     d: ndarray:
         the difference array
     """
@@ -310,15 +310,15 @@ def ms2samples(t:Real, fs:Real) -> int:
 
     convert time `t` with units in ms to number of samples
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     t: real number,
         time with units in ms
     fs: real number,
         sampling frequency of a signal
 
-    Returns:
-    --------
+    Returns
+    -------
     n_samples: int,
         number of samples corresponding to time `t`
     """
@@ -331,15 +331,15 @@ def samples2ms(n_samples:int, fs:Real) -> Real:
 
     inverse function of `ms2samples`
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     n_samples: int,
         number of sample points
     fs: real number,
         sampling frequency of a signal
 
-    Returns:
-    --------
+    Returns
+    -------
     t: real number,
         time duration correponding to `n_samples`
     """
@@ -356,8 +356,8 @@ def get_mask(shape:Union[int, Sequence[int]],
 
     get the mask around the `critical_points`
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     shape: int, or sequence of int,
         shape of the mask (and the original data)
     critical_points: ndarray,
@@ -371,8 +371,8 @@ def get_mask(shape:Union[int, Sequence[int]],
         "mask" for the usual mask,
         can also be "intervals", which consists of a list of intervals
 
-    Returns:
-    --------
+    Returns
+    -------
     mask: ndarray or list,
     """
     if isinstance(shape, int):
@@ -392,8 +392,8 @@ def class_weight_to_sample_weight(y:np.ndarray, class_weight:Union[str,List[floa
 
     transform class weight to sample weight
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     y: ndarray,
         the label (class) of each sample
     class_weight: str, or list, or ndarray, or dict, default "balanced",
@@ -432,8 +432,8 @@ def plot_single_lead(t:np.ndarray,
                      **kwargs) -> NoReturn:
     """ finished, NOT checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     to write
     """
     if "plt" not in dir():
@@ -476,8 +476,8 @@ def plot_single_lead(t:np.ndarray,
 def init_logger(log_dir:str, log_file:Optional[str]=None, mode:str="a", verbose:int=0) -> logging.Logger:
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     log_dir: str,
         directory of the log file
     log_file: str, optional,
@@ -487,8 +487,8 @@ def init_logger(log_dir:str, log_file:Optional[str]=None, mode:str="a", verbose:
     verbose: int, default 0,
         log verbosity
 
-    Returns:
-    --------
+    Returns
+    -------
     logger: Logger
     """
     if log_dir is None:
@@ -535,13 +535,13 @@ def init_logger(log_dir:str, log_file:Optional[str]=None, mode:str="a", verbose:
 def get_date_str(fmt:Optional[str]=None):
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     fmt: str, optional,
         format of the string of date
 
-    Returns:
-    --------
+    Returns
+    -------
     date_str: str,
         current time in the `str` format
     """
@@ -560,8 +560,8 @@ def rdheader(header_data:Union[str, Sequence[str]]) -> Union[Record, MultiRecord
     head_data: str, or sequence of str,
         path of the .hea header file, or lines of the .hea header file
 
-    Returns:
-    --------
+    Returns
+    -------
     record: wfdb.Record or wfdb.MultiRecord,
         header in the format of wfdb Record
     """
@@ -655,8 +655,8 @@ def masks_to_waveforms(masks:np.ndarray,
 
     convert masks into lists of waveforms
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     masks: ndarray,
         wave delineation in the form of masks,
         of shape (n_leads, seq_len), or (seq_len,)
@@ -673,8 +673,8 @@ def masks_to_waveforms(masks:np.ndarray,
     leads: str or list of str, optional,
         the names of leads corresponding to the channels of the `masks`
 
-    Returns:
-    --------
+    Returns
+    -------
     waves: dict,
         each item value is a list containing the `ECGWaveForm`s corr. to the lead;
         each item key is from `leads` if `leads` is set,
@@ -726,15 +726,15 @@ def masks_to_waveforms(masks:np.ndarray,
 def mask_to_intervals(mask:np.ndarray, vals:Optional[Union[int,Sequence[int]]]=None) -> Union[list, dict]:
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     mask: ndarray,
         1d mask
     vals: int or sequence of int, optional,
         values in `mask` to obtain intervals
 
-    Returns:
-    --------
+    Returns
+    -------
     intervals: dict or list,
         the intervals corr. to each value in `vals` if `vals` is `None` or `Sequence`;
         or the intervals corr. to `vals` if `vals` is int.
@@ -781,13 +781,13 @@ def nildent(text:str) -> str:
 def list_sum(l:Sequence[list]) -> list:
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     l: sequence of list,
         the sequence of lists to obtain the summation
 
-    Returns:
-    --------
+    Returns
+    -------
     l_sum: list,
         sum of `l`,
         i.e. if l = [list1, list2, ...], then l_sum = list1 + list2 + ...

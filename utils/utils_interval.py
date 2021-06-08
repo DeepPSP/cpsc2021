@@ -56,12 +56,12 @@ def overlaps(interval:Interval, another:Interval) -> int:
     If 0,  they are book-ended
     If <0, the distance in bp between them
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     interval, another: two `Interval`s
 
-    Returns:
-    --------
+    Returns
+    -------
     int, overlap length of two intervals; if < 0, the distance of two intervals
     """
     # in case a or b is not in ascending order
@@ -80,14 +80,14 @@ def validate_interval(
     if true, return True, and validated (of the form [a,b] with a<=b) interval,
     return `False, []`, otherwise
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     interval: Interval, or unions of `Interval`s
     join_book_endeds: bool, default True,
         if True, two book-ended intervals will be joined into one
 
-    Returns:
-    --------
+    Returns
+    -------
     tuple, consisting of
         a bool, indicating whether `interval` is a valid interval
         an interval (can be empty)
@@ -110,15 +110,15 @@ def in_interval(val:Real, interval:Interval, left_closed:bool=True, right_closed
 
     check whether val is inside interval or not
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     val: real number,
     interval: Interval,
     left_closed: bool, default True,
     right_closed: bool, default False,
 
-    Returns:
-    --------
+    Returns
+    -------
     is_in: bool,
     """
     itv = sorted(interval)
@@ -143,15 +143,15 @@ def in_generalized_interval(
 
     check whether val is inside generalized_interval or not
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     val: real number,
     generalized_interval: union of `Interval`s,
     left_closed: bool, default True,
     right_closed: bool, default False,
 
-    Returns:
-    --------
+    Returns
+    -------
     is_in: bool,
     """
     is_in = False
@@ -171,16 +171,16 @@ def get_confidence_interval(
 ) -> np.ndarray:
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     data: array_like, optional,
     val: real number, optional,
     rmse: float, optional,
     confidence: float, default 0.95,
     kwargs: dict,
 
-    Returns:
-    --------
+    Returns
+    -------
     conf_itv: ndarray,
     """
     from scipy.stats import norm
@@ -205,15 +205,15 @@ def intervals_union(interval_list:GeneralizedInterval, join_book_endeds:bool=Tru
     find the union (ordered and non-intersecting) of all the intervals in `interval_list`,
     which is a list of intervals in the form [a,b], where a,b need not be ordered
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     interval_list: GeneralizedInterval,
         the list of intervals to calculate their union
     join_book_endeds: bool, default True,
         join the book-ended intervals into one (e.g. [[1,2],[2,3]] into [1,3]) or not
     
-    Returns:
-    --------
+    Returns
+    -------
     processed: GeneralizedInterval,
         the union of the intervals in `interval_list`
     """
@@ -271,15 +271,15 @@ def generalized_intervals_union(
 
     calculate the union of a list (or tuple) of `GeneralizedInterval`s
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     interval_list: list or tuple,
         a list (or tuple) of `GeneralizedInterval`s
     join_book_endeds: bool, default True,
         join the book-ended intervals into one (e.g. [[1,2],[2,3]] into [1,3]) or not
 
-    Returns:
-    --------
+    Returns
+    -------
     iu: GeneralizedInterval,
         the union of `interval_list`
     """
@@ -293,15 +293,15 @@ def intervals_intersection(interval_list:GeneralizedInterval, drop_degenerate:bo
 
     calculate the intersection of all intervals in interval_list
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     interval_list: GeneralizedInterval,
         the list of intervals to yield intersection
     drop_degenerate: bool, default True,
         whether or not drop the degenerate intervals, i.e. intervals with length 0
     
-    Returns:
-    --------
+    Returns
+    -------
     its: Interval,
         the intersection of all intervals in `interval_list`
     """
@@ -328,15 +328,15 @@ def generalized_intervals_intersection(
     calculate the intersection of generalized_interval and another_generalized_interval,
     which are both generalized intervals
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     generalized_interval, another_generalized_interval: GeneralizedInterval,
         the 2 `GeneralizedInterval`s to yield intersection
     drop_degenerate: bool, default True,
         whether or not drop the degenerate intervals, i.e. intervals with length 0
     
-    Returns:
-    --------
+    Returns
+    -------
     its: GeneralizedInterval,
         the intersection of `generalized_interval` and `another_generalized_interval`
     """
@@ -368,13 +368,13 @@ def generalized_interval_complement(
 
     TODO: the case `total_interval` is a `GeneralizedInterval`
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     total_interval, Interval,
     generalized_interval: union of `Interval`s
 
-    Returns:
-    --------
+    Returns
+    -------
     cpl: union of `Interval`s,
         the complement of `generalized_interval` in `total_interval`
     """
@@ -410,8 +410,8 @@ def get_optimal_covering(
     each interval in the covering is of length at least `min_len`,
     and any two intervals in the covering have distance at least `split_threshold`
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     total_interval: Interval,
         the total interval that the covering is picked from
     to_cover: list,
@@ -424,13 +424,13 @@ def get_optimal_covering(
         if True, a list containing the list of indices of the intervals in the original `to_cover`,
         that each interval in the covering covers
 
-    Raises:
-    -------
+    Raises
+    ------
     if any of the intervals in `to_cover` exceeds the range of `total_interval`,
     ValueError will be raised
 
-    Returns:
-    --------
+    Returns
+    -------
     (ret, ret_traceback)
         ret: GeneralizedInterval,
             the covering that satisfies the given conditions
@@ -595,15 +595,15 @@ def find_max_cont_len(sublist:Interval, tot_rng:Real) -> dict:
     eg, tot_rng=10, sublist=[0,2,3,4,7,9],
     then 3, 1, [2,3,4] will be returned
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     sublist: Interval,
         a sublist
     tot_rng: real number,
         the total range
 
-    Returns:
-    --------
+    Returns
+    -------
     ret: dict, with items
         - "max_cont_len"
         - "max_cont_sublist_start"
@@ -627,12 +627,12 @@ def interval_len(interval:Interval) -> Real:
 
     compute the length of an interval. 0 for the empty interval []
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     interval: Interval
 
-    Returns:
-    --------
+    Returns
+    -------
     itv_len: real number,
         the `length` of `interval`
     """
@@ -646,12 +646,12 @@ def generalized_interval_len(generalized_interval:GeneralizedInterval) -> Real:
 
     compute the length of a generalized interval. 0 for the empty interval []
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     generalized_interval: GeneralizedInterval
 
-    Returns:
-    --------
+    Returns
+    -------
     gi_len: real number,
         the `length` of `generalized_interval`
     """
@@ -664,16 +664,16 @@ def diff_with_step(a:Sequence, step:int=1, **kwargs) -> np.ndarray:
 
     compute a[n+step] - a[n] for all valid n
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     a: array_like,
         the input data
     step: int, default 1,
         the step to compute the difference
     kwargs: dict,
 
-    Returns:
-    --------
+    Returns
+    -------
     d: ndarray:
         the difference array
     """
@@ -688,15 +688,15 @@ def find_extrema(signal:Optional[Sequence]=None, mode:str="both") -> np.ndarray:
     """
     Locate local extrema points in a signal. Based on Fermat's Theorem
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     signal: ndarray
         input signal.
     mode: str, optional
         whether to find maxima ("max"), minima ("min"), or both ("both").
     
-    Returns:
-    --------
+    Returns
+    -------
     extrema : ndarray
         indices of the extrama points.
     """
@@ -728,12 +728,12 @@ def is_intersect(
 
     determines if two (generalized) intervals intersect or not
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     interval, another_interval: GeneralizedInterval or Interval
 
-    Returns:
-    --------
+    Returns
+    -------
     bool, True if `interval` intersects with another_interval, False otherwise
     """
     if interval is None or another_interval is None or len(interval)*len(another_interval)==0:
@@ -764,13 +764,13 @@ def max_disjoint_covering(
 
     find the largest (the largest interval length) covering of a sequence of intervals
 
-    NOTE:
-    -----
+    NOTE
+    ----
     1. the problem seems slightly different from the problem discussed in refs
     2. intervals with non-positive length will be ignored
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     intervals: GeneralizedInterval,
         a sequence of intervals
     allow_book_endeds: bool, default True,
@@ -779,15 +779,15 @@ def max_disjoint_covering(
         if True, the indices of the intervals in the input `intervals` of the output covering 
         will also be returned
 
-    Returns:
-    --------
+    Returns
+    -------
     covering: GeneralizedInterval,
         the maximum non-overlapping (disjoint) subset of `intervals`
     covering_inds: list of int,
         indices in `intervals` of the intervals of `covering_inds`
 
-    References:
-    -----------
+    References
+    ----------
     [1] https://en.wikipedia.org/wiki/Maximum_disjoint_set
     [2] https://www.geeksforgeeks.org/maximal-disjoint-intervals/
     """
@@ -854,15 +854,15 @@ def max_disjoint_covering(
 def mask_to_intervals(mask:np.ndarray, vals:Optional[Union[int,Sequence[int]]]=None) -> Union[list, dict]:
     """ finished, checked,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     mask: ndarray,
         1d mask
     vals: int or sequence of int, optional,
         values in `mask` to obtain intervals
 
-    Returns:
-    --------
+    Returns
+    -------
     intervals: dict or list,
         the intervals corr. to each value in `vals` if `vals` is `None` or `Sequence`;
         or the intervals corr. to `vals` if `vals` is int.

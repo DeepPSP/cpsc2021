@@ -43,8 +43,8 @@ class CPSC2021(Dataset):
     def __init__(self, config:ED, training:bool=True) -> NoReturn:
         """ NOT finished, NOT checked,
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         config: dict,
             configurations for the Dataset,
             ref. `cfg.TrainCfg`
@@ -83,16 +83,16 @@ class CPSC2021(Dataset):
         do train test split,
         it is ensured that both the train and the test set contain all classes
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         train_ratio: float, default 0.8,
             ratio of the train set in the whole dataset
         force_recompute: bool, default False,
             if True, force redo the train-test split,
             regardless of the existing ones stored in json files
 
-        Returns:
-        --------
+        Returns
+        -------
         records: list of str,
             list of the records split for training or validation
         """

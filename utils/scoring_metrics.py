@@ -187,8 +187,8 @@ def compute_challenge_metric(class_true:int,
 
     compute challenge metric for a single record
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     class_true: int,
     class_pred: int,
     endpoints_pred: sequence of intervals,
@@ -196,8 +196,8 @@ def compute_challenge_metric(class_true:int,
     onset_score_range: sequence of float,
     offset_score_range: sequence of float,
 
-    Returns:
-    --------
+    Returns
+    -------
     u: float,
     """
     ur_score = ur_calculate(class_true, class_pred)
@@ -214,8 +214,8 @@ def gen_endpoint_score_mask(siglen:int,
 
     generate the scoring mask for the onsets and offsets of af episodes,
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     siglen: int,
         length of the signal
     critical_points: sequence of int,
@@ -229,13 +229,13 @@ def gen_endpoint_score_mask(siglen:int,
         keys are bias (with ±) in terms of number of rpeaks
         values are corresponding scores
 
-    NOTE:
-    -----
+    NOTE
+    ----
     the onsets in `af_intervals` are 0.15s ahead of the corresponding R peaks,
     while the offsets in `af_intervals` are 0.15s behind the corresponding R peaks,
 
-    Returns:
-    --------
+    Returns
+    -------
     (onset_score_mask, offset_score_mask): 2-tuple of ndarray,
         scoring mask for the onset and offsets predictions of af episodes
     """

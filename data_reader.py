@@ -57,8 +57,8 @@ class CPSC2021Reader(object):
     The 4th China Physiological Signal Challenge 2021:
     Paroxysmal Atrial Fibrillation Events Detection from Dynamic ECG Recordings
 
-    ABOUT CPSC2021:
-    ---------------
+    ABOUT CPSC2021
+    --------------
     1. source ECG data are recorded from 12-lead Holter or 3-lead wearable ECG monitoring devices
     2. dataset provides variable-length ECG fragments extracted from lead I and lead II of the long-term source ECG data, each sampled at 200 Hz
     3. AF event is limited to be no less than 5 heart beats
@@ -82,8 +82,8 @@ class CPSC2021Reader(object):
         U = \dfrac{1}{N} \sum\limits_{i=1}^N \left( Ur_i + \dfrac{Ma_i}{\max\{Mr_i, Ma_i\}} \right)
         where N is the number of records, Ma is the number of annotated AF episodes, Mr the number of predicted AF episodes
 
-    NOTE:
-    -----
+    NOTE
+    ----
     1. if an ECG record is classified as AFf, the provided onset and offset locations should be the first and last record points. If an ECG record is classified as N, the answer should be an empty list
     2. it can be inferred from the classification scoring matrix that the punishment of false negatives of AFf is very heavy, while mixing-up of AFf and AFp is not punished
     3. flag of atrial fibrillation and atrial flutter ("AFIB" and "AFL") in annotated information are seemed as the same type when scoring the method
@@ -91,28 +91,28 @@ class CPSC2021Reader(object):
     5. rhythm change annotations ("(AFIB", "(AFL", "(N" in the `aux_note` field or "+" in the `symbol` field of the annotation files) are inserted 0.15s ahead of or behind (onsets or offset resp.) of corresponding R peaks.
     6. some records are revised if there are heart beats of the AF episode or the pause between adjacent AF episodes less than 5. The id numbers of the revised records are summarized in the attached REVISED_RECORDS
 
-    ISSUES:
-    -------
-    1. 
-
-    TODO:
-    -----
-    1. 
-
-    Usage:
+    ISSUES
     ------
+    1. 
+
+    TODO
+    ----
+    1. 
+
+    Usage
+    -----
     1. AF (event, fine) detection
 
-    References:
-    -----------
+    References
+    ----------
     [1] http://www.icbeb.org/CPSC2021
     [2] https://archive.physionet.org/physiobank/annotations.shtml
     """
     def __init__(self, db_dir:str, working_dir:Optional[str]=None, verbose:int=2, **kwargs):
         """ finished, checked,
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         db_dir: str,
             storage path of the database
         working_dir: str, optional,
@@ -173,15 +173,15 @@ class CPSC2021Reader(object):
         automatically infer the units of `sig`,
         under the assumption that `sig` not being raw signal, with baseline removed
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sig: ndarray,
             the signal to infer its units
         sig_type: str, default "ECG", case insensitive,
             type of the signal
 
-        Returns:
-        --------
+        Returns
+        -------
         units: str,
             units of `sig`, "μV" or "mV"
         """
@@ -199,8 +199,8 @@ class CPSC2021Reader(object):
     def _set_logger(self, prefix:Optional[str]=None) -> NoReturn:
         """
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         prefix: str, optional,
             prefix (for each line) of the logger, and its file name
         """
@@ -397,13 +397,13 @@ class CPSC2021Reader(object):
     def get_subject_id(self, rec:str) -> int:
         """ finished, checked,
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
 
-        Returns:
-        --------
+        Returns
+        -------
         sid: int,
             subject id corresponding to the record
         """
@@ -414,15 +414,15 @@ class CPSC2021Reader(object):
     def _get_path(self, rec:str, ext:Optional[str]=None) -> str:
         """ finished, checked,
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
         ext: str, optional,
             file extension of the path
 
-        Returns:
-        --------
+        Returns
+        -------
         p: str,
             path (with or without file extension) of the record
         """
@@ -439,8 +439,8 @@ class CPSC2021Reader(object):
         """ finished, checked,
         validate `sampfrom` and `sampto` so that they are reasonable
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
         sampfrom: int, optional,
@@ -448,8 +448,8 @@ class CPSC2021Reader(object):
         sampto: int, optional,
             end index of the data to be loaded
 
-        Returns:
-        --------
+        Returns
+        -------
         (sf, st): tuple of int,
         sf: int,
             index sampling from
@@ -475,8 +475,8 @@ class CPSC2021Reader(object):
         load physical (converted from digital) ecg data,
         which is more understandable for humans
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
         leads: str or list of str, optional,
@@ -494,8 +494,8 @@ class CPSC2021Reader(object):
         fs: real number, optional,
             if not None, the loaded data will be resampled to this sampling frequency
         
-        Returns:
-        --------
+        Returns
+        -------
         data: ndarray,
             the ecg data
         """
@@ -536,8 +536,8 @@ class CPSC2021Reader(object):
 
         load annotations of the record
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
         field: str, optional
@@ -558,8 +558,8 @@ class CPSC2021Reader(object):
                 for more details, ref. corresponding functions
             used only when field is specified,
 
-        Returns:
-        --------
+        Returns
+        -------
         ann: dict, or list, or ndarray, or str,
             annotaton of the record
         """
@@ -598,8 +598,8 @@ class CPSC2021Reader(object):
 
         load position (in terms of samples) of rpeaks
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
         ann: Annotation, optional,
@@ -616,8 +616,8 @@ class CPSC2021Reader(object):
         fs: real number, optional,
             if not None, positions of the loaded rpeaks will be ajusted according to this sampling frequency
 
-        Returns:
-        --------
+        Returns
+        -------
         rpeaks: ndarray,
             position (in terms of samples) of rpeaks of the record
         """
@@ -647,7 +647,7 @@ class CPSC2021Reader(object):
 
         load the episodes of atrial fibrillation, in terms of intervals or mask
 
-        Paramters:
+        Parameters
         ----------
         rec: str,
             name of the record
@@ -669,8 +669,8 @@ class CPSC2021Reader(object):
         fmt: str, default "intervals",
             format of the episodes of atrial fibrillation, can be one of "intervals", "mask", "c_intervals"
 
-        Returns:
-        --------
+        Returns
+        -------
         af_episodes: list or ndarray,
             episodes of atrial fibrillation, in terms of intervals or mask
         """
@@ -741,8 +741,8 @@ class CPSC2021Reader(object):
         "paroxysmal atrial fibrillation",
         "persistent atrial fibrillation",
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
         ann: Annotation, optional,
@@ -757,8 +757,8 @@ class CPSC2021Reader(object):
             "a", "abbr", "abbrevation": abbreviation for the label
             "n", "num", "number": class number of the label (in accordance with the settings of the offical class map)
 
-        Returns:
-        --------
+        Returns
+        -------
         label: str,
             classifying label of the record
         """
@@ -789,8 +789,8 @@ class CPSC2021Reader(object):
         with metadata (labels, episodes of atrial fibrillation, etc.),
         possibly also along with wave delineations
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rec: str,
             name of the record
         data: ndarray, optional,
@@ -817,13 +817,13 @@ class CPSC2021Reader(object):
             "t_onsets", "t_peaks", "t_offsets"
         kwargs: dict,
 
-        TODO:
-        -----
+        TODO
+        ----
         1. slice too long records, and plot separately for each segment
         2. plot waves using `axvspan`
 
-        NOTE:
-        -----
+        NOTE
+        ----
         1. `Locator` of `plt` has default `MAXTICKS` equal to 1000,
         if not modifying this number, at most 40 seconds of signal could be plotted once
         2. raw data usually have very severe baseline drifts,
