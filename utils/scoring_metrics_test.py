@@ -1,5 +1,6 @@
 """
 """
+import os
 from typing import Union, List
 from numbers import Real
 
@@ -12,6 +13,9 @@ from .scoring_metrics import (
     compute_challenge_metric, gen_endpoint_score_mask,
 )
 from cfg import BaseCfg
+
+
+_l_test_records = list(set([os.path.splitext(item) for item in os.listdir(BaseCfg.test_data_dir)]))
 
 
 
@@ -63,3 +67,8 @@ def _load_af_episodes(fp:str, fmt:str="intervals") -> Union[List[List[int]], np.
         af_episodes = mask
 
     return af_episodes
+
+
+
+if __name__ == "__main__":
+    pass  # NOT finished

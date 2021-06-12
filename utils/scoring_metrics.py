@@ -181,26 +181,33 @@ def score(data_path, ans_path):
 
 def compute_challenge_metric(class_true:int,
                              class_pred:int,
-                             endpoints_pred:Sequence[Sequence[int]],
                              endpoints_true:Sequence[Sequence[int]],
+                             endpoints_pred:Sequence[Sequence[int]],
                              onset_score_range:Sequence[float],
                              offset_score_range:Sequence[float]) -> float:
-    """ NOT finished, NOT checked,
+    """ finished, NOT checked,
 
     compute challenge metric for a single record
 
     Parameters
     ----------
     class_true: int,
+        labelled for the record
     class_pred: int,
-    endpoints_pred: sequence of intervals,
+        predicted class for the record
     endpoints_true: sequence of intervals,
+        labelled intervals of AF episodes
+    endpoints_pred: sequence of intervals,
+        predicted intervals of AF episodes
     onset_score_range: sequence of float,
+        scoring mask for the AF onset predictions
     offset_score_range: sequence of float,
+        scoring mask for the AF offset predictions
 
     Returns
     -------
     u: float,
+        the final score for the prediction
     """
     ur_score = ur_calculate(class_true, class_pred)
     ue_score = ue_calculate(endpoints_pred, endpoints_true, onset_score_range, offset_score_range)
@@ -231,15 +238,15 @@ def gen_endpoint_score_mask(siglen:int,
         keys are bias (with ±) in terms of number of rpeaks
         values are corresponding scores
 
-    NOTE
-    ----
-    the onsets in `af_intervals` are 0.15s ahead of the corresponding R peaks,
-    while the offsets in `af_intervals` are 0.15s behind the corresponding R peaks,
-
     Returns
     -------
     (onset_score_mask, offset_score_mask): 2-tuple of ndarray,
         scoring mask for the onset and offsets predictions of af episodes
+
+    NOTE
+    ----
+    the onsets in `af_intervals` are 0.15s ahead of the corresponding R peaks,
+    while the offsets in `af_intervals` are 0.15s behind the corresponding R peaks,
     """
     _critical_points = list(critical_points)
     if 0 not in _critical_points:
