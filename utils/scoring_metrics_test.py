@@ -34,7 +34,7 @@ def get_parser() -> dict:
     )
     parser.add_argument(
         "-c", "--classes", type=str,
-        help="classes to check, separated by ,",
+        help="""classes to check, separated by ",", subset of {"n", "aff", "afp"}, case insensitive""",
         dest="classes",
     )
 
@@ -95,14 +95,22 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
 
     Parameters
     ----------
-    to write
+    rec: str,
+        path of the record (without extension)
+    classes: list of str, optional,
+        classes (subset of {"n", "aff", "afp"}) to run test, case insensitive,
+        if not specified, all 3 classes will be tested
     """
     header = wfdb.rdheader(rec)
     ann = wfdb.rdann(rec, extension="atr")
     official_ref_info = RefInfo(rec)
 
+    if classes and BaseCfg.class_fn2abbr[header.comments[0]] not in [c.lower() for c in classes]:
+        print(f"class of {os.path.basename(rec)} is {BaseCfg.class_fn2abbr[header.comments[0]]}, hence skipped")
+        return
+
     print(textwrap.dedent(f"""
-        record = {rec},
+        record = {os.path.basename(rec)},
         class = {header.comments[0]},
         """))
 
@@ -110,32 +118,40 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
         siglen=header.sig_len,
         critical_points=ann.sample,
         af_intervals=_load_af_episodes(rec, fmt="c_intervals"),
+        verbose=1,
     )
-    official_onset_scoring_mask, official_offset_scoring_mask = official_ref_info._gen_endpoint_score_range()
-    print(textwrap.dedent(f"""
-        custom_onset_scoring_mask.shape = {custom_onset_scoring_mask.shape},
-        custom_offset_scoring_mask.shape = {custom_offset_scoring_mask.shape},
-        official_onset_scoring_mask.shape = {official_onset_scoring_mask.shape},
-        official_offset_scoring_mask.shape = {official_offset_scoring_mask.shape}
-        """))
+    official_onset_scoring_mask, official_offset_scoring_mask = official_ref_info._gen_endpoint_score_range(verbose=1)
+    # print(textwrap.dedent(f"""
+    #     custom_onset_scoring_mask.shape = {custom_onset_scoring_mask.shape},
+    #     custom_offset_scoring_mask.shape = {custom_offset_scoring_mask.shape},
+    #     official_onset_scoring_mask.shape = {official_onset_scoring_mask.shape},
+    #     official_offset_scoring_mask.shape = {official_offset_scoring_mask.shape}
+    #     """))
     onsets = (official_onset_scoring_mask==custom_onset_scoring_mask).all()
-    print(f"onsets: {onsets}")
+    print(f"onsets agree: {onsets}")
     if not onsets:
         print(f"{np.where(official_onset_scoring_mask!=custom_onset_scoring_mask)[0]}")
     offsets = (official_offset_scoring_mask==custom_offset_scoring_mask).all()
-    print(f"offsets: {offsets}")
+    print(f"offsets agree: {offsets}")
     if not offsets:
         print(f"{np.where(official_offset_scoring_mask!=custom_offset_scoring_mask)[0]}")
 
 
 
-def run_test(l_rec:List[str], classes:Optional[List[str]]=None) -> NoReturn:
+def run_test(l_rec:Optional[List[str]]=None, classes:Optional[List[str]]=None) -> NoReturn:
     """
 
     Parameters
     ----------
-    to write
+    l_rec: list of str, optional,
+        list of records (path, excluding file extension) to run test,
+        if not specified, records in the `test_data` folder will be used
+    classes: list of str, optional,
+        classes (subset of {"n", "aff", "afp"}) to run test, case insensitive
+        if not specified, all 3 classes will be tested
     """
+    if not l_rec:
+        l_rec = [os.path.join(BaseCfg.test_data_dir, rec) for rec in _l_test_records]
     for rec in l_rec:
         run_single_test(rec, classes)
 
@@ -149,6 +165,10 @@ if __name__ == "__main__":
         dr = CPSC2021Reader(db_dir)
         l_rec = [dr._get_path(rec) for rec in dr.all_records]
     else:
+        # if the location of full database is not given
+        # use the test data instead
         l_rec = [os.path.join(BaseCfg.test_data_dir, rec) for rec in _l_test_records]
-    classes = args.get("classes", "").split(",")
+    classes = args.get("classes", None)
+    if classes:
+        classes = classes.split(",")
     run_test(l_rec, classes)
