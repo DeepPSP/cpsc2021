@@ -2,8 +2,28 @@
 """
 import os
 import textwrap
+import argparse
 from typing import Union, Optional, List, NoReturn
 from numbers import Real
+
+def import_parents(level:int=1) -> NoReturn:
+    # https://gist.github.com/vaultah/d63cb4c86be2774377aa674b009f759a
+    import sys, importlib
+    from pathlib import Path
+    global __package__
+    file = Path(__file__).resolve()
+    parent, top = file.parent, file.parents[level]
+    
+    sys.path.append(str(top))
+    try:
+        sys.path.remove(str(parent))
+    except ValueError: # already removed
+        pass
+    __package__ = '.'.join(parent.parts[len(top.parts):])
+    importlib.import_module(__package__) # won't be needed after that
+
+if __name__ == "__main__" and __package__ is None:
+    import_parents(level=1)
 
 import numpy as np
 import wfdb
@@ -91,7 +111,7 @@ def _load_af_episodes(fp:str, fmt:str="c_intervals") -> Union[List[List[int]], n
 
 
 def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
-    """
+    """ finished, checked,
 
     Parameters
     ----------
@@ -105,7 +125,7 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
     ann = wfdb.rdann(rec, extension="atr")
     official_ref_info = RefInfo(rec)
 
-    if classes and BaseCfg.class_fn2abbr[header.comments[0]] not in [c.lower() for c in classes]:
+    if classes and BaseCfg.class_fn2abbr[header.comments[0]].lower() not in [c.lower() for c in classes]:
         print(f"class of {os.path.basename(rec)} is {BaseCfg.class_fn2abbr[header.comments[0]]}, hence skipped")
         return
 
@@ -139,7 +159,7 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
 
 
 def run_test(l_rec:Optional[List[str]]=None, classes:Optional[List[str]]=None) -> NoReturn:
-    """
+    """ finished, checked,
 
     Parameters
     ----------
@@ -171,4 +191,5 @@ if __name__ == "__main__":
     classes = args.get("classes", None)
     if classes:
         classes = classes.split(",")
+    print(f"classes = {classes}")
     run_test(l_rec, classes)
