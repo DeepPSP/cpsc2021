@@ -57,6 +57,11 @@ def get_parser() -> dict:
         help="""classes to check, separated by ",", subset of {"n", "aff", "afp"}, case insensitive""",
         dest="classes",
     )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="log verbosity",
+        dest="verbose",
+    )
 
     args = vars(parser.parse_args())
 
@@ -110,7 +115,7 @@ def _load_af_episodes(fp:str, fmt:str="c_intervals") -> Union[List[List[int]], n
     return af_episodes
 
 
-def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
+def run_single_test(rec:str, classes:Optional[List[str]]=None, verbose:bool=False) -> bool:
     """ finished, checked,
 
     Parameters
@@ -120,6 +125,14 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
     classes: list of str, optional,
         classes (subset of {"n", "aff", "afp"}) to run test, case insensitive,
         if not specified, all 3 classes will be tested
+    verbose: bool, default False,
+        log verbosity
+
+    Returns
+    -------
+    masks_agree: bool,
+        True if official and custom onset and offset scoring masks agree,
+        otherwise False
     """
     header = wfdb.rdheader(rec)
     ann = wfdb.rdann(rec, extension="atr")
@@ -129,6 +142,7 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
         print(f"class of {os.path.basename(rec)} is {BaseCfg.class_fn2abbr[header.comments[0]]}, hence skipped")
         return
 
+    print(f"  {os.path.basename(rec)} starts ".center(30, "-"))
     print(textwrap.dedent(f"""
         record = {os.path.basename(rec)},
         class = {header.comments[0]},
@@ -138,9 +152,9 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
         siglen=header.sig_len,
         critical_points=ann.sample,
         af_intervals=_load_af_episodes(rec, fmt="c_intervals"),
-        verbose=1,
+        verbose=verbose,
     )
-    official_onset_scoring_mask, official_offset_scoring_mask = official_ref_info._gen_endpoint_score_range(verbose=1)
+    official_onset_scoring_mask, official_offset_scoring_mask = official_ref_info._gen_endpoint_score_range(verbose=verbose)
     # print(textwrap.dedent(f"""
     #     custom_onset_scoring_mask.shape = {custom_onset_scoring_mask.shape},
     #     custom_offset_scoring_mask.shape = {custom_offset_scoring_mask.shape},
@@ -148,17 +162,21 @@ def run_single_test(rec:str, classes:Optional[List[str]]=None) -> NoReturn:
     #     official_offset_scoring_mask.shape = {official_offset_scoring_mask.shape}
     #     """))
     onsets = (official_onset_scoring_mask==custom_onset_scoring_mask).all()
-    print(f"onsets agree: {onsets}")
+    print(f"onset masks agree: {onsets}")
     if not onsets:
         print(f"{np.where(official_onset_scoring_mask!=custom_onset_scoring_mask)[0]}")
     offsets = (official_offset_scoring_mask==custom_offset_scoring_mask).all()
-    print(f"offsets agree: {offsets}")
+    print(f"offset masks agree: {offsets}")
     if not offsets:
         print(f"{np.where(official_offset_scoring_mask!=custom_offset_scoring_mask)[0]}")
+    print("\n"+f"  {os.path.basename(rec)} finishes ".center(30, "-")+"\n")
+
+    masks_agree = onsets and offsets
+    return masks_agree
 
 
 
-def run_test(l_rec:Optional[List[str]]=None, classes:Optional[List[str]]=None) -> NoReturn:
+def run_test(l_rec:Optional[List[str]]=None, classes:Optional[List[str]]=None, verbose:bool=False) -> NoReturn:
     """ finished, checked,
 
     Parameters
@@ -169,11 +187,18 @@ def run_test(l_rec:Optional[List[str]]=None, classes:Optional[List[str]]=None) -
     classes: list of str, optional,
         classes (subset of {"n", "aff", "afp"}) to run test, case insensitive
         if not specified, all 3 classes will be tested
+    verbose: bool, default False,
+        log verbosity
     """
+    err_list = []
     if not l_rec:
         l_rec = [os.path.join(BaseCfg.test_data_dir, rec) for rec in _l_test_records]
     for rec in l_rec:
-        run_single_test(rec, classes)
+        masks_agree = run_single_test(rec, classes, verbose)
+        if not masks_agree:
+            err_list.append(os.path.basename(rec))
+    print("execution finished!")
+    print(f"""err_list = {",".join(err_list) or "empty"}""")
 
 
 
@@ -191,5 +216,5 @@ if __name__ == "__main__":
     classes = args.get("classes", None)
     if classes:
         classes = classes.split(",")
-    print(f"classes = {classes}")
-    run_test(l_rec, classes)
+    verbose = args.get("verbose", False)
+    run_test(l_rec, classes, verbose)
