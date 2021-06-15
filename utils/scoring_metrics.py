@@ -316,9 +316,9 @@ def gen_endpoint_score_mask(siglen:int,
     onset_score_mask, offset_score_mask = np.zeros((siglen,)), np.zeros((siglen,))
     for b, v in bias.items():
         mask_onset, mask_offset = np.zeros((siglen,)), np.zeros((siglen,))
-        for itv in af_intervals:
+        for itv in _af_intervals:
             onset_start = _critical_points[max(0, itv[0]-b)]
-            # note that the onsets and offsets in `af_intervals` already occupy positions in `critical_points`
+            # note that the onsets and offsets in `_af_intervals` already occupy positions in `_critical_points`
             onset_end = _critical_points[min(itv[0]+1+b, len(_critical_points)-1)]
             if verbose > 0:
                 print(f"custom --- onset (c_ind, score {v}): {max(0, itv[0]-b)} --- {min(itv[0]+1+b, len(_critical_points)-1)}")
