@@ -144,6 +144,7 @@ log
 # notebooks that are not ignored should be specified
 *.ipynb
 # to add ingored notebooks
+!inspect_data.ipynb
 
 # dl models
 *.h5
