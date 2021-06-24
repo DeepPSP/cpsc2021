@@ -28,6 +28,7 @@ from utils.misc import (
     WFDB_Beat_Annotations, WFDB_Non_Beat_Annotations, WFDB_Rhythm_Annotations,
 )
 from utils.utils_interval import generalized_intervals_intersection
+from utils.scoring_metrics import gen_endpoint_score_mask
 
 
 __all__ = [
@@ -771,6 +772,39 @@ class CPSC2021Reader(object):
         elif not fmt.lower() in ["f", "fullname"]:
             raise ValueError(f"format `{fmt}` of labels is not supported!")
         return label
+
+
+    def gen_endpoint_score_mask(self, rec:str, bias:dict={1:1, 2:0.5}) -> Tuple[np.ndarray, np.ndarray]:
+        """finished, checked,
+
+        generate the scoring mask for the onsets and offsets of af episodes,
+
+        Parameters
+        ----------
+        rec: str,
+            name of the record
+        bias: dict, default {1:1, 2:0.5},
+            keys are bias (with ±) in terms of number of rpeaks
+            values are corresponding scores
+
+        Returns
+        -------
+        (onset_score_mask, offset_score_mask): 2-tuple of ndarray,
+            scoring mask for the onset and offsets predictions of af episodes
+
+        NOTE
+        ----
+        the onsets in `af_intervals` are 0.15s ahead of the corresponding R peaks,
+        while the offsets in `af_intervals` are 0.15s behind the corresponding R peaks,
+        """
+        masks = gen_endpoint_score_mask(
+            siglen=self.df_stats[self.df_stats.record==rec].iloc[0].sig_len,
+            critical_points=wfdb.rdann(self._get_path(rec), extension=self.ann_ext).sample,
+            af_intervals=self.load_af_episodes(rec, fmt="c_intervals"),
+            bias=bias,
+            verbose=self.verbose,
+        )
+        return masks
 
 
     def plot(self,
