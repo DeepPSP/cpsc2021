@@ -156,7 +156,10 @@ class CPSC2021Reader(object):
         self.__all_subjects = None
         self._subject_records = ED({t:[] for t in self.db_tranches})
         self._stats = pd.DataFrame()
-        self._stats_columns = ["record", "tranche", "subject_id", "record_id", "label", "fs", "sig_len", "revised",]
+        self._stats_columns = [
+            "record", "tranche", "subject_id", "record_id", "label",
+            "fs", "sig_len", "sig_len_sec", "revised",
+        ]
         self._ls_rec()
         self._aggregate_stats()
 
@@ -321,6 +324,7 @@ class CPSC2021Reader(object):
             self._stats["label"] = self._stats["record"].apply(lambda s: self.load_label(s))
             self._stats["fs"] = self.fs
             self._stats["sig_len"] = self._stats["record"].apply(lambda s: wfdb.rdheader(self._get_path(s)).sig_len)
+            self._stats["sig_len_sec"] = self._stats["sig_len"] / self._stats["fs"]
             self._stats["revised"] = self._stats["record"].apply(lambda s: 1 if s in self.__revised_records else 0)
             self._stats = self._stats.sort_values(by=["subject_id", "record_id"], ignore_index=True)
             self._stats = self._stats[self._stats_columns]
