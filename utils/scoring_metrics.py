@@ -299,29 +299,32 @@ def gen_endpoint_score_mask(siglen:int,
 
     NOTE
     ----
-    the onsets in `af_intervals` are 0.15s ahead of the corresponding R peaks,
-    while the offsets in `af_intervals` are 0.15s behind the corresponding R peaks,
+    1. the onsets in `af_intervals` are 0.15s ahead of the corresponding R peaks,
+    while the offsets in `af_intervals` are 0.15s behind the corresponding R peaks.
+    2. for records [data_39_4,data_48_4,data_68_23,data_98_5,data_101_5,data_101_7,data_101_8,data_104_25,data_104_27],
+    the official `RefInfo._gen_endpoint_score_range` slightly expands the scoring intervals at heads or tails of the records,
+    which strictly is incorrect as defined in the `Scoring` section of the official webpage (http://www.icbeb.org/CPSC2021)
     """
     _critical_points = list(critical_points)
     if 0 not in _critical_points:
         _critical_points.insert(0, 0)
         _af_intervals = [[itv[0]+1, itv[1]+1] for itv in af_intervals]
         if verbose >= 2:
-            print("0 added to critical_points")
+            print(f"0 added to _critical_points, len(_critical_points): {len(_critical_points)-1} ==> {len(_critical_points)}")
     else:
         _af_intervals = [[itv[0], itv[1]] for itv in af_intervals]
-    # records with AFf mostly have `critical_points` ending with `siglen-1`
+    # records with AFf mostly have `_critical_points` ending with `siglen-1`
     # but in some rare case ending with `siglen`
     if siglen-1 in _critical_points:
         _critical_points[-1] = siglen
         if verbose >= 2:
-            print(f"in critical_points siglen-1 (={siglen-1}) changed to siglen (={siglen})")
+            print(f"in _critical_points siglen-1 (={siglen-1}) changed to siglen (={siglen})")
     elif siglen in _critical_points:
         pass
     else:
         _critical_points.append(siglen)
         if verbose >= 2:
-            print(f"siglen (={siglen}) appended to critical_points")
+            print(f"siglen (={siglen}) appended to _critical_points, len(_critical_points): {len(_critical_points)-1} ==> {len(_critical_points)}")
     onset_score_mask, offset_score_mask = np.zeros((siglen,)), np.zeros((siglen,))
     for b, v in bias.items():
         mask_onset, mask_offset = np.zeros((siglen,)), np.zeros((siglen,))
@@ -333,12 +336,10 @@ def gen_endpoint_score_mask(siglen:int,
                 print(f"custom --- onset (c_ind, score {v}): {max(0, itv[0]-b)} --- {min(itv[0]+1+b, len(_critical_points)-1)}")
                 print(f"custom --- onset (sample, score {v}): {_critical_points[max(0, itv[0]-b)]} --- {_critical_points[min(itv[0]+1+b, len(_critical_points)-1)]}")
             mask_onset[onset_start: onset_end] = v
-            # note that the onsets and offsets in `af_intervals` already occupy positions in `critical_points`
+            # note that the onsets and offsets in `af_intervals` already occupy positions in `_critical_points`
             offset_start = _critical_points[max(0, itv[1]-1-b)]
             offset_end = _critical_points[min(itv[1]+b, len(_critical_points)-1)]
             if verbose > 0:
-                print(itv)
-                print(itv[1]+b, len(_critical_points)-1)
                 print(f"custom --- offset (c_ind, score {v}): {max(0, itv[1]-1-b)} --- {min(itv[1]+b, len(_critical_points)-1)}")
                 print(f"custom --- offset (sample, score {v}): {_critical_points[max(0, itv[1]-1-b)]} --- {_critical_points[min(itv[1]+b, len(_critical_points)-1)]}")
             mask_offset[offset_start: offset_end] = v
