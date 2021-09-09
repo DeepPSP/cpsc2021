@@ -1,0 +1,20 @@
+numpy==1.19.5
+scipy==1.6.1
+joblib==1.0.1
+# Cython==0.29.10
+pandas==1.2.2
+scikit-learn==0.24.1
+wfdb==3.2.0
+# biosppy==0.6.1
+biosppy
+opencv-python
+# tensorflow==1.15.2
+# keras==2.3.1
+packaging
+easydict
+# torch==1.8.0  # see Dockerfile
+torchsummary
+tensorboardX
+tqdm
+deprecated
+peakutils
