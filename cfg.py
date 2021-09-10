@@ -7,6 +7,33 @@ from itertools import repeat
 import numpy as np
 from easydict import EasyDict as ED
 
+from torch_ecg.torch_ecg.model_configs.ecg_seq_lab_net import ECG_SEQ_LAB_NET_CONFIG
+from torch_ecg.torch_ecg.model_configs.rr_lstm import (
+    RR_LSTM_CONFIG,
+    RR_AF_CRF_CONFIG, RR_AF_VANILLA_CONFIG,
+)
+from torch_ecg.torch_ecg.model_configs.cnn import (
+    vgg_block_basic, vgg_block_mish, vgg_block_swish,
+    vgg16, vgg16_leadwise,
+    resnet_block_stanford, resnet_stanford,
+    resnet_block_basic, resnet_bottle_neck,
+    resnet, resnet_leadwise,
+    multi_scopic_block,
+    multi_scopic, multi_scopic_leadwise,
+    dense_net_leadwise,
+    xception_leadwise,
+)
+from torch_ecg.torch_ecg.model_configs.rnn import (
+    lstm,
+    attention,
+    linear,
+)
+from torch_ecg.torch_ecg.model_configs.attn import (
+    non_local,
+    squeeze_excitation,
+    global_context,
+)
+
 
 __all__ = [
     "BaseCfg",
@@ -20,7 +47,8 @@ _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 BaseCfg = ED()
-BaseCfg.db_dir = "/home/taozi/Data/CPSC2021/"
+# BaseCfg.db_dir = "/home/taozi/Data/CPSC2021/"
+BaseCfg.db_dir = "/home/wenhao/Jupyter/wenhao/data/CPSC2021/"
 BaseCfg.log_dir = os.path.join(_BASE_DIR, "log")
 BaseCfg.model_dir = os.path.join(_BASE_DIR, "saved_models")
 os.makedirs(BaseCfg.log_dir, exist_ok=True)
@@ -42,8 +70,115 @@ BaseCfg.class_fn_map = { # fullname to number
 }
 BaseCfg.class_abbr_map = {k: BaseCfg.class_fn_map[v] for k,v in BaseCfg.class_abbr2fn.items()}
 
+BaseCfg.bias_thr = 0.15 * BaseCfg.fs  # rhythm change annotations onsets or offset of corresponding R peaks
+BaseCfg.beat_ann_bias_thr = 0.1 * BaseCfg.fs  # half width of broad qrs complex
+BaseCfg.beat_winL = 250 * BaseCfg.fs // 1000  # corr. to 250 ms
+BaseCfg.beat_winR = 250 * BaseCfg.fs // 1000  # corr. to 250 ms
+
+
 
 TrainCfg = ED()
+TrainCfg.fs = BaseCfg.fs
+TrainCfg.data_format = "channel_first"
+TrainCfg.db_dir = BaseCfg.db_dir
+TrainCfg.log_dir = BaseCfg.log_dir
+TrainCfg.model_dir = BaseCfg.model_dir
+TrainCfg.checkpoints = os.path.join(_BASE_DIR, "checkpoints")
+os.makedirs(TrainCfg.checkpoints, exist_ok=True)
+TrainCfg.keep_checkpoint_max = 20
+
+# preprocessing configs
+# sequential, keep correct ordering, to add 'motion_artefact'
+TrainCfg.preproc = ['bandpass',]  # 'baseline',
+# for 200 ms and 600 ms, ref. (`ecg_classification` in `reference`)
+TrainCfg.baseline_window1 = int(0.2*TrainCfg.fs)  # 200 ms window
+TrainCfg.baseline_window2 = int(0.6*TrainCfg.fs)  # 600 ms window
+TrainCfg.filter_band = [0.5, 45]
+# TrainCfg.parallel_epoch_len = 600  # second
+# TrainCfg.parallel_epoch_overlap = 10  # second
+# TrainCfg.parallel_keep_tail = True
+# TrainCfg.rpeaks = 'seq_lab'  # 'xqrs
+# or 'gqrs', or 'pantompkins', 'hamilton', 'ssf', 'christov', 'engzee', 'gamboa'
+# or empty string '' if not detecting rpeaks
+"""
+for qrs detectors:
+    `xqrs` sometimes detects s peak (valley) as r peak,
+    but according to Jeethan, `xqrs` has the best performance
+"""
+# least distance of an valid R peak to two ends of ECG signals
+TrainCfg.rpeaks_dist2border = int(0.5 * TrainCfg.fs)  # 0.5s
+
+TrainCfg.normalize_data = True
+
+# data augmentation
+
+TrainCfg.label_smoothing = 0.1
+TrainCfg.random_mask = int(TrainCfg.fs * 0.0)  # 1.0s, 0 for no masking
+TrainCfg.stretch_compress = 5  # stretch or compress in time axis, units in percentage (0 - inf)
+TrainCfg.random_normalize = True  # (re-)normalize to random mean and std
+# valid segments has
+# median of mean appr. 0, mean of mean 0.038
+# median of std 0.13, mean of std 0.18
+TrainCfg.random_normalize_mean = [-0.05, 0.1]
+TrainCfg.random_normalize_std = [0.08, 0.32]
+
+# TrainCfg.baseline_wander = True  # randomly shifting the baseline
+# TrainCfg.bw = TrainCfg.baseline_wander  # alias
+# TrainCfg.bw_fs = np.array([0.33, 0.1, 0.05, 0.01])
+# TrainCfg.bw_ampl_ratio = np.array([
+#     [0.01, 0.01, 0.02, 0.03],  # low
+#     [0.01, 0.02, 0.04, 0.05],  # low
+#     [0.1, 0.06, 0.04, 0.02],  # low
+#     [0.02, 0.04, 0.07, 0.1],  # low
+#     [0.05, 0.1, 0.16, 0.25],  # medium
+#     [0.1, 0.15, 0.25, 0.3],  # high
+#     [0.25, 0.25, 0.3, 0.35],  # extremely high
+# ])
+# TrainCfg.bw_gaussian = np.array([  # mean and std, ratio
+#     [0.0, 0.0],
+#     [0.0, 0.0],
+#     [0.0, 0.0],  # ensure at least one with no gaussian noise
+#     [0.0, 0.003],
+#     [0.0, 0.01],
+# ])
+
+TrainCfg.flip = [-1] + [1]*4  # making the signal upside down, with probability 1/(1+4)
+# TODO: explore and add more data augmentations
+
+# configs of training epochs, batch, etc.
+TrainCfg.n_epochs = 300
+TrainCfg.batch_size = 128
+TrainCfg.train_ratio = 0.8
+
+# configs of optimizers and lr_schedulers
+TrainCfg.train_optimizer = "adamw_amsgrad"  # "sgd", "adam", "adamw"
+TrainCfg.momentum = 0.949  # default values for corresponding PyTorch optimizers
+TrainCfg.betas = (0.9, 0.999)  # default values for corresponding PyTorch optimizers
+TrainCfg.decay = 1e-2  # default values for corresponding PyTorch optimizers
+
+TrainCfg.learning_rate = 1e-3  # 1e-4
+TrainCfg.lr = TrainCfg.learning_rate
+
+TrainCfg.lr_scheduler = None  # "one_cycle", "plateau", "burn_in", "step", None
+TrainCfg.lr_step_size = 50
+TrainCfg.lr_gamma = 0.1
+TrainCfg.max_lr = 1e-2  # for "one_cycle" scheduler, to adjust via expriments
+
+TrainCfg.early_stopping = ED()  # early stopping according to challenge metric
+TrainCfg.early_stopping.min_delta = 0.001  # should be non-negative
+TrainCfg.early_stopping.patience = 8
+
+# configs of loss function
+TrainCfg.loss = "BCEWithLogitsLoss"
+# TrainCfg.loss = "BCEWithLogitsWithClassWeightLoss"
+TrainCfg.flooding_level = 0.0  # flooding performed if positive, typically 0.45-0.55 for cinc2021?
+
+TrainCfg.log_step = 20
+TrainCfg.eval_every = 20
+
+# configs of model selection
+# TODO
+# "resnet_leadwise", "multi_scopic_leadwise", "vgg16", "resnet", "vgg16_leadwise", "cpsc", "cpsc_leadwise"
 
 
 ModelCfg = ED()
