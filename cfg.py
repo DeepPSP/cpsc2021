@@ -77,6 +77,7 @@ BaseCfg.beat_winR = 250 * BaseCfg.fs // 1000  # corr. to 250 ms
 
 
 
+
 TrainCfg = ED()
 TrainCfg.fs = BaseCfg.fs
 TrainCfg.data_format = "channel_first"
@@ -181,7 +182,16 @@ TrainCfg.eval_every = 20
 # "resnet_leadwise", "multi_scopic_leadwise", "vgg16", "resnet", "vgg16_leadwise", "cpsc", "cpsc_leadwise"
 
 
+
+
 ModelCfg = ED()
+
+# TODO (Plan):
+# R-peak detection using UNets, sequence labelling,
+# main task via RR-LSTM using sequence of R peaks as input
+# main task via UNets, sequence labelling using raw ECGs
+
+
 
 
 # configurations for visualization
