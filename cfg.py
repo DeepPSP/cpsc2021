@@ -86,6 +86,8 @@ TrainCfg.checkpoints = os.path.join(_BASE_DIR, "checkpoints")
 os.makedirs(TrainCfg.checkpoints, exist_ok=True)
 TrainCfg.keep_checkpoint_max = 20
 
+TrainCfg.debug = True
+
 # preprocessing configs
 # sequential, keep correct ordering, to add 'motion_artefact'
 TrainCfg.preproc = ['bandpass',]  # 'baseline',

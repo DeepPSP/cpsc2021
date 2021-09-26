@@ -169,6 +169,13 @@ def get_args(**kwargs:Any):
     return ED(cfg)
 
 
+_MODEL_MAP = {
+    "seq_lab": ECG_SEQ_LAB_NET_CPSC2021,
+    "unet": ECG_UNET_CPSC2021,
+    "lstm_crf": RR_LSTM_CPSC2021,
+    "lstm": RR_LSTM_CPSC2021,
+}
+
 
 if __name__ == "__main__":
     config = get_args(**TrainCfg)
@@ -180,35 +187,37 @@ if __name__ == "__main__":
     logger.info(f"with configuration\n{dict_to_str(config)}")
 
     # TODO: adjust for CPSC2021
-    # model = ECG_CRNN_CINC2021(
-    #     classes=classes,
-    #     n_leads=config.n_leads,
-    #     config=model_config,
-    # )
-    # model.__DEBUG__ = False
+    for task in config.tasks:
+        model_cls = _MODEL_MAP[config[task].model_name]
+        model_config = deepcopy(ModelCfg[task])
+        model = model_cls(
+            classes=config.classes,
+            n_leads=config.n_leads,
+            config=model_config,
+        )
+        model.__DEBUG__ = False
+        if torch.cuda.device_count() > 1:
+            model = DP(model)
+            # model = DDP(model)
+        model.to(device=device)
 
-    # if torch.cuda.device_count() > 1:
-    #     model = DP(model)
-    #     # model = DDP(model)
-    # model.to(device=device)
-
-    # try:
-    #     train(
-    #         model=model,
-    #         model_config=model_config,
-    #         config=config,
-    #         device=device,
-    #         logger=logger,
-    #         debug=config.debug,
-    #     )
-    # except KeyboardInterrupt:
-    #     torch.save({
-    #         "model_state_dict": model.state_dict(),
-    #         "model_config": model_config,
-    #         "train_config": config,
-    #     }, os.path.join(config.checkpoints, "INTERRUPTED.pth.tar"))
-    #     logger.info("Saved interrupt")
-    #     try:
-    #         sys.exit(0)
-    #     except SystemExit:
-    #         os._exit(0)
+        try:
+            train(
+                model=model,
+                model_config=model_config,
+                config=config,
+                device=device,
+                logger=logger,
+                debug=config.debug,
+            )
+        except KeyboardInterrupt:
+            torch.save({
+                "model_state_dict": model.state_dict(),
+                "model_config": model_config,
+                "train_config": config,
+            }, os.path.join(config.checkpoints, "INTERRUPTED.pth.tar"))
+            logger.info("Saved interrupt")
+            try:
+                sys.exit(0)
+            except SystemExit:
+                os._exit(0)
