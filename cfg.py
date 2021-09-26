@@ -7,12 +7,12 @@ from itertools import repeat
 import numpy as np
 from easydict import EasyDict as ED
 
-from torch_ecg.torch_ecg.model_configs.ecg_seq_lab_net import ECG_SEQ_LAB_NET_CONFIG
-from torch_ecg.torch_ecg.model_configs.rr_lstm import (
+from torch_ecg.torch_ecg.model_configs import (
+    ECG_SEQ_LAB_NET_CONFIG,
     RR_LSTM_CONFIG,
     RR_AF_CRF_CONFIG, RR_AF_VANILLA_CONFIG,
-)
-from torch_ecg.torch_ecg.model_configs.cnn import (
+    ECG_UNET_VANILLA_CONFIG,
+    ECG_SUBTRACT_UNET_CONFIG,
     vgg_block_basic, vgg_block_mish, vgg_block_swish,
     vgg16, vgg16_leadwise,
     resnet_block_stanford, resnet_stanford,
@@ -22,13 +22,9 @@ from torch_ecg.torch_ecg.model_configs.cnn import (
     multi_scopic, multi_scopic_leadwise,
     dense_net_leadwise,
     xception_leadwise,
-)
-from torch_ecg.torch_ecg.model_configs.rnn import (
     lstm,
     attention,
     linear,
-)
-from torch_ecg.torch_ecg.model_configs.attn import (
     non_local,
     squeeze_excitation,
     global_context,
@@ -79,6 +75,8 @@ BaseCfg.beat_winR = 250 * BaseCfg.fs // 1000  # corr. to 250 ms
 
 
 TrainCfg = ED()
+
+# common confis for all training tasks
 TrainCfg.fs = BaseCfg.fs
 TrainCfg.data_format = "channel_first"
 TrainCfg.db_dir = BaseCfg.db_dir
@@ -177,19 +175,48 @@ TrainCfg.flooding_level = 0.0  # flooding performed if positive, typically 0.45-
 TrainCfg.log_step = 20
 TrainCfg.eval_every = 20
 
+# tasks of training
+TrainCfg.tasks = [
+    "qrs_detection",
+    "rr_lstm",
+    "main",
+]
+
 # configs of model selection
-# TODO
-# "resnet_leadwise", "multi_scopic_leadwise", "vgg16", "resnet", "vgg16_leadwise", "cpsc", "cpsc_leadwise"
+# "resnet_leadwise", "multi_scopic_leadwise", "vgg16", "resnet", "vgg16_leadwise", "cpsc", "cpsc_leadwise", etc.
+
+for t in TrainCfg.tasks:
+    TrainCfg[t] = ED()
+
+TrainCfg.qrs_detection.model_name = "seq_lab"  # "unet"
+TrainCfg.qrs_detection.cnn_name = "multi_scopic"
+TrainCfg.qrs_detection.rnn_name = "lstm"  # "none", "lstm"
+TrainCfg.qrs_detection.attn_name = "se"  # "none", "se", "gc", "nl"
+TrainCfg.qrs_detection.input_len = int(30*TrainCfg.fs)
+TrainCfg.qrs_detection.classes = ["N",]
+
+TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
+TrainCfg.rr_lstm.input_len = None
+TrainCfg.rr_lstm.classes = ["af",]
+
+TrainCfg.main.model_name = "seq_lab"  # "unet"
+TrainCfg.main.cnn_name = "multi_scopic"
+TrainCfg.main.rnn_name = "lstm"  # "none", "lstm"
+TrainCfg.main.attn_name = "se"  # "none", "se", "gc", "nl"
+TrainCfg.main.input_len = int(30*TrainCfg.fs)
+TrainCfg.main.classes = ["af",]
 
 
-
-
-ModelCfg = ED()
 
 # TODO (Plan):
 # R-peak detection using UNets, sequence labelling,
 # main task via RR-LSTM using sequence of R peaks as input
 # main task via UNets, sequence labelling using raw ECGs
+
+ModelCfg = ED()
+
+for t in TrainCfg.tasks:
+    ModelCfg[t] = ED()
 
 
 
