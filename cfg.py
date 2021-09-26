@@ -220,7 +220,21 @@ ModelCfg = ED()
 for t in TrainCfg.tasks:
     ModelCfg[t] = ED()
 
+ModelCfg.qrs_detection.model_name = TrainCfg.qrs_detection.model_name
+ModelCfg.qrs_detection.cnn_name = TrainCfg.qrs_detection.cnn_name
+ModelCfg.qrs_detection.rnn_name = TrainCfg.qrs_detection.rnn_name
+ModelCfg.qrs_detection.attn_name = TrainCfg.qrs_detection.attn_name
 
+
+
+ModelCfg.rr_lstm.model_name = TrainCfg.rr_lstm.model_name
+
+
+
+ModelCfg.main.model_name = TrainCfg.main.model_name
+ModelCfg.main.cnn_name = TrainCfg.main.cnn_name
+ModelCfg.main.rnn_name = TrainCfg.main.rnn_name
+ModelCfg.main.attn_name = TrainCfg.main.attn_name
 
 
 # configurations for visualization

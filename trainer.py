@@ -84,7 +84,74 @@ def train(model:nn.Module,
     best_state_dict: OrderedDict,
         state dict of the best model
     """
-    raise NotImplementedError
+    msg = f"training configurations are as follows:\n{dict_to_str(config)}"
+    if logger:
+        logger.info(msg)
+    else:
+        print(msg)
+
+    if type(model).__name__ in ["DataParallel",]:  # TODO: further consider "DistributedDataParallel"
+        _model = model.module
+    else:
+        _model = model
+
+    train_dataset = CPSC2021(config=config, training=True)
+
+    if debug:
+        val_train_dataset = CPSC2021(config=config, training=True)
+        val_train_dataset.disable_data_augmentation()
+    val_dataset = CPSC2021(config=config, training=False)
+
+    n_train = len(train_dataset)
+    n_val = len(val_dataset)
+
+    n_epochs = config.n_epochs
+    batch_size = config.batch_size
+    lr = config.learning_rate
+
+    # https://discuss.pytorch.org/t/guidelines-for-assigning-num-workers-to-dataloader/813/4
+    num_workers = 4
+
+    train_loader = DataLoader(
+        dataset=train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
+        drop_last=False,
+        collate_fn=collate_fn,
+    )
+
+    if debug:
+        val_train_loader = DataLoader(
+            dataset=val_train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=True,
+            drop_last=False,
+            collate_fn=collate_fn,
+        )
+    val_loader = DataLoader(
+        dataset=val_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
+        drop_last=False,
+        collate_fn=collate_fn,
+    )
+
+    cnn_name = "_" + config.cnn_name if hasattr(config, "cnn_name") else ""
+    rnn_name = "_" + config.rnn_name if hasattr(config, "rnn_name") else ""
+    attn_name = "_" + config.attn_name if hasattr(config, "attn_name") else ""
+    
+    writer = SummaryWriter(
+        log_dir=config.log_dir,
+        filename_suffix=f"OPT_{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_{config.train_optimizer}_LR_{lr}_BS_{batch_size}",
+        comment=f"OPT_{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_{config.train_optimizer}_LR_{lr}_BS_{batch_size}",
+    )
+    # TODO:
 
 
 @torch.no_grad()
@@ -189,6 +256,7 @@ if __name__ == "__main__":
     # TODO: adjust for CPSC2021
     for task in config.tasks:
         model_cls = _MODEL_MAP[config[task].model_name]
+        config.task = task
         model_config = deepcopy(ModelCfg[task])
         model = model_cls(
             classes=config.classes,
