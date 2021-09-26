@@ -90,8 +90,8 @@ TrainCfg.keep_checkpoint_max = 20
 # sequential, keep correct ordering, to add 'motion_artefact'
 TrainCfg.preproc = ['bandpass',]  # 'baseline',
 # for 200 ms and 600 ms, ref. (`ecg_classification` in `reference`)
-TrainCfg.baseline_window1 = int(0.2*TrainCfg.fs)  # 200 ms window
-TrainCfg.baseline_window2 = int(0.6*TrainCfg.fs)  # 600 ms window
+# TrainCfg.baseline_window1 = int(0.2*TrainCfg.fs)  # 200 ms window
+# TrainCfg.baseline_window2 = int(0.6*TrainCfg.fs)  # 600 ms window
 TrainCfg.filter_band = [0.5, 45]
 # TrainCfg.parallel_epoch_len = 600  # second
 # TrainCfg.parallel_epoch_overlap = 10  # second
