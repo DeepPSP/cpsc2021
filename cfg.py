@@ -216,6 +216,8 @@ TrainCfg.main.classes = ["af",]
 # main task via UNets, sequence labelling using raw ECGs
 
 ModelCfg = ED()
+ModelCfg.torch_dtype = BaseCfg.torch_dtype
+ModelCfg.fs = BaseCfg.fs
 
 for t in TrainCfg.tasks:
     ModelCfg[t] = ED()
@@ -224,17 +226,21 @@ ModelCfg.qrs_detection.model_name = TrainCfg.qrs_detection.model_name
 ModelCfg.qrs_detection.cnn_name = TrainCfg.qrs_detection.cnn_name
 ModelCfg.qrs_detection.rnn_name = TrainCfg.qrs_detection.rnn_name
 ModelCfg.qrs_detection.attn_name = TrainCfg.qrs_detection.attn_name
-
+ModelCfg.qrs_detection.input_len = TrainCfg.qrs_detection.input_len
+ModelCfg.qrs_detection.classes = TrainCfg.qrs_detection.classes
 
 
 ModelCfg.rr_lstm.model_name = TrainCfg.rr_lstm.model_name
-
+ModelCfg.rr_lstm.input_len = TrainCfg.rr_lstm.input_len
+ModelCfg.rr_lstm.classes = TrainCfg.rr_lstm.classes
 
 
 ModelCfg.main.model_name = TrainCfg.main.model_name
 ModelCfg.main.cnn_name = TrainCfg.main.cnn_name
 ModelCfg.main.rnn_name = TrainCfg.main.rnn_name
 ModelCfg.main.attn_name = TrainCfg.main.attn_name
+ModelCfg.main.input_len = TrainCfg.main.input_len
+ModelCfg.main.classes = TrainCfg.main.classes
 
 
 # configurations for visualization
