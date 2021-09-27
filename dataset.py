@@ -97,7 +97,7 @@ class CPSC2021(Dataset):
         if hasattr(self, "task") and self.task == task.lower():
             return
         self.task = task.lower()
-        self.all_classes = self.config.tasks[task]classes
+        self.all_classes = self.config.tasks[task].classes
         self.n_classes = len(self.config.tasks[task].classes)
 
         self.seglen = self.config.tasks[task].input_len  # alias, for simplicity
@@ -161,6 +161,7 @@ class CPSC2021(Dataset):
         seg_name = self.segments[index]
         seg_data = self._load_seg_data(seg_name)
         # TODO:
+        raise NotImplementedError
 
     def __len__(self) -> int:
         """
@@ -438,7 +439,7 @@ class CPSC2021(Dataset):
             print verbosity
         """
         if force_recompute:
-            
+            self._clear_cached_segments()
         for idx,rec in enumerate(self.reader.all_records):
             self._slice_one_record(
                 rec=rec,
@@ -451,22 +452,6 @@ class CPSC2021(Dataset):
         if force_recompute:
             with open(self.segments_json, "w") as f:
                 json.dump(self.__all_segments, f)
-
-    def _clear_cached_segments(self, recs:Optional[Sequence[str]]=None) -> NoReturn:
-        """
-        """
-        if recs is not None:
-            for rec in recs:
-                subject = self.reader.get_subject_id(rec)
-                for item in ["data", "ann",]:
-                    path = self.segments_dirs[item][subject]
-                    for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
-                        os.remove(os.path.join(path, f))
-        for subject in self.reader.all_subjects:
-            for item in ["data", "ann",]:
-                path = self.segments_dirs[item][subject]
-                for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
-                    os.remove(os.path.join(path, f))
 
     def _slice_one_record(self, rec:str, force_recompute:bool=False, update_segments_json:bool=False, verbose:int=0) -> NoReturn:
         """ NOT finished, NOT checked,
@@ -498,6 +483,23 @@ class CPSC2021(Dataset):
         border_dist = int(0.5 * self.config.fs)
         forward_len = self.seglen - self.config.overlap_len
         # TODO: not finished
+        raise NotImplementedError
+
+    def _clear_cached_segments(self, recs:Optional[Sequence[str]]=None) -> NoReturn:
+        """
+        """
+        if recs is not None:
+            for rec in recs:
+                subject = self.reader.get_subject_id(rec)
+                for item in ["data", "ann",]:
+                    path = self.segments_dirs[item][subject]
+                    for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
+                        os.remove(os.path.join(path, f))
+        for subject in self.reader.all_subjects:
+            for item in ["data", "ann",]:
+                path = self.segments_dirs[item][subject]
+                for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
+                    os.remove(os.path.join(path, f))
 
     def _train_test_split(self,
                           train_ratio:float=0.8,
