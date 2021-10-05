@@ -97,10 +97,10 @@ class CPSC2021(Dataset):
         if hasattr(self, "task") and self.task == task.lower():
             return
         self.task = task.lower()
-        self.all_classes = self.config.tasks[task].classes
-        self.n_classes = len(self.config.tasks[task].classes)
+        self.all_classes = self.config[task].classes
+        self.n_classes = len(self.config[task].classes)
 
-        self.seglen = self.config.tasks[task].input_len  # alias, for simplicity
+        self.seglen = self.config[task].input_len  # alias, for simplicity
         split_res = self._train_test_split(
             train_ratio=self.config.train_ratio,
             force_recompute=False,
@@ -215,25 +215,6 @@ class CPSC2021(Dataset):
         seg_data = loadmat(seg_data_fp)["ecg"]
         return seg_data
 
-
-    # def _load_seg_label(self, seg:str) -> np.ndarray:
-    #     """ NOT finished, NOT checked,
-
-    #     Parameters
-    #     ----------
-    #     seg: str,
-    #         name of the segment, of pattern like "S_1_1_0000193"
-
-    #     Returns
-    #     -------
-    #     seg_label: ndarray,
-    #         label of the segment, of shape (`self.n_classes`,)
-    #     """
-    #     seg_ann_fp = self._get_seg_ann_path(seg)
-    #     seg_label = loadmat(seg_ann_fp)["label"].squeeze()
-    #     return seg_label
-
-
     def _load_seg_mask(self, seg:str) -> np.ndarray:
         """ finished, NOT checked,
 
@@ -254,7 +235,6 @@ class CPSC2021(Dataset):
         elif self.task in ["main",]:
             seg_mask = loadmat(seg_mask_fp)["af_mask"]
         return seg_mask
-
 
     def _load_seg_seq_lab(self, seg:str, reduction:int=8) -> np.ndarray:
         """ finished, NOT checked,
@@ -503,7 +483,7 @@ class CPSC2021(Dataset):
 
     def _train_test_split(self,
                           train_ratio:float=0.8,
-                          force_recompute:bool=False) -> List[str]:
+                          force_recompute:bool=False) -> Dict[str, List[str]]:
         """ finished, checked,
 
         do train test split,
@@ -519,8 +499,9 @@ class CPSC2021(Dataset):
 
         Returns
         -------
-        records: list of str,
-            list of the records split for training or validation
+        split_res: dict,
+            keys are "train" and "test",
+            values are list of the subjects split for training or validation
         """
         start = time.time()
         print("\nstart performing train test split...\n")
@@ -544,7 +525,7 @@ class CPSC2021(Dataset):
             test_set = sample(afp_subjects, int(round(len(afp_subjects)*_test_ratio/100))) + \
                 sample(aff_subjects, int(round(len(aff_subjects)*_test_ratio/100))) + \
                 sample(normal_subjects, int(round(len(normal_subjects)*_test_ratio/100)))
-            train_set = all_subjects - test_set
+            train_set = list(all_subjects - set(test_set))
             
             # test_set = self.reader.df_stats[self.reader.df_stats.subject_id.isin(test_set)].record.tolist()
             # train_set = self.reader.df_stats[self.reader.df_stats.subject_id.isin(train_set)].record.tolist()
@@ -574,11 +555,11 @@ class CPSC2021(Dataset):
 
         print(f"train test split finished in {(time.time()-start)/60:.2f} minutes")
 
-        if self.training:
-            records = list_sum([train_set[k] for k in _tranches])
-        else:
-            records = list_sum([test_set[k] for k in _tranches])
-        return records
+        split_res = ED({
+            "train": train_set,
+            "test": test_set,
+        })
+        return split_res
 
     def plot_seg(self, seg:str, ticks_granularity:int=0, rpeak_inds:Optional[Union[Sequence[int],np.ndarray]]=None) -> NoReturn:
         """ finished, NOT checked,
