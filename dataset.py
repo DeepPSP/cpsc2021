@@ -4,7 +4,6 @@ data generator for feeding data into pytorch models
 import os, sys
 import json
 import time
-import textwrap
 from random import shuffle, randint, sample
 from copy import deepcopy
 from typing import Union, Optional, List, Tuple, Dict, Sequence, Set, NoReturn
@@ -26,7 +25,10 @@ from signal_processing.ecg_preproc import preprocess_multi_lead_signal
 from signal_processing.ecg_denoise import ecg_denoise_naive
 from utils.utils_signal import ensure_siglen, butter_bandpass_filter, get_ampl
 from utils.utils_interval import mask_to_intervals
-from utils.misc import dict_to_str, list_sum, get_record_list_recursive3
+from utils.misc import (
+    dict_to_str, list_sum, nildent,
+    get_record_list_recursive3,
+)
 
 
 if ModelCfg.torch_dtype.lower() == "double":
@@ -86,14 +88,14 @@ class CPSC2021(Dataset):
         self.__set_task(task)
 
     def __set_task(self, task:str) -> NoReturn:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
         task: str,
             name of the task, can be one of `TrainCfg.tasks`
         """
-        assert task.lower() in TrainCfg.tasks, "illegal task"
+        assert task.lower() in TrainCfg.tasks, f"illegal task \042{task}\042"
         if hasattr(self, "task") and self.task == task.lower():
             return
         self.task = task.lower()
@@ -105,6 +107,7 @@ class CPSC2021(Dataset):
             train_ratio=self.config.train_ratio,
             force_recompute=False,
         )
+
         if self.task in ["qrs_detection", "main",]:
             # for qrs detection, or for the main task
             self.segments_dirs = ED()
@@ -117,7 +120,7 @@ class CPSC2021(Dataset):
                 shuffle(self.segments)
             else:
                 self.segments = list_sum([self.__all_segments[subject] for subject in split_res.test])
-        elif self.config.task.lower() in ["rr_lstm",]:
+        elif self.task.lower() in ["rr_lstm",]:
             pass
         else:
             raise NotImplementedError(f"data generator for task \042{self.task}\042 not implemented")
@@ -181,7 +184,7 @@ class CPSC2021(Dataset):
         fp: str,
             path of the data file of the segment
         """
-        subject = int(seg.split("_")[1])
+        subject = seg.split("_")[1]
         fp = os.path.join(self.segments_dirs.data[subject], f"{seg}.{self.segment_ext}")
         return fp
 
@@ -196,7 +199,7 @@ class CPSC2021(Dataset):
         fp: str,
             path of the annotation file of the segment
         """
-        subject = int(seg.split("_")[1])
+        subject = seg.split("_")[1]
         fp = os.path.join(self.segments_dirs.ann[subject], f"{seg}.{self.segment_ext}")
         return fp
 
@@ -294,7 +297,7 @@ class CPSC2021(Dataset):
         )
 
     def _preprocess_data(self, preproc:List[str], force_recompute:bool=False, verbose:int=0) -> NoReturn:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         preprocesses the ecg data in advance for further use,
         offline for `self.persistence`
@@ -321,14 +324,14 @@ class CPSC2021(Dataset):
                 print(f"{idx+1}/{len(self.reader.all_records)} records", end="\r")
 
     def _preprocess_one_record(self, rec:str, preproc:List[str], force_recompute:bool=False, verbose:int=0) -> NoReturn:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         preprocesses the ecg data in advance for further use,
         offline for `self.persistence`
 
         Parameters
         ----------
-        rec: int or str,
+        rec: str,
             filename of the record
         preproc: list of str,
             type of preprocesses to perform,
@@ -338,9 +341,8 @@ class CPSC2021(Dataset):
         verbose: int, default 0,
             print verbosity
         """
-        rec_name = self.reader._get_rec_name(rec)
         suffix = self._get_rec_suffix(preproc)
-        save_fp = os.path.join(self.preprocess_dir, f"{rec_name}-{suffix}.{self.segment_ext}")
+        save_fp = os.path.join(self.preprocess_dir, f"{rec}-{suffix}.{self.segment_ext}")
         if (not force_recompute) and os.path.isfile(save_fp):
             return
         # perform pre-process
@@ -360,7 +362,7 @@ class CPSC2021(Dataset):
         savemat(save_fp, {"ecg": pps["filtered_ecg"]}, format="5")
 
     def _normalize_preprocess_names(self, preproc:List[str], ensure_nonempty:bool) -> List[str]:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         to transform all preproc into lower case,
         and keep them in a specific ordering 
@@ -388,7 +390,7 @@ class CPSC2021(Dataset):
         return _p
 
     def _get_rec_suffix(self, operations:List[str]) -> str:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -441,7 +443,7 @@ class CPSC2021(Dataset):
         
         Parameters
         ----------
-        rec: int or str,
+        rec: str,
             filename of the record
         force_recompute: bool, default False,
             if True, recompute regardless of possible existing files
@@ -466,7 +468,13 @@ class CPSC2021(Dataset):
         raise NotImplementedError
 
     def _clear_cached_segments(self, recs:Optional[Sequence[str]]=None) -> NoReturn:
-        """
+        """ finished, NOT checked,
+
+        Parameters
+        ----------
+        recs: sequence of str, optional
+            sequence of the records whose segments are to be cleared,
+            defaults to all records
         """
         if recs is not None:
             for rec in recs:
@@ -527,8 +535,6 @@ class CPSC2021(Dataset):
                 sample(normal_subjects, int(round(len(normal_subjects)*_test_ratio/100)))
             train_set = list(all_subjects - set(test_set))
             
-            # test_set = self.reader.df_stats[self.reader.df_stats.subject_id.isin(test_set)].record.tolist()
-            # train_set = self.reader.df_stats[self.reader.df_stats.subject_id.isin(train_set)].record.tolist()
             shuffle(test_set)
             shuffle(train_set)
 
@@ -542,7 +548,7 @@ class CPSC2021(Dataset):
             with open(test_file_1, "w") as f1, open(test_file_2, "w") as f2:
                 json.dump(test_set, f1, ensure_ascii=False)
                 json.dump(test_set, f2, ensure_ascii=False)
-            print(textwrap.dedent(f"""
+            print(nildent(f"""
                 train set saved to \n\042{train_file_1}\042and\n\042{train_file_2}\042
                 test set saved to \n\042{test_file_1}\042and\n\042{test_file_2}\042
                 """
