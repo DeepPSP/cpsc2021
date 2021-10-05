@@ -241,7 +241,7 @@ class CPSC2021Reader(object):
         self.logger.addHandler(f_handler)
 
     @property
-    def all_records(self):
+    def all_records(self) -> List[str]:
         """
         """
         if self.__all_records is None:
@@ -292,9 +292,14 @@ class CPSC2021Reader(object):
                 with open(record_list_fp, "r") as f:
                     self.__revised_records.extend(f.read().splitlines())
 
-            self._all_subjects[t] = sorted([rec.split("_")[1] for rec in self._all_records[t]])
-            self._subject_records[t] = \
-                ED({sid: [rec for rec in self._all_records[t] if rec.split("_")[1]==sid] for sid in self._all_subjects[t]})
+            self._all_subjects[t] = sorted(
+                list(set([rec.split("_")[1] for rec in self._all_records[t]])),
+                key=lambda s: int(s)
+            )
+            self._subject_records[t] =  ED({
+                sid: [rec for rec in self._all_records[t] if rec.split("_")[1]==sid] \
+                    for sid in self._all_subjects[t]
+            })
         self._all_records_inv = {r:t for t, l_r in self._all_records.items() for r in l_r}
         self._all_subjects_inv = {s:t for t, l_s in self._all_subjects.items() for s in l_s}
         self.__all_records = sorted(list_sum(self._all_records.values()))
@@ -333,25 +338,26 @@ class CPSC2021Reader(object):
             print(f"Done in {time.time() - start:.5f} seconds!")
         else:
             pass  # currently no need to parse the loaded csv file
+        self._stats["subject_id"] = self._stats["subject_id"].apply(lambda s: str(s))
         self.__all_records = self._stats["record"].tolist()
     
 
     @property
-    def all_subjects(self):
+    def all_subjects(self) -> List[str]:
         """
         """
         return self.__all_subjects
 
 
     @property
-    def subject_records(self):
+    def subject_records(self) -> ED:
         """
         """
         return self._subject_records
 
 
     @property
-    def df_stats(self):
+    def df_stats(self) -> pd.DataFrame:
         """
         """
         return self._stats
