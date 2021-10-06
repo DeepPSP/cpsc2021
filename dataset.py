@@ -361,6 +361,34 @@ class CPSC2021(Dataset):
         )
         savemat(save_fp, {"ecg": pps["filtered_ecg"]}, format="5")
 
+    def load_preprocessed_data(self, rec:str, preproc:Optional[List[str]]=None) -> np.ndarray:
+        """ finished, checked,
+
+        Parameters
+        ----------
+        rec: str,
+            filename of the record
+        preproc: list of str, optional
+            type of preprocesses to perform,
+            should be sublist of `self.allowed_preproc`,
+            defaults to `self.allowed_preproc`
+
+        Returns
+        -------
+        p_sig: ndarray,
+            the pre-computed processed ECG
+        """
+        if preproc is None:
+            preproc = self.allowed_preproc
+        suffix = self._get_rec_suffix(preproc)
+        fp = os.path.join(self.preprocess_dir, f"{rec}-{suffix}.{self.segment_ext}")
+        if not os.path.exists(fp):
+            raise FileNotFoundError(f"preprocess(es) \042{preproc}\042 not done for {rec} yet")
+        p_sig = loadmat(fp)["ecg"]
+        if p_sig.shape[0] != 2:
+            p_sig = p_sig.T
+        return p_sig
+
     def _normalize_preprocess_names(self, preproc:List[str], ensure_nonempty:bool) -> List[str]:
         """ finished, checked,
 

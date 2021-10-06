@@ -195,6 +195,7 @@ TrainCfg.qrs_detection.cnn_name = "multi_scopic"
 TrainCfg.qrs_detection.rnn_name = "lstm"  # "none", "lstm"
 TrainCfg.qrs_detection.attn_name = "se"  # "none", "se", "gc", "nl"
 TrainCfg.qrs_detection.input_len = int(30*TrainCfg.fs)
+TrainCfg.qrs_detection.overlap_len = int(20*TrainCfg.fs)
 TrainCfg.qrs_detection.classes = ["N",]
 
 TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
@@ -206,6 +207,7 @@ TrainCfg.main.cnn_name = "multi_scopic"
 TrainCfg.main.rnn_name = "lstm"  # "none", "lstm"
 TrainCfg.main.attn_name = "se"  # "none", "se", "gc", "nl"
 TrainCfg.main.input_len = int(30*TrainCfg.fs)
+TrainCfg.qrs_detection.overlap_len = int(20*TrainCfg.fs)
 TrainCfg.main.classes = ["af",]
 
 
