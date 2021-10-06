@@ -4,12 +4,13 @@ data generator for feeding data into pytorch models
 import os, sys
 import json
 import time
-from random import shuffle, randint, sample
+from random import shuffle, randint, sample, uniform
 from copy import deepcopy
 from typing import Union, Optional, List, Tuple, Dict, Sequence, Set, NoReturn
 
 import numpy as np
 np.set_printoptions(precision=5, suppress=True)
+from scipy import signal as SS
 from easydict import EasyDict as ED
 from tqdm import tqdm
 import torch
@@ -487,11 +488,61 @@ class CPSC2021(Dataset):
         elif force_recompute:
             self.__all_segments[rec_name] = []
 
-        data = self.reader.load_data(rec, units="mV")
+        # data = self.reader.load_data(rec, units="mV")
+        data = self.load_preprocessed_data(rec)
+        siglen = data.shape[1]
         rpeaks = self.reader.load_rpeaks(rec)
         mask = self.reader.load_af_episodes(rec, fmt="mask")
-        border_dist = int(0.5 * self.config.fs)
+        # border_dist = int(0.5 * self.config.fs)
         forward_len = self.seglen - self.config.overlap_len
+        critical_forward_len = self.seglen - self.config.critical_overlap_len
+        critical_forward_len = [critical_forward_len//2, critical_forward_len]
+
+        # find critical points
+        critical_points, = np.where(np.diff(mask)!=0)
+        critical_points = [p for p in critical_points if critical_forward_len<=p<siglen-critical_forward_len]
+
+        # offline augmentations are done, including strech-or-compress, ...
+        stretch_compress_choices = [-1,1] + [0] * int(2/self.config.stretch_compress_prob - 2)
+        # ordinary segments with constant forward_len
+        for idx in range(siglen//forward_len):
+            start_idx = idx * forward_len
+            if self.config.stretch_compress != 0:
+                sign = sample(stretch_compress_choices, 1)[0]
+                if sign != 0:
+                    sc_ratio = self.config.stretch_compress
+                    sc_ratio = 1 + (uniform(sc_ratio/4, sc_ratio) * sign) / 100
+                    sc_len = int(round(sc_ratio * self.seglen))
+                    end_idx = start_idx + sc_len
+                    if end_idx > siglen:
+                        end_idx = siglen
+                        start_idx = end_idx - sc_len
+                    aug_seg = data[start_idx: end_idx]
+                    aug_seg = SS.resample(x=aug_seg, num=self.seglen).reshape((1,-1))
+                else:
+                    end_idx = start_idx + self.seglen
+                    # the segment of original signal, with no augmentation
+                    aug_seg = data[start_idx: end_idx]
+                    sc_ratio = 1
+        # the tail segment
+        if self.config.stretch_compress != 0:
+            sign = sample(stretch_compress_choices, 1)[0]
+            if sign != 0:
+                sc_ratio = self.config.stretch_compress
+                sc_ratio = 1 + (uniform(sc_ratio/4, sc_ratio) * sign) / 100
+                sc_len = int(round(sc_ratio * self.seglen))
+                end_idx = siglen
+                start_idx = end_idx - sc_len
+                aug_seg = data[start_idx: end_idx]
+                aug_seg = SS.resample(x=aug_seg, num=self.seglen).reshape((1,-1))
+                # TODO: adjust mask
+            else:
+                end_idx = start_idx + self.seglen
+                # the segment of original signal, with no augmentation
+                aug_seg = data[start_idx: end_idx]
+                # sc_ratio = 1
+        # special segments around critical_points with random forward_len in critical_forward_len
+
         # TODO: not finished
         raise NotImplementedError
 

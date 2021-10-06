@@ -116,6 +116,7 @@ TrainCfg.normalize_data = True
 TrainCfg.label_smoothing = 0.1
 TrainCfg.random_mask = int(TrainCfg.fs * 0.0)  # 1.0s, 0 for no masking
 TrainCfg.stretch_compress = 5  # stretch or compress in time axis, units in percentage (0 - inf)
+TrainCfg.stretch_compress_prob = 0.3  # probability of performing stretch or compress
 TrainCfg.random_normalize = True  # (re-)normalize to random mean and std
 # valid segments has
 # median of mean appr. 0, mean of mean 0.038
@@ -195,7 +196,8 @@ TrainCfg.qrs_detection.cnn_name = "multi_scopic"
 TrainCfg.qrs_detection.rnn_name = "lstm"  # "none", "lstm"
 TrainCfg.qrs_detection.attn_name = "se"  # "none", "se", "gc", "nl"
 TrainCfg.qrs_detection.input_len = int(30*TrainCfg.fs)
-TrainCfg.qrs_detection.overlap_len = int(20*TrainCfg.fs)
+TrainCfg.qrs_detection.overlap_len = int(15*TrainCfg.fs)
+TrainCfg.qrs_detection.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.qrs_detection.classes = ["N",]
 
 TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
@@ -207,7 +209,8 @@ TrainCfg.main.cnn_name = "multi_scopic"
 TrainCfg.main.rnn_name = "lstm"  # "none", "lstm"
 TrainCfg.main.attn_name = "se"  # "none", "se", "gc", "nl"
 TrainCfg.main.input_len = int(30*TrainCfg.fs)
-TrainCfg.qrs_detection.overlap_len = int(20*TrainCfg.fs)
+TrainCfg.main.overlap_len = int(15*TrainCfg.fs)
+TrainCfg.main.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.main.classes = ["af",]
 
 
