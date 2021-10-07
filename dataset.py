@@ -492,15 +492,18 @@ class CPSC2021(Dataset):
         data = self.load_preprocessed_data(rec)
         siglen = data.shape[1]
         rpeaks = self.reader.load_rpeaks(rec)
-        mask = self.reader.load_af_episodes(rec, fmt="mask")
-        # border_dist = int(0.5 * self.config.fs)
+        rpeak_border_dist = int(0.5 * self.config.fs)
+        af_mask = self.reader.load_af_episodes(rec, fmt="mask")
         forward_len = self.seglen - self.config.overlap_len
         critical_forward_len = self.seglen - self.config.critical_overlap_len
         critical_forward_len = [critical_forward_len//2, critical_forward_len]
 
         # find critical points
-        critical_points, = np.where(np.diff(mask)!=0)
+        critical_points, = np.where(np.diff(af_mask)!=0)
         critical_points = [p for p in critical_points if critical_forward_len<=p<siglen-critical_forward_len]
+
+        segments = []
+        n_seg = 0
 
         # offline augmentations are done, including strech-or-compress, ...
         stretch_compress_choices = [-1,1] + [0] * int(2/self.config.stretch_compress_prob - 2)
@@ -524,6 +527,31 @@ class CPSC2021(Dataset):
                     # the segment of original signal, with no augmentation
                     aug_seg = data[start_idx: end_idx]
                     sc_ratio = 1
+            else:
+                end_idx = start_idx + self.seglen
+                aug_seg = data[start_idx: end_idx]
+                sc_ratio = 1
+            # adjust af_mask and rpeaks
+            seg_rpeaks = self.reader.load_rpeaks(
+                rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True,
+            )
+            seg_rpeaks = [
+                int(round(r*sc_ratio)) for r in seg_rpeaks if rpeak_border_dist<=r<self.seglen-rpeak_border_dist
+            ]
+            seg_af_intervals = self.reader.load_af_episodes(
+                rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True, fmt="intervals",
+            )
+            seg_af_mask = np.zeros((self.seglen,), dtype=int)
+            for itv in seg_af_intervals:
+                seg_af_mask[int(round(itv[0]*sc_ratio)): int(round(itv[1]*sc_ratio))] = 1
+
+            new_seg = ED(
+                data=aug_seg,
+                rpeaks=seg_rpeaks,
+                af_mask=seg_af_mask,
+            )
+            segments.append(new_seg)
+            n_seg += 1
         # the tail segment
         if self.config.stretch_compress != 0:
             sign = sample(stretch_compress_choices, 1)[0]
@@ -535,13 +563,44 @@ class CPSC2021(Dataset):
                 start_idx = end_idx - sc_len
                 aug_seg = data[start_idx: end_idx]
                 aug_seg = SS.resample(x=aug_seg, num=self.seglen).reshape((1,-1))
-                # TODO: adjust mask
             else:
-                end_idx = start_idx + self.seglen
+                end_idx = siglen
+                start_idx = end_idx - sc_len
                 # the segment of original signal, with no augmentation
                 aug_seg = data[start_idx: end_idx]
-                # sc_ratio = 1
+                sc_ratio = 1
+        else:
+            end_idx = siglen
+            start_idx = end_idx - sc_len
+            # the segment of original signal, with no augmentation
+            aug_seg = data[start_idx: end_idx]
+            sc_ratio = 1
+        # adjust af_mask and rpeaks
+        seg_rpeaks = self.reader.load_rpeaks(
+            rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True,
+        )
+        seg_rpeaks = [
+            int(round(r*sc_ratio)) for r in seg_rpeaks if rpeak_border_dist<=r<self.seglen-rpeak_border_dist
+        ]
+        seg_af_intervals = self.reader.load_af_episodes(
+            rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True, fmt="intervals",
+        )
+        seg_af_mask = np.zeros((self.seglen,), dtype=int)
+        for itv in seg_af_intervals:
+            seg_af_mask[int(round(itv[0]*sc_ratio)): int(round(itv[1]*sc_ratio))] = 1
+
+        new_seg = ED(
+            data=aug_seg,
+            rpeaks=seg_rpeaks,
+            af_mask=seg_af_mask,
+        )
+        segments.append(new_seg)
+        n_seg += 1
+
         # special segments around critical_points with random forward_len in critical_forward_len
+        for cp in critical_points:
+            # TODO
+            pass
 
         # TODO: not finished
         raise NotImplementedError
