@@ -108,6 +108,7 @@ for qrs detectors:
 """
 # least distance of an valid R peak to two ends of ECG signals
 TrainCfg.rpeaks_dist2border = int(0.5 * TrainCfg.fs)  # 0.5s
+TrainCfg.qrs_mask_bias = int(0.075 * TrainCfg.fs)  # bias to rpeaks
 
 TrainCfg.normalize_data = True
 

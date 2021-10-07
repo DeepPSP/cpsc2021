@@ -465,7 +465,7 @@ class CPSC2021(Dataset):
                 json.dump(self.__all_segments, f)
 
     def _slice_one_record(self, rec:str, force_recompute:bool=False, update_segments_json:bool=False, verbose:int=0) -> NoReturn:
-        """ NOT finished, NOT checked,
+        """ finished, NOT checked,
 
         slice one record into segments of length `self.seglen`,
         and perform data augmentations specified in `self.config`
@@ -492,7 +492,6 @@ class CPSC2021(Dataset):
         data = self.load_preprocessed_data(rec)
         siglen = data.shape[1]
         rpeaks = self.reader.load_rpeaks(rec)
-        rpeak_border_dist = int(0.5 * self.config.fs)
         af_mask = self.reader.load_af_episodes(rec, fmt="mask")
         forward_len = self.seglen - self.config.overlap_len
         critical_forward_len = self.seglen - self.config.critical_overlap_len
@@ -503,55 +502,17 @@ class CPSC2021(Dataset):
         critical_points = [p for p in critical_points if critical_forward_len<=p<siglen-critical_forward_len]
 
         segments = []
-        n_seg = 0
 
         # offline augmentations are done, including strech-or-compress, ...
         stretch_compress_choices = [-1,1] + [0] * int(2/self.config.stretch_compress_prob - 2)
         # ordinary segments with constant forward_len
         for idx in range(siglen//forward_len):
             start_idx = idx * forward_len
-            if self.config.stretch_compress != 0:
-                sign = sample(stretch_compress_choices, 1)[0]
-                if sign != 0:
-                    sc_ratio = self.config.stretch_compress
-                    sc_ratio = 1 + (uniform(sc_ratio/4, sc_ratio) * sign) / 100
-                    sc_len = int(round(sc_ratio * self.seglen))
-                    end_idx = start_idx + sc_len
-                    if end_idx > siglen:
-                        end_idx = siglen
-                        start_idx = end_idx - sc_len
-                    aug_seg = data[start_idx: end_idx]
-                    aug_seg = SS.resample(x=aug_seg, num=self.seglen).reshape((1,-1))
-                else:
-                    end_idx = start_idx + self.seglen
-                    # the segment of original signal, with no augmentation
-                    aug_seg = data[start_idx: end_idx]
-                    sc_ratio = 1
-            else:
-                end_idx = start_idx + self.seglen
-                aug_seg = data[start_idx: end_idx]
-                sc_ratio = 1
-            # adjust af_mask and rpeaks
-            seg_rpeaks = self.reader.load_rpeaks(
-                rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True,
-            )
-            seg_rpeaks = [
-                int(round(r*sc_ratio)) for r in seg_rpeaks if rpeak_border_dist<=r<self.seglen-rpeak_border_dist
-            ]
-            seg_af_intervals = self.reader.load_af_episodes(
-                rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True, fmt="intervals",
-            )
-            seg_af_mask = np.zeros((self.seglen,), dtype=int)
-            for itv in seg_af_intervals:
-                seg_af_mask[int(round(itv[0]*sc_ratio)): int(round(itv[1]*sc_ratio))] = 1
-
-            new_seg = ED(
-                data=aug_seg,
-                rpeaks=seg_rpeaks,
-                af_mask=seg_af_mask,
+            new_seg = self.__generate_segment(
+                rec=rec, data=data, start_idx=start_idx,
+                stretch_compress_choices=stretch_compress_choices,
             )
             segments.append(new_seg)
-            n_seg += 1
         # the tail segment
         if self.config.stretch_compress != 0:
             sign = sample(stretch_compress_choices, 1)[0]
@@ -582,6 +543,11 @@ class CPSC2021(Dataset):
         seg_rpeaks = [
             int(round(r*sc_ratio)) for r in seg_rpeaks if rpeak_border_dist<=r<self.seglen-rpeak_border_dist
         ]
+        # generate qrs_mask from rpeaks
+        seg_qrs_mask = np.zeros((self.seglen,), dtype=int)
+        for r in seg_rpeaks:
+            seg_qrs_mask[r-self.config.qrs_mask_bias:r+self.config.qrs_mask_bias] = 1
+        # generate af_mask
         seg_af_intervals = self.reader.load_af_episodes(
             rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True, fmt="intervals",
         )
@@ -592,18 +558,119 @@ class CPSC2021(Dataset):
         new_seg = ED(
             data=aug_seg,
             rpeaks=seg_rpeaks,
+            qrs_mask=seg_qrs_mask,
             af_mask=seg_af_mask,
+            interval=[start_idx,end_idx],
         )
         segments.append(new_seg)
-        n_seg += 1
 
         # special segments around critical_points with random forward_len in critical_forward_len
         for cp in critical_points:
-            # TODO
-            pass
+            start_idx = max(0, cp - self.seglen + randint(critical_forward_len//4, critical_forward_len))
+            while start_idx <= min(cp - critical_forward_len, siglen - self.seglen):
+                new_seg = self.__generate_segment(
+                rec=rec, data=data, start_idx=start_idx,
+                stretch_compress_choices=stretch_compress_choices,
+                )
+                segments.append(new_seg)
+                start_idx += randint(critical_forward_len//4, critical_forward_len)
+        
+        self.__save_segments(segments)
 
-        # TODO: not finished
-        raise NotImplementedError
+    def __generate_segment(self, rec:str, data:np.ndarray, start_idx:int, stretch_compress_choices:List[int]) -> ED:
+        """ finished, NOT checked,
+
+        generate segment, with possible data augmentation
+
+        Parameter
+        ---------
+        rec: str,
+            filename of the record
+        data: ndarray,
+            the whole of (preprocessed) ECG record
+        start_idx: int,
+            start index of the signal of `rec` for generating the segment
+        stretch_compress_choices: list of int,
+            choices list for the stretch_or_compress augmentation
+
+        Returns
+        -------
+        new_seg: dict,
+            segments (meta-)data, containing:
+            - data: values of the segment, with units in mV
+            - rpeaks: indices of rpeaks of the segment
+            - qrs_mask: mask of qrs complexes of the segment
+            - af_mask: mask of af episodes of the segment
+            - interval: interval ([start_idx, end_idx]) in the original ECG record of the segment
+        """
+        if self.config.stretch_compress != 0:
+            sign = sample(stretch_compress_choices, 1)[0]
+            if sign != 0:
+                sc_ratio = self.config.stretch_compress
+                sc_ratio = 1 + (uniform(sc_ratio/4, sc_ratio) * sign) / 100
+                sc_len = int(round(sc_ratio * self.seglen))
+                end_idx = start_idx + sc_len
+                if end_idx > siglen:
+                    end_idx = siglen
+                    start_idx = end_idx - sc_len
+                aug_seg = data[start_idx: end_idx]
+                aug_seg = SS.resample(x=aug_seg, num=self.seglen).reshape((1,-1))
+            else:
+                end_idx = start_idx + self.seglen
+                # the segment of original signal, with no augmentation
+                aug_seg = data[start_idx: end_idx]
+                sc_ratio = 1
+        else:
+            end_idx = start_idx + self.seglen
+            aug_seg = data[start_idx: end_idx]
+            sc_ratio = 1
+        # adjust af_mask and rpeaks
+        seg_rpeaks = self.reader.load_rpeaks(
+            rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True,
+        )
+        seg_rpeaks = [
+            int(round(r*sc_ratio)) for r in seg_rpeaks \
+                if self.config.rpeaks_dist2border <= r < self.seglen-self.config.rpeaks_dist2border
+        ]
+        # generate qrs_mask from rpeaks
+        seg_qrs_mask = np.zeros((self.seglen,), dtype=int)
+        for r in seg_rpeaks:
+            seg_qrs_mask[r-self.config.qrs_mask_bias:r+self.config.qrs_mask_bias] = 1
+        # generate af_mask
+        seg_af_intervals = self.reader.load_af_episodes(
+            rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True, fmt="intervals",
+        )
+        seg_af_mask = np.zeros((self.seglen,), dtype=int)
+        for itv in seg_af_intervals:
+            seg_af_mask[int(round(itv[0]*sc_ratio)): int(round(itv[1]*sc_ratio))] = 1
+
+        new_seg = ED(
+            data=aug_seg,
+            rpeaks=seg_rpeaks,
+            qrs_mask=seg_qrs_mask,
+            af_mask=seg_af_mask,
+            interval=[start_idx, end_idx],
+        )
+        return new_seg
+
+    def __save_segments(self, rec:str, segments:List[ED]) -> NoReturn:
+        """ finished, NOT checked,
+
+        Parameters
+        ----------
+        rec: str,
+            filename of the record
+        segments: list of dict,
+            list of the segments (meta-)data
+        """
+        ordering = list(range(n_seg))
+        shuffle(ordering)
+        for i, idx in enumerate(ordering):
+            seg = segments[idx]
+            data_path = os.path.join(self.segments_dirs.data, f"{rec}_{i:07d}.{self.segment_ext}".replace("data", "S"))
+            savemat(data_path, {"ecg": seg.data})
+            ann_path = os.path.join(self.segments_dirs.ann, f"{rec}_{i:07d}.{self.segment_ext}".replace("data", "S"))
+            savemat(ann_path, {k:v for k,v in seg.items() if k not in ["data",]})
 
     def _clear_cached_segments(self, recs:Optional[Sequence[str]]=None) -> NoReturn:
         """ finished, NOT checked,
