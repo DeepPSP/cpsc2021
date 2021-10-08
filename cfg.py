@@ -149,8 +149,8 @@ TrainCfg.flip = [-1] + [1]*4  # making the signal upside down, with probability 
 # TODO: explore and add more data augmentations
 
 # configs of training epochs, batch, etc.
-TrainCfg.n_epochs = 300
-TrainCfg.batch_size = 128
+TrainCfg.n_epochs = 100
+TrainCfg.batch_size = 64
 TrainCfg.train_ratio = 0.8
 
 # configs of optimizers and lr_schedulers
@@ -202,7 +202,7 @@ TrainCfg.qrs_detection.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.qrs_detection.classes = ["N",]
 
 TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
-TrainCfg.rr_lstm.input_len = None
+TrainCfg.rr_lstm.input_len = 30  # number of rpeaks
 TrainCfg.rr_lstm.classes = ["af",]
 
 TrainCfg.main.model_name = "seq_lab"  # "unet"

@@ -545,6 +545,10 @@ class CPSC2021(Dataset):
         critical_forward_len = self.seglen - self.config[self.task].critical_overlap_len
         critical_forward_len = [critical_forward_len//4, critical_forward_len]
 
+        # skip those records that are too short
+        if siglen < self.seglen:
+            return
+
         # find critical points
         critical_points = np.where(np.diff(af_mask)!=0)[0]
         critical_points = [p for p in critical_points if critical_forward_len[1]<=p<siglen-critical_forward_len[1]]
