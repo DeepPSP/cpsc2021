@@ -4,6 +4,7 @@ import os, sys
 import re
 import logging
 import datetime
+import random
 from functools import reduce
 from collections import namedtuple
 from glob import glob
@@ -42,6 +43,7 @@ __all__ = [
     "nildent",
     "list_sum",
     "save_dict",
+    "uniform",
     "WFDB_Beat_Annotations", "WFDB_Non_Beat_Annotations", "WFDB_Rhythm_Annotations",
 ]
 
@@ -797,9 +799,30 @@ def list_sum(l:Sequence[list]) -> list:
 
 
 def save_dict(filename, dic):
-    '''save dict into json file'''
+    """save dict into json file"""
     with open(filename,'w') as json_file:
         json.dump(dic, json_file, ensure_ascii=False)
+
+
+def uniform(low:Real, high:Real, num:int) -> List[float]:
+    """ finished, checked,
+
+    Parameters
+    ----------
+    low: real number,
+        lower bound of the interval of the uniform distribution
+    high: real number,
+        upper bound of the interval of the uniform distribution
+    num: int,
+        number of random numbers to generate
+
+    Returns
+    -------
+    arr: list of float,
+        array of randomly generated numbers with uniform distribution
+    """
+    arr = [random.uniform(low,high) for _ in range(num)]
+    return arr
 
 
 WFDB_Beat_Annotations = {

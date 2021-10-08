@@ -51,6 +51,7 @@ os.makedirs(BaseCfg.log_dir, exist_ok=True)
 os.makedirs(BaseCfg.model_dir, exist_ok=True)
 BaseCfg.test_data_dir = os.path.join(_BASE_DIR, "test_data")
 BaseCfg.fs = 200
+BaseCfg.n_lead = 2
 BaseCfg.torch_dtype = "float"  # "double"
 
 BaseCfg.class_fn2abbr = { # fullname to abbreviation
@@ -78,6 +79,7 @@ TrainCfg = ED()
 
 # common confis for all training tasks
 TrainCfg.fs = BaseCfg.fs
+TrainCfg.n_lead = BaseCfg.n_lead
 TrainCfg.data_format = "channel_first"
 TrainCfg.db_dir = BaseCfg.db_dir
 TrainCfg.log_dir = BaseCfg.log_dir
@@ -193,6 +195,7 @@ for t in TrainCfg.tasks:
     TrainCfg[t] = ED()
 
 TrainCfg.qrs_detection.model_name = "seq_lab"  # "unet"
+TrainCfg.qrs_detection.reduction = 8
 TrainCfg.qrs_detection.cnn_name = "multi_scopic"
 TrainCfg.qrs_detection.rnn_name = "lstm"  # "none", "lstm"
 TrainCfg.qrs_detection.attn_name = "se"  # "none", "se", "gc", "nl"
@@ -202,10 +205,11 @@ TrainCfg.qrs_detection.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.qrs_detection.classes = ["N",]
 
 TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
-TrainCfg.rr_lstm.input_len = 30  # number of rpeaks
+TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.classes = ["af",]
 
 TrainCfg.main.model_name = "seq_lab"  # "unet"
+TrainCfg.qrs_detection.reduction = 8
 TrainCfg.main.cnn_name = "multi_scopic"
 TrainCfg.main.rnn_name = "lstm"  # "none", "lstm"
 TrainCfg.main.attn_name = "se"  # "none", "se", "gc", "nl"
