@@ -4,6 +4,7 @@ data generator for feeding data into pytorch models
 import os, sys
 import json
 import time
+import multiprocessing as mp
 from random import shuffle, randint, sample, uniform
 from copy import deepcopy
 from typing import Union, Optional, List, Tuple, Dict, Sequence, Set, NoReturn
@@ -120,8 +121,10 @@ class CPSC2021(Dataset):
             if self.training:
                 self.segments = list_sum([self.__all_segments[subject] for subject in split_res.train])
                 shuffle(self.segments)
+                self.subjects = split_res.train
             else:
                 self.segments = list_sum([self.__all_segments[subject] for subject in split_res.test])
+                self.subjects = split_res.test
         elif self.task.lower() in ["rr_lstm",]:
             pass
         else:
@@ -498,6 +501,11 @@ class CPSC2021(Dataset):
             )
             if verbose >= 1:
                 print(f"{idx+1}/{len(self.reader.all_records)} records", end="\r")
+        # with mp.Pool(processes=max(1, mp.cpu_count()-3)) as pool:
+        #     pool.starmap(
+        #         func=self._slice_one_record,
+        #         iterable=[(rec, force_recompute, False, verbose) for rec in self.reader.all_records]
+        #     )
         if force_recompute:
             with open(self.segments_json, "w") as f:
                 json.dump(self.__all_segments, f)
@@ -535,11 +543,11 @@ class CPSC2021(Dataset):
         af_mask = self.reader.load_af_episodes(rec, fmt="mask")
         forward_len = self.seglen - self.config[self.task].overlap_len
         critical_forward_len = self.seglen - self.config[self.task].critical_overlap_len
-        critical_forward_len = [critical_forward_len//2, critical_forward_len]
+        critical_forward_len = [critical_forward_len//4, critical_forward_len]
 
         # find critical points
-        critical_points, = np.where(np.diff(af_mask)!=0)
-        critical_points = [p for p in critical_points if critical_forward_len<=p<siglen-critical_forward_len]
+        critical_points = np.where(np.diff(af_mask)!=0)[0]
+        critical_points = [p for p in critical_points if critical_forward_len[1]<=p<siglen-critical_forward_len[1]]
 
         segments = []
 
@@ -558,13 +566,13 @@ class CPSC2021(Dataset):
 
         # special segments around critical_points with random forward_len in critical_forward_len
         for cp in critical_points:
-            start_idx = max(0, cp - self.seglen + randint(critical_forward_len//4, critical_forward_len))
-            while start_idx <= min(cp - critical_forward_len, siglen - self.seglen):
+            start_idx = max(0, cp - self.seglen + randint(critical_forward_len[0], critical_forward_len[1]))
+            while start_idx <= min(cp - critical_forward_len[1], siglen - self.seglen):
                 new_seg = self.__generate_segment(
                     rec=rec, data=data, start_idx=start_idx,
                 )
                 segments.append(new_seg)
-                start_idx += randint(critical_forward_len//4, critical_forward_len)
+                start_idx += randint(critical_forward_len[0], critical_forward_len[1])
         
         # return segments
         self.__save_segments(rec, segments, update_segments_json)
@@ -706,12 +714,16 @@ class CPSC2021(Dataset):
                 for item in ["data", "ann",]:
                     path = self.segments_dirs[item][subject]
                     for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
-                        os.remove(os.path.join(path, f))
+                        if self._get_rec_name(f) == rec:
+                            os.remove(os.path.join(path, f))
+                            self.__all_segments[subject].remove(os.path.splitext(f)[0])
         for subject in self.reader.all_subjects:
             for item in ["data", "ann",]:
                 path = self.segments_dirs[item][subject]
                 for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
                     os.remove(os.path.join(path, f))
+                    self.__all_segments[subject].remove(os.path.splitext(f)[0])
+        self.segments = list_sum([self.__all_segments[subject] for subject in self.subjects])
 
     def _get_rec_name(self, seg:str) -> str:
         """ finished, checked,
