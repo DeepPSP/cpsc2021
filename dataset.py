@@ -82,8 +82,9 @@ class CPSC2021(Dataset):
         self.preprocess_dir = os.path.join(config.db_dir, "preprocessed")
         os.makedirs(self.preprocess_dir, exist_ok=True)
         # segments_dir for sliced segments
-        self.base_segments_dir = os.path.join(config.db_dir, "segments")
-        os.makedirs(self.base_segments_dir, exist_ok=True)
+        self.segments_base_dir = os.path.join(config.db_dir, "segments")
+        os.makedirs(self.segments_base_dir, exist_ok=True)
+        self.segment_name_pattern = "S_\d{1,3}_\d{1,2}_\d{7}"
         self.segment_ext = "mat"
 
         self.__set_task(task)
@@ -113,7 +114,7 @@ class CPSC2021(Dataset):
             # for qrs detection, or for the main task
             self.segments_dirs = ED()
             self.__all_segments = ED()
-            self.segments_json = os.path.join(self.base_segments_dir, "segments.json")
+            self.segments_json = os.path.join(self.segments_base_dir, "segments.json")
             self._ls_segments()
 
             if self.training:
@@ -125,6 +126,9 @@ class CPSC2021(Dataset):
             pass
         else:
             raise NotImplementedError(f"data generator for task \042{self.task}\042 not implemented")
+        
+        # more aux config on offline augmentations
+        self.config.stretch_compress_choices = [-1,1] + [0] * int(2/self.config.stretch_compress_prob - 2)
 
     def reset_task(self, task:str) -> NoReturn:
         """ finished, checked,
@@ -139,14 +143,14 @@ class CPSC2021(Dataset):
         for item in ["data", "ann"]:
             self.segments_dirs[item] = ED()
             for s in self.reader.all_subjects:
-                self.segments_dirs[item][s] = os.path.join(self.base_segments_dir, item, s)
+                self.segments_dirs[item][s] = os.path.join(self.segments_base_dir, item, s)
                 os.makedirs(self.segments_dirs[item][s], exist_ok=True)
         if os.path.isfile(self.segments_json):
             with open(self.segments_json, "r") as f:
                 self.__all_segments = json.load(f)
             return
-        print(f"please allow the reader a few minutes to collect the segments from {self.base_segments_dir}...")
-        seg_filename_pattern = f"S_\d{{1,3}}_\d{{1,2}}_\d{{7}}{self.reader.rec_ext}"
+        print(f"please allow the reader a few minutes to collect the segments from {self.segments_base_dir}...")
+        seg_filename_pattern = f"{self.segment_name_pattern}.{self.segment_ext}"
         self.__all_segments = ED({
             s: get_record_list_recursive3(self.segments_dirs.data[s], seg_filename_pattern) \
                 for s in self.reader.all_subjects
@@ -191,12 +195,14 @@ class CPSC2021(Dataset):
 
     def _get_seg_ann_path(self, seg:str) -> str:
         """ finished, checked,
-        Parameters:
-        -----------
+
+        Parameters
+        ----------
         seg: str,
             name of the segment, of pattern like "S_1_1_0000193"
-        Returns:
-        --------
+
+        Returns
+        -------
         fp: str,
             path of the annotation file of the segment
         """
@@ -206,21 +212,6 @@ class CPSC2021(Dataset):
 
     def _load_seg_data(self, seg:str) -> np.ndarray:
         """ finished, checked,
-        Parameters:
-        -----------
-        seg: str,
-            name of the segment, of pattern like "S_1_1_0000193"
-        Returns:
-        --------
-        seg_data: ndarray,
-            data of the segment, of shape (2, `self.seglen`)
-        """
-        seg_data_fp = self._get_seg_data_path(seg)
-        seg_data = loadmat(seg_data_fp)["ecg"]
-        return seg_data
-
-    def _load_seg_mask(self, seg:str) -> np.ndarray:
-        """ finished, NOT checked,
 
         Parameters
         ----------
@@ -229,19 +220,63 @@ class CPSC2021(Dataset):
 
         Returns
         -------
-        seg_mask: np.ndarray,
-            label of the sequence,
+        seg_data: ndarray,
+            data of the segment, of shape (2, `self.seglen`)
+        """
+        seg_data_fp = self._get_seg_data_path(seg)
+        seg_data = loadmat(seg_data_fp)["ecg"]
+        return seg_data
+
+    def _load_seg_ann(self, seg:str) -> dict:
+        """ finished, checked,
+
+        Parameters
+        ----------
+        seg: str,
+            name of the segment, of pattern like "S_1_1_0000193"
+
+        Returns
+        -------
+        seg_ann: dict,
+            annotations of the segment, including
+            - rpeaks: indices of rpeaks of the segment
+            - qrs_mask: mask of qrs complexes of the segment
+            - af_mask: mask of af episodes of the segment
+            - interval: interval ([start_idx, end_idx]) in the original ECG record of the segment
+        """
+        seg_ann_fp = self._get_seg_ann_path(seg)
+        seg_ann = {k:v.flatten() for k,v in loadmat(seg_ann_fp).items() if not k.startswith("__")}
+        return seg_ann
+
+    def _load_seg_mask(self, seg:str, task:Optional[str]=None) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+        """ finished, checked,
+
+        Parameters
+        ----------
+        seg: str,
+            name of the segment, of pattern like "S_1_1_0000193"
+        task: str, optional,
+            if specified, overrides self.task,
+            else if is "all", then all masks ("qrs_mask", "af_mask", etc.) will be returned
+
+        Returns
+        -------
+        seg_mask: np.ndarray or dict,
+            mask(s) of the segment,
             of shape (self.seglen, self.n_classes)
         """
-        seg_mask_fp = self._get_seg_ann_path(seg)
-        if self.task in ["qrs_detection",]:
-            seg_mask = loadmat(seg_mask_fp)["qrs_mask"]
-        elif self.task in ["main",]:
-            seg_mask = loadmat(seg_mask_fp)["af_mask"]
+        seg_mask = {k:v.reshape((self.seglen, -1)) for k,v in self._load_seg_ann(seg).items() if k in ["qrs_mask", "af_mask",]}
+        _task = (task or self.task).lower()
+        if _task == "all":
+            return seg_mask
+        if _task in ["qrs_detection",]:
+            seg_mask = seg_mask["qrs_mask"]
+        elif _task in ["main",]:
+            seg_mask = seg_mask["af_mask"]
         return seg_mask
 
     def _load_seg_seq_lab(self, seg:str, reduction:int=8) -> np.ndarray:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -259,10 +294,13 @@ class CPSC2021(Dataset):
         """
         seg_mask = self._load_seg_mask(seg)
         seg_len, n_classes = seg_mask.shape
-        seq_lab = np.array([
-            np.mean(seg_mask[reduction*idx:reduction*(idx+1)],axis=0,keepdims=True).astype(int) \
-                for idx in range(seg_len//reduction)
-        ])
+        seq_lab = np.stack(
+            arrays=[
+                np.mean(seg_mask[reduction*idx:reduction*(idx+1)],axis=0,keepdims=True).astype(int) \
+                    for idx in range(seg_len//reduction)
+            ],
+            axis=0,
+        ).squeeze(axis=1)
         return seq_lab
 
     def disable_data_augmentation(self) -> NoReturn:
@@ -437,7 +475,7 @@ class CPSC2021(Dataset):
 
 
     def _slice_data(self, force_recompute:bool=False, verbose:int=0) -> NoReturn:
-        """ NOT finished, NOT checked,
+        """ finished, NOT checked,
 
         slice all records into segments of length `self.seglen`,
         and perform data augmentations specified in `self.config`
@@ -465,7 +503,7 @@ class CPSC2021(Dataset):
                 json.dump(self.__all_segments, f)
 
     def _slice_one_record(self, rec:str, force_recompute:bool=False, update_segments_json:bool=False, verbose:int=0) -> NoReturn:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         slice one record into segments of length `self.seglen`,
         and perform data augmentations specified in `self.config`
@@ -483,18 +521,20 @@ class CPSC2021(Dataset):
         verbose: int, default 0,
             print verbosity
         """
-        if (not force_recompute) and len(self.__all_segments[rec_name]) > 0:
+        subject = self.reader.get_subject_id(rec)
+        rec_segs = [item for item in self.__all_segments[subject] if item.startswith(rec.replace("data", "S"))]
+        if (not force_recompute) and len(rec_segs) > 0:
             return
         elif force_recompute:
-            self.__all_segments[rec_name] = []
+            self._clear_cached_segments([rec])
 
         # data = self.reader.load_data(rec, units="mV")
         data = self.load_preprocessed_data(rec)
         siglen = data.shape[1]
         rpeaks = self.reader.load_rpeaks(rec)
         af_mask = self.reader.load_af_episodes(rec, fmt="mask")
-        forward_len = self.seglen - self.config.overlap_len
-        critical_forward_len = self.seglen - self.config.critical_overlap_len
+        forward_len = self.seglen - self.config[self.task].overlap_len
+        critical_forward_len = self.seglen - self.config[self.task].critical_overlap_len
         critical_forward_len = [critical_forward_len//2, critical_forward_len]
 
         # find critical points
@@ -503,64 +543,16 @@ class CPSC2021(Dataset):
 
         segments = []
 
-        # offline augmentations are done, including strech-or-compress, ...
-        stretch_compress_choices = [-1,1] + [0] * int(2/self.config.stretch_compress_prob - 2)
         # ordinary segments with constant forward_len
         for idx in range(siglen//forward_len):
             start_idx = idx * forward_len
             new_seg = self.__generate_segment(
                 rec=rec, data=data, start_idx=start_idx,
-                stretch_compress_choices=stretch_compress_choices,
             )
             segments.append(new_seg)
         # the tail segment
-        if self.config.stretch_compress != 0:
-            sign = sample(stretch_compress_choices, 1)[0]
-            if sign != 0:
-                sc_ratio = self.config.stretch_compress
-                sc_ratio = 1 + (uniform(sc_ratio/4, sc_ratio) * sign) / 100
-                sc_len = int(round(sc_ratio * self.seglen))
-                end_idx = siglen
-                start_idx = end_idx - sc_len
-                aug_seg = data[start_idx: end_idx]
-                aug_seg = SS.resample(x=aug_seg, num=self.seglen).reshape((1,-1))
-            else:
-                end_idx = siglen
-                start_idx = end_idx - sc_len
-                # the segment of original signal, with no augmentation
-                aug_seg = data[start_idx: end_idx]
-                sc_ratio = 1
-        else:
-            end_idx = siglen
-            start_idx = end_idx - sc_len
-            # the segment of original signal, with no augmentation
-            aug_seg = data[start_idx: end_idx]
-            sc_ratio = 1
-        # adjust af_mask and rpeaks
-        seg_rpeaks = self.reader.load_rpeaks(
-            rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True,
-        )
-        seg_rpeaks = [
-            int(round(r*sc_ratio)) for r in seg_rpeaks if rpeak_border_dist<=r<self.seglen-rpeak_border_dist
-        ]
-        # generate qrs_mask from rpeaks
-        seg_qrs_mask = np.zeros((self.seglen,), dtype=int)
-        for r in seg_rpeaks:
-            seg_qrs_mask[r-self.config.qrs_mask_bias:r+self.config.qrs_mask_bias] = 1
-        # generate af_mask
-        seg_af_intervals = self.reader.load_af_episodes(
-            rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True, fmt="intervals",
-        )
-        seg_af_mask = np.zeros((self.seglen,), dtype=int)
-        for itv in seg_af_intervals:
-            seg_af_mask[int(round(itv[0]*sc_ratio)): int(round(itv[1]*sc_ratio))] = 1
-
-        new_seg = ED(
-            data=aug_seg,
-            rpeaks=seg_rpeaks,
-            qrs_mask=seg_qrs_mask,
-            af_mask=seg_af_mask,
-            interval=[start_idx,end_idx],
+        new_seg = self.__generate_segment(
+            rec=rec, data=data, end_idx=siglen,
         )
         segments.append(new_seg)
 
@@ -569,16 +561,16 @@ class CPSC2021(Dataset):
             start_idx = max(0, cp - self.seglen + randint(critical_forward_len//4, critical_forward_len))
             while start_idx <= min(cp - critical_forward_len, siglen - self.seglen):
                 new_seg = self.__generate_segment(
-                rec=rec, data=data, start_idx=start_idx,
-                stretch_compress_choices=stretch_compress_choices,
+                    rec=rec, data=data, start_idx=start_idx,
                 )
                 segments.append(new_seg)
                 start_idx += randint(critical_forward_len//4, critical_forward_len)
         
-        self.__save_segments(segments)
+        # return segments
+        self.__save_segments(rec, segments, update_segments_json)
 
-    def __generate_segment(self, rec:str, data:np.ndarray, start_idx:int, stretch_compress_choices:List[int]) -> ED:
-        """ finished, NOT checked,
+    def __generate_segment(self, rec:str, data:np.ndarray, start_idx:Optional[int]=None, end_idx:Optional[int]=None) -> ED:
+        """ finished, checked,
 
         generate segment, with possible data augmentation
 
@@ -588,10 +580,12 @@ class CPSC2021(Dataset):
             filename of the record
         data: ndarray,
             the whole of (preprocessed) ECG record
-        start_idx: int,
+        start_idx: int, optional,
             start index of the signal of `rec` for generating the segment
-        stretch_compress_choices: list of int,
-            choices list for the stretch_or_compress augmentation
+        end_idx: int, optional,
+            end index of the signal of `rec` for generating the segment,
+            if `start_idx` is set, `end_idx` is ignored,
+            at least one of `start_idx` and `end_idx` should be set
 
         Returns
         -------
@@ -603,46 +597,63 @@ class CPSC2021(Dataset):
             - af_mask: mask of af episodes of the segment
             - interval: interval ([start_idx, end_idx]) in the original ECG record of the segment
         """
+        assert not all([start_idx is None, end_idx is None]), \
+            "at least one of `start_idx` and `end_idx` should be set"
+        siglen = data.shape[1]
+        # offline augmentations are done, including strech-or-compress, ...
         if self.config.stretch_compress != 0:
-            sign = sample(stretch_compress_choices, 1)[0]
+            sign = sample(self.config.stretch_compress_choices, 1)[0]
             if sign != 0:
                 sc_ratio = self.config.stretch_compress
                 sc_ratio = 1 + (uniform(sc_ratio/4, sc_ratio) * sign) / 100
                 sc_len = int(round(sc_ratio * self.seglen))
-                end_idx = start_idx + sc_len
+                if start_idx is not None:
+                    end_idx = start_idx + sc_len
+                else:
+                    start_idx = end_idx - sc_len
                 if end_idx > siglen:
                     end_idx = siglen
                     start_idx = end_idx - sc_len
-                aug_seg = data[start_idx: end_idx]
-                aug_seg = SS.resample(x=aug_seg, num=self.seglen).reshape((1,-1))
+                aug_seg = data[..., start_idx: end_idx]
+                aug_seg = SS.resample(x=aug_seg, num=self.seglen, axis=1)
             else:
-                end_idx = start_idx + self.seglen
+                if start_idx is not None:
+                    end_idx = start_idx + self.seglen
+                else:
+                    start_idx = end_idx - self.seglen
                 # the segment of original signal, with no augmentation
-                aug_seg = data[start_idx: end_idx]
+                aug_seg = data[..., start_idx: end_idx]
                 sc_ratio = 1
         else:
-            end_idx = start_idx + self.seglen
-            aug_seg = data[start_idx: end_idx]
+            if start_idx is not None:
+                end_idx = start_idx + self.seglen
+            else:
+                start_idx = end_idx - self.seglen
+            aug_seg = data[..., start_idx: end_idx]
             sc_ratio = 1
-        # adjust af_mask and rpeaks
+        # adjust rpeaks
         seg_rpeaks = self.reader.load_rpeaks(
             rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True,
         )
         seg_rpeaks = [
-            int(round(r*sc_ratio)) for r in seg_rpeaks \
+            int(round(r/sc_ratio)) for r in seg_rpeaks \
                 if self.config.rpeaks_dist2border <= r < self.seglen-self.config.rpeaks_dist2border
         ]
         # generate qrs_mask from rpeaks
         seg_qrs_mask = np.zeros((self.seglen,), dtype=int)
         for r in seg_rpeaks:
             seg_qrs_mask[r-self.config.qrs_mask_bias:r+self.config.qrs_mask_bias] = 1
-        # generate af_mask
+        # adjust af_intervals
         seg_af_intervals = self.reader.load_af_episodes(
             rec=rec, sampfrom=start_idx, sampto=end_idx, zero_start=True, fmt="intervals",
         )
+        seg_af_intervals = [
+            [int(round(itv[0]/sc_ratio)), int(round(itv[1]/sc_ratio))] for itv in seg_af_intervals
+        ]
+        # generate af_mask from af_intervals
         seg_af_mask = np.zeros((self.seglen,), dtype=int)
         for itv in seg_af_intervals:
-            seg_af_mask[int(round(itv[0]*sc_ratio)): int(round(itv[1]*sc_ratio))] = 1
+            seg_af_mask[itv[0]:itv[1]] = 1
 
         new_seg = ED(
             data=aug_seg,
@@ -653,8 +664,8 @@ class CPSC2021(Dataset):
         )
         return new_seg
 
-    def __save_segments(self, rec:str, segments:List[ED]) -> NoReturn:
-        """ finished, NOT checked,
+    def __save_segments(self, rec:str, segments:List[ED], update_segments_json:bool=False) -> NoReturn:
+        """ finished, checked,
 
         Parameters
         ----------
@@ -662,18 +673,26 @@ class CPSC2021(Dataset):
             filename of the record
         segments: list of dict,
             list of the segments (meta-)data
+        update_segments_json: bool, default False,
+            if True, the file `self.segments_json` will be updated
         """
-        ordering = list(range(n_seg))
+        subject = self.reader.get_subject_id(rec)
+        ordering = list(range(len(segments)))
         shuffle(ordering)
         for i, idx in enumerate(ordering):
             seg = segments[idx]
-            data_path = os.path.join(self.segments_dirs.data, f"{rec}_{i:07d}.{self.segment_ext}".replace("data", "S"))
+            filename = f"{rec}_{i:07d}.{self.segment_ext}".replace("data", "S")
+            data_path = os.path.join(self.segments_dirs.data[subject], filename)
             savemat(data_path, {"ecg": seg.data})
-            ann_path = os.path.join(self.segments_dirs.ann, f"{rec}_{i:07d}.{self.segment_ext}".replace("data", "S"))
+            self.__all_segments[subject].append(os.path.splitext(filename)[0])
+            ann_path = os.path.join(self.segments_dirs.ann[subject], filename)
             savemat(ann_path, {k:v for k,v in seg.items() if k not in ["data",]})
+        if update_segments_json:
+            with open(self.segments_json, "w") as f:
+                json.dump(self.__all_segments, f)
 
     def _clear_cached_segments(self, recs:Optional[Sequence[str]]=None) -> NoReturn:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -693,6 +712,22 @@ class CPSC2021(Dataset):
                 path = self.segments_dirs[item][subject]
                 for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
                     os.remove(os.path.join(path, f))
+
+    def _get_rec_name(self, seg:str) -> str:
+        """ finished, checked,
+
+        Parameters
+        ----------
+        seg: str,
+            name of the segment
+        
+        Returns
+        -------
+        rec: str,
+            name of the record that `seg` was generated from
+        """
+        rec = seg.replace("S", "data")[:-8]
+        return rec
 
     def _train_test_split(self,
                           train_ratio:float=0.8,
@@ -772,8 +807,8 @@ class CPSC2021(Dataset):
         })
         return split_res
 
-    def plot_seg(self, seg:str, ticks_granularity:int=0, rpeak_inds:Optional[Union[Sequence[int],np.ndarray]]=None) -> NoReturn:
-        """ finished, NOT checked,
+    def plot_seg(self, seg:str, ticks_granularity:int=0) -> NoReturn:
+        """ finished, checked,
 
         Parameters
         ----------
@@ -782,19 +817,16 @@ class CPSC2021(Dataset):
         ticks_granularity: int, default 0,
             the granularity to plot axis ticks, the higher the more,
             0 (no ticks) --> 1 (major ticks) --> 2 (major + minor ticks)
-        rpeak_inds: array_like, optional,
-            indices of R peaks,
         """
         seg_data = self._load_seg_data(seg)
-        seg_mask = self._load_seg_mask(seg)
-        intervals = mask_to_intervals(seg_mask.flatten(), vals=1)
-        seg_ann = "rpeaks" if self.task in ["qrs_detection",] else "af_episodes"
-        seg_ann = {seg_ann: intervals}
-        rec_name = seg.replace("S", "data")[:-8]
+        print(f"seg_data.shape = {seg_data.shape}")
+        seg_ann = self._load_seg_ann(seg)
+        seg_ann["af_episodes"] = mask_to_intervals(seg_ann["af_mask"], vals=1)
+        print(f"seg_ann = {seg_ann}")
+        rec_name = self._get_rec_name(seg)
         self.reader.plot(
             rec=rec_name,  # unnecessary indeed
             data=seg_data,
             ann=seg_ann,
             ticks_granularity=ticks_granularity,
-            rpeak_inds=rpeak_inds,
         )

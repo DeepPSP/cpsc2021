@@ -405,7 +405,7 @@ class CPSC2021Reader(object):
         return self._diagnoses_records_list
 
 
-    def get_subject_id(self, rec:str) -> int:
+    def get_subject_id(self, rec:str) -> str:
         """ finished, checked,
 
         Parameters
@@ -415,10 +415,10 @@ class CPSC2021Reader(object):
 
         Returns
         -------
-        sid: int,
+        sid: str,
             subject id corresponding to the record
         """
-        sid = int(rec.split("_")[1])
+        sid = rec.split("_")[1]
         return sid
 
 
@@ -969,7 +969,7 @@ class CPSC2021Reader(object):
         else:
             rpeaks = ann.get("rpeaks", [])
             af_episodes = ann.get("af_episodes", [])
-            label = ann["label"]
+            label = ann.get("label", "")
 
         nb_leads = len(_leads)
 
@@ -1008,7 +1008,8 @@ class CPSC2021Reader(object):
                     axes[ax_idx].grid(which="minor", linestyle=":", linewidth="0.5", color="black")
                 # add extra info. to legend
                 # https://stackoverflow.com/questions/16826711/is-it-possible-to-add-a-string-as-a-legend-item-in-matplotlib
-                axes[ax_idx].plot([], [], " ", label=f"label - {label}")
+                if label:
+                    axes[ax_idx].plot([], [], " ", label=f"label - {label}")
                 seg_rpeaks = [r/self.fs for r in rpeaks if idx*line_len <= r < (idx+1)*line_len]
                 for r in seg_rpeaks:
                     axes[ax_idx].axvspan(
