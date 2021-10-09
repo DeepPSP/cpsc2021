@@ -206,6 +206,8 @@ TrainCfg.qrs_detection.classes = ["N",]
 
 TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
 TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1)
+TrainCfg.rr_lstm.overlap_len = 15  # number of rr intervals ( number of rpeaks - 1)
+TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.classes = ["af",]
 
 TrainCfg.main.model_name = "seq_lab"  # "unet"

@@ -3,6 +3,7 @@ data generator for feeding data into pytorch models
 """
 import os, sys
 import json
+import re
 import time
 import multiprocessing as mp
 import random
@@ -27,7 +28,7 @@ from signal_processing.ecg_preproc import preprocess_multi_lead_signal
 from utils.utils_signal import normalize
 from utils.utils_interval import mask_to_intervals
 from utils.misc import (
-    dict_to_str, list_sum, nildent, uniform
+    dict_to_str, list_sum, nildent, uniform,
     get_record_list_recursive3,
 )
 
@@ -55,7 +56,7 @@ class CPSC2021(Dataset):
     __name__ = "CPSC2021"
     
     def __init__(self, config:ED, task:str, training:bool=True) -> NoReturn:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -131,7 +132,7 @@ class CPSC2021(Dataset):
         elif self.task.lower() in ["rr_lstm",]:
             self.rr_seq_dirs = ED()
             self.__all_rr_seq = ED()
-            self.rr_json = os.path.join(self.rr_seq_base_dir, "rr_seq.json")
+            self.rr_seq_json = os.path.join(self.rr_seq_base_dir, "rr_seq.json")
             self._ls_rr_seq()
             self.rr_seq = list_sum([self.__all_rr_seq[subject] for subject in self.subjects])
             if self.training:
@@ -253,7 +254,7 @@ class CPSC2021(Dataset):
         if self.task in ["qrs_detection", "main",]:
             return len(self.segments)
         else:  # "rr_lstm"
-            return len(self.rr)
+            return len(self.rr_seq)
 
     def _get_seg_data_path(self, seg:str) -> str:
         """ finished, checked,
@@ -383,14 +384,44 @@ class CPSC2021(Dataset):
         return seq_lab
 
     def _get_rr_seq_path(self, seq_name:str) -> str:
-        """ NOT finished, NOT checked,
-        """
-        raise NotImplementedError
+        """ finished, checked,
 
-    def _load_rr_seq(self, seq_name:str) -> Tuple[np.ndarray, np.ndarray]:
-        """ NOT finished, NOT checked,
+        Parameters
+        ----------
+        seq_name: str,
+            name of the rr_seq, of pattern like "R_1_1_0000193"
+
+        Returns
+        -------
+        fp: str,
+            path of the annotation file of the rr_seq
         """
-        raise NotImplementedError
+        subject = seq_name.split("_")[1]
+        fp = os.path.join(self.rr_seq_dirs[subject], f"{seq_name}.{self.rr_seq_ext}")
+        return fp
+
+    def _load_rr_seq(self, seq_name:str) -> Dict[str, np.ndarray]:
+        """ finished, checked,
+
+        Parameters
+        ----------
+        seq_name: str,
+            name of the rr_seq, of pattern like "R_1_1_0000193"
+
+        Returns
+        -------
+        rr_seq: dict,
+            metadata of sequence of rr intervals, including
+            - rr: the sequence of rr intervals, with units in seconds, of shape (self.seglen, 1)
+            - label: label of the rr intervals, 0 for normal, 1 for af, of shape (self.seglen, self.n_classes)
+            - interval: interval of the current rr sequence in the whole rr sequence in the original record
+        """
+        rr_seq_path = self._get_rr_seq_path(seq_name)
+        rr_seq = {k:v for k,v in loadmat(rr_seq_path).items() if not k.startswith("__")}
+        rr_seq["rr"] = rr_seq["rr"].reshape((self.seglen, 1))
+        rr_seq["label"] = rr_seq["label"].reshape((self.seglen, self.n_classes))
+        rr_seq["interval"] = rr_seq["interval"].flatten()
+        return rr_seq
 
     def disable_data_augmentation(self) -> NoReturn:
         """
@@ -403,7 +434,7 @@ class CPSC2021(Dataset):
         self.__data_aug = True
 
     def persistence(self, force_recompute:bool=False, verbose:int=0) -> NoReturn:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         make the dataset persistent w.r.t. the ratios in `self.config`
 
@@ -414,12 +445,22 @@ class CPSC2021(Dataset):
         verbose: int, default 0,
             print verbosity
         """
+        if verbose >= 1:
+            print(" preprocessing data ".center("#", 110))
         self._preprocess_data(
             self.allowed_preproc,
             force_recompute=force_recompute,
             verbose=verbose,
         )
+        if verbose >= 1:
+            print("\n" + " slicing data into segments ".center("#", 110))
         self._slice_data(
+            force_recompute=force_recompute,
+            verbose=verbose,
+        )
+        if verbose >= 1:
+            print("\n" + " generating rr sequences ".center("#", 110))
+        self._slice_rr_seq(
             force_recompute=force_recompute,
             verbose=verbose,
         )
@@ -575,12 +616,13 @@ class CPSC2021(Dataset):
         verbose: int, default 0,
             print verbosity
         """
+        self.__assert_task(["qrs_detection", "main",])
         if force_recompute:
             self._clear_cached_segments()
-        for idx,rec in enumerate(self.reader.all_records):
+        for idx, rec in enumerate(self.reader.all_records):
             self._slice_one_record(
                 rec=rec,
-                force_recompute=force_recompute,
+                force_recompute=False,
                 update_segments_json=False,
                 verbose=verbose,
             )
@@ -614,6 +656,7 @@ class CPSC2021(Dataset):
         verbose: int, default 0,
             print verbosity
         """
+        self.__assert_task(["qrs_detection", "main",])
         subject = self.reader.get_subject_id(rec)
         rec_segs = [item for item in self.__all_segments[subject] if item.startswith(rec.replace("data", "S"))]
         if (not force_recompute) and len(rec_segs) > 0:
@@ -797,6 +840,7 @@ class CPSC2021(Dataset):
             sequence of the records whose segments are to be cleared,
             defaults to all records
         """
+        self.__assert_task(["qrs_detection", "main",])
         if recs is not None:
             for rec in recs:
                 subject = self.reader.get_subject_id(rec)
@@ -806,38 +850,156 @@ class CPSC2021(Dataset):
                         if self._get_rec_name(f) == rec:
                             os.remove(os.path.join(path, f))
                             self.__all_segments[subject].remove(os.path.splitext(f)[0])
-        for subject in self.reader.all_subjects:
-            for item in ["data", "ann",]:
-                path = self.segments_dirs[item][subject]
-                for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
-                    os.remove(os.path.join(path, f))
-                    self.__all_segments[subject].remove(os.path.splitext(f)[0])
+        else:
+            for subject in self.reader.all_subjects:
+                for item in ["data", "ann",]:
+                    path = self.segments_dirs[item][subject]
+                    for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
+                        os.remove(os.path.join(path, f))
+                        self.__all_segments[subject].remove(os.path.splitext(f)[0])
         self.segments = list_sum([self.__all_segments[subject] for subject in self.subjects])
 
-    def _gen_rr_seq(self):
-        """ NOT finished, NOT checked,
-        """
-        raise NotImplementedError
+    def _slice_rr_seq(self, force_recompute:bool=False, verbose:int=0) -> NoReturn:
+        """ finished, checked,
 
-    def _clear_cached_rr_seq(self):
-        """ NOT finished, NOT checked,
-        """
-        raise NotImplementedError
+        slice sequences of rr intervals into fixed length (sub)sequences
 
-    def _get_rec_name(self, seg:str) -> str:
+        Parameters
+        ----------
+        force_recompute: bool, default False,
+            if True, recompute regardless of possible existing files
+        verbose: int, default 0,
+            print verbosity
+        """
+        self.__assert_task(["rr_lstm"])
+        if force_recompute:
+            self._clear_cached_rr_seq()
+        for idx, rec in enumerate(self.reader.all_records):
+            self._slice_rr_seq_one_record(
+                rec=rec,
+                force_recompute=False,
+                update_rr_seq_json=False,
+                verbose=verbose,
+            )
+            if verbose >= 1:
+                print(f"{idx+1}/{len(self.reader.all_records)} records", end="\r")
+        if force_recompute:
+            with open(self.rr_seq_json, "w") as f:
+                json.dump(self.__all_rr_seq, f)
+
+    def _slice_rr_seq_one_record(self, rec:str, force_recompute:bool=False, update_rr_seq_json:bool=False, verbose:int=0) -> NoReturn:
+        """ finished, checked,
+        """
+        self.__assert_task(["rr_lstm"])
+        subject = self.reader.get_subject_id(rec)
+        rec_rr_seq = [item for item in self.__all_rr_seq[subject] if item.startswith(rec.replace("data", "R"))]
+        if (not force_recompute) and len(rec_rr_seq) > 0:
+            return
+        elif force_recompute:
+            self._clear_cached_rr_seq([rec])
+
+        forward_len = self.seglen - self.config[self.task].overlap_len
+        critical_forward_len = self.seglen - self.config[self.task].critical_overlap_len
+        critical_forward_len = [critical_forward_len-2, critical_forward_len]
+            
+        rpeaks = self.reader.load_rpeaks(rec)
+        rr = np.diff(rpeaks) / self.config.fs
+        if len(rr) < self.seglen:
+            return
+        af_mask = self.reader.load_af_episodes(rec, fmt="mask")
+        label_seq = af_mask[rpeaks][:-1]
+
+        # find critical points
+        critical_points = np.where(np.diff(label_seq)!=0)[0]
+        critical_points = [p for p in critical_points if critical_forward_len[1]<=p<len(rr)-critical_forward_len[1]]
+
+        rr_seq = []
+
+        # ordinary segments with constant forward_len
+        for idx in range(len(rr)//forward_len):
+            start_idx = idx * forward_len
+            end_idx = start_idx + self.seglen
+            new_rr_seq = ED(
+                rr=rr[start_idx:end_idx],
+                label=label_seq[start_idx:end_idx],
+                interval=[start_idx,end_idx],
+            )
+            rr_seq.append(new_rr_seq)
+        # the tail segment
+        end_idx = len(rr)
+        start_idx = start_idx + self.seglen
+        new_rr_seq = ED(
+            rr=rr[start_idx:end_idx],
+            label=label_seq[start_idx:end_idx],
+            interval=[start_idx,end_idx],
+        )
+        rr_seq.append(new_rr_seq)
+
+        # special segments around critical_points with random forward_len in critical_forward_len
+        for cp in critical_points:
+            start_idx = max(0, cp - self.seglen + random.randint(critical_forward_len[0], critical_forward_len[1]))
+            while start_idx <= min(cp - critical_forward_len[1], len(rr) - self.seglen):
+                end_idx = start_idx + self.seglen
+                new_rr_seq = ED(
+                    rr=rr[start_idx:end_idx],
+                    label=label_seq[start_idx:end_idx],
+                    interval=[start_idx,end_idx],
+                )
+                rr_seq.append(new_rr_seq)
+                start_idx += random.randint(critical_forward_len[0], critical_forward_len[1])
+        # save rr sequences
+        ordering = list(range(len(rr_seq)))
+        random.shuffle(ordering)
+        for i, idx in enumerate(ordering):
+            item = rr_seq[idx]
+            filename = f"{rec}_{i:07d}.{self.rr_seq_ext}".replace("data", "R")
+            data_path = os.path.join(self.rr_seq_dirs[subject], filename)
+            savemat(data_path, item)
+            self.__all_rr_seq[subject].append(os.path.splitext(filename)[0])
+        if update_rr_seq_json:
+            with open(self.rr_seq_json, "w") as f:
+                json.dump(self.__all_rr_seq, f)
+
+    def _clear_cached_rr_seq(self, recs:Optional[Sequence[str]]=None) -> NoReturn:
         """ finished, checked,
 
         Parameters
         ----------
-        seg: str,
-            name of the segment
+        recs: sequence of str, optional
+            sequence of the records whose segments are to be cleared,
+            defaults to all records
+        """
+        self.__assert_task(["rr_lstm"])
+        if recs is not None:
+            for rec in recs:
+                subject = self.reader.get_subject_id(rec)
+                path = self.rr_seq_dirs[subject]
+                for f in [n for n in os.listdir(path) if n.endswith(self.rr_seq_ext)]:
+                    if self._get_rec_name(f) == rec:
+                        os.remove(os.path.join(path, f))
+                        self.__all_rr_seq[subject].remove(os.path.splitext(f)[0])
+        else:
+            for subject in self.reader.all_subjects:
+                    path = self.rr_seq_dirs[subject]
+                    for f in [n for n in os.listdir(path) if n.endswith(self.rr_seq_ext)]:
+                        os.remove(os.path.join(path, f))
+                        self.__all_rr_seq[subject].remove(os.path.splitext(f)[0])
+        self.rr_seq = list_sum([self.__all_rr_seq[subject] for subject in self.subjects])
+
+    def _get_rec_name(self, seg_or_rr:str) -> str:
+        """ finished, checked,
+
+        Parameters
+        ----------
+        seg_or_rr: str,
+            name of the segment or rr_seq
         
         Returns
         -------
         rec: str,
             name of the record that `seg` was generated from
         """
-        rec = seg.replace("S", "data")[:-8]
+        rec = re.sub("[RS]", "data", os.path.splitext(seg_or_rr)[0])[:-8]
         return rec
 
     def _train_test_split(self,
@@ -917,6 +1079,12 @@ class CPSC2021(Dataset):
             "test": test_set,
         })
         return split_res
+
+    def __assert_task(self, tasks:List[str]) -> NoReturn:
+        """
+        """
+        assert self.task in tasks, \
+            f"DO NOT call this method when the current task is {self.task}. Switch task using `reset_task`"
 
     def plot_seg(self, seg:str, ticks_granularity:int=0) -> NoReturn:
         """ finished, checked,
