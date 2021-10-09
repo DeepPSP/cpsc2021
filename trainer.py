@@ -95,12 +95,12 @@ def train(model:nn.Module,
     else:
         _model = model
 
-    train_dataset = CPSC2021(config=config, training=True)
+    train_dataset = CPSC2021(config=config, task=config.task, training=True)
 
     if debug:
-        val_train_dataset = CPSC2021(config=config, training=True)
+        val_train_dataset = CPSC2021(config=config, task=config.task, training=True)
         val_train_dataset.disable_data_augmentation()
-    val_dataset = CPSC2021(config=config, training=False)
+    val_dataset = CPSC2021(config=config, task=config.task, training=False)
 
     n_train = len(train_dataset)
     n_val = len(val_dataset)
@@ -152,6 +152,267 @@ def train(model:nn.Module,
         comment=f"OPT_{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_{config.train_optimizer}_LR_{lr}_BS_{batch_size}",
     )
     # TODO:
+
+    msg = textwrap.dedent(f"""
+        Starting training:
+        ------------------
+        Epochs:          {n_epochs}
+        Batch size:      {batch_size}
+        Learning rate:   {lr}
+        Training size:   {n_train}
+        Validation size: {n_val}
+        Device:          {device.type}
+        Optimizer:       {config.train_optimizer}
+        Dataset classes: {train_dataset.all_classes}
+        ---------------------------------------------------
+        """)
+
+    if logger:
+        logger.info(msg)
+    else:
+        print(msg)
+
+    if config.train_optimizer.lower() == "adam":
+        optimizer = optim.Adam(
+            params=model.parameters(),
+            lr=lr,
+            betas=config.betas,
+            eps=1e-08,  # default
+        )
+    elif config.train_optimizer.lower() in ["adamw", "adamw_amsgrad"]:
+        optimizer = optim.AdamW(
+            params=model.parameters(),
+            lr=lr,
+            betas=config.betas,
+            weight_decay=config.decay,
+            eps=1e-08,  # default
+            amsgrad=config.train_optimizer.lower().endswith("amsgrad"),
+        )
+    elif config.train_optimizer.lower() == "sgd":
+        optimizer = optim.SGD(
+            params=model.parameters(),
+            lr=lr,
+            momentum=config.momentum,
+            weight_decay=config.decay,
+        )
+    else:
+        raise NotImplementedError(f"optimizer `{config.train_optimizer}` not implemented!")
+    # scheduler = optim.lr_scheduler.LambdaLR(optimizer, burnin_schedule)
+
+    if config.lr_scheduler is None:
+        scheduler = None
+    elif config.lr_scheduler.lower() == "plateau":
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "max", patience=2)
+    elif config.lr_scheduler.lower() == "step":
+        scheduler = optim.lr_scheduler.StepLR(optimizer, config.lr_step_size, config.lr_gamma)
+    elif config.lr_scheduler.lower() in ["one_cycle", "onecycle",]:
+        scheduler = optim.lr_scheduler.OneCycleLR(
+            optimizer=optimizer,
+            max_lr=config.max_lr,
+            epochs=n_epochs,
+            steps_per_epoch=len(train_loader),
+        )
+    else:
+        raise NotImplementedError(f"lr scheduler `{config.lr_scheduler.lower()}` not implemented for training")
+
+    if config.loss == "BCEWithLogitsLoss":
+        criterion = nn.BCEWithLogitsLoss()
+    elif config.loss == "BCEWithLogitsWithClassWeightLoss":
+        criterion = BCEWithLogitsWithClassWeightLoss(
+            class_weight=train_dataset.class_weights.to(device=device, dtype=_DTYPE)
+        )
+    else:
+        raise NotImplementedError(f"loss `{config.loss}` not implemented!")
+    # scheduler = ReduceLROnPlateau(optimizer, mode="max", verbose=True, patience=6, min_lr=1e-7)
+    # scheduler = CosineAnnealingWarmRestarts(optimizer, 0.001, 1e-6, 20)
+
+    save_prefix = f"{_model.__name__}{cnn_name}{rnn_name}{attn_name}_epoch"
+
+    os.makedirs(config.checkpoints, exist_ok=True)
+    os.makedirs(config.model_dir, exist_ok=True)
+
+     # monitor for training: challenge metric
+    best_state_dict = OrderedDict()
+    best_metric = -np.inf
+    best_eval_res = tuple()
+    best_epoch = -1
+    pseudo_best_epoch = -1
+
+    saved_models = deque()
+    model.train()
+    global_step = 0
+
+    for epoch in range(n_epochs):
+        # train one epoch
+        model.train()
+        epoch_loss = 0
+
+        with tqdm(total=n_train, desc=f"Epoch {epoch + 1}/{n_epochs}", ncols=100) as pbar:
+            for epoch_step, (signals, labels) in enumerate(train_loader):
+                global_step += 1
+                if config.task == "rr_lstm":
+                    # (batch_size, seq_len, n_channel) -> (seq_len, batch_size, n_channel)
+                    signals = signals.permute(1,0,2)
+                signals = signals.to(device=device, dtype=_DTYPE)
+                labels = labels.to(device=device, dtype=_DTYPE)
+
+                preds = model(signals)
+                loss = criterion(preds, labels)
+                if config.flooding_level > 0:
+                    flood = (loss - config.flooding_level).abs() + config.flooding_level
+                    epoch_loss += loss.item()
+                    optimizer.zero_grad()
+                    flood.backward()
+                else:
+                    epoch_loss += loss.item()
+                    optimizer.zero_grad()
+                    loss.backward()
+                optimizer.step()
+
+            if global_step % config.log_step == 0:
+                    writer.add_scalar("train/loss", loss.item(), global_step)
+                    if scheduler:
+                        writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
+                        pbar.set_postfix(**{
+                            "loss (batch)": loss.item(),
+                            "lr": scheduler.get_lr()[0],
+                        })
+                        msg = f"Train step_{global_step}: loss : {loss.item()}, lr : {scheduler.get_lr()[0] * batch_size}"
+                    else:
+                        pbar.set_postfix(**{
+                            "loss (batch)": loss.item(),
+                        })
+                        msg = f"Train step_{global_step}: loss : {loss.item()}"
+                    # print(msg)  # in case no logger
+                    if config.flooding_level > 0:
+                        writer.add_scalar("train/flood", flood.item(), global_step)
+                        msg = f"{msg}\nflood : {flood.item()}"
+                    if logger:
+                        logger.info(msg)
+                    else:
+                        print(msg)
+                pbar.update(signals.shape[0])
+
+            writer.add_scalar("train/epoch_loss", epoch_loss, global_step)
+
+            # eval for each epoch using `evaluate`
+            if debug:
+                eval_train_res = evaluate(model, val_train_loader, config, device, debug, logger=logger)
+                # TODO: add metric to summary writer
+                # writer.add_scalar("train/auroc", eval_train_res[0], global_step)
+
+            eval_res = evaluate(model, val_loader, config, device, debug, logger=logger)
+            model.train()
+            # TODO: add metric to summary writer
+            # writer.add_scalar("test/auroc", eval_res[0], global_step)
+
+            if config.lr_scheduler is None:
+                pass
+            elif config.lr_scheduler.lower() == "plateau":
+                scheduler.step(metrics=eval_res[6])
+            elif config.lr_scheduler.lower() == "step":
+                scheduler.step()
+            elif config.lr_scheduler.lower() in ["one_cycle", "onecycle",]:
+                scheduler.step()
+
+            if debug:
+                # TODO: add msg
+                # eval_train_msg = f"""
+                # train/auroc:             {eval_train_res[0]}
+                # """
+            else:
+                eval_train_msg = ""
+            # TODO: add msg
+            # msg = textwrap.dedent(f"""
+            #     Train epoch_{epoch + 1}:
+            #     --------------------
+            #     train/epoch_loss:        {epoch_loss}{eval_train_msg}
+            #     test/auroc:              {eval_res[0]}
+            #     ---------------------------------
+            #     """)
+            if logger:
+                logger.info(msg)
+            else:
+                print(msg)
+
+            if eval_res[6] > best_metric:  # TODO: replace eval_res[6]
+                best_metric = eval_res[6]  # TODO: replace eval_res[6]
+                best_state_dict = _model.state_dict()
+                best_eval_res = deepcopy(eval_res)
+                best_epoch = epoch + 1
+                pseudo_best_epoch = epoch + 1
+            elif config.early_stopping:
+                if eval_res[6] >= best_metric - config.early_stopping.min_delta:  # TODO: replace eval_res[6]
+                    pseudo_best_epoch = epoch + 1
+                elif epoch - pseudo_best_epoch >= config.early_stopping.patience:
+                    msg = f"early stopping is triggered at epoch {epoch + 1}"
+                    if logger:
+                        logger.info(msg)
+                    else:
+                        print(msg)
+                    break
+
+            msg = textwrap.dedent(f"""
+                best metric = {best_metric},
+                obtained at epoch {best_epoch}
+            """)
+            if logger:
+                logger.info(msg)
+            else:
+                print(msg)
+
+            try:
+                os.makedirs(config.checkpoints, exist_ok=True)
+            except OSError:
+                pass
+            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[6]:.2f}"  # TODO: replace eval_res[6]
+            save_filename = f"{save_prefix}{epoch + 1}_{get_date_str()}_{save_suffix}.pth.tar"
+            save_path = os.path.join(config.checkpoints, save_filename)
+            torch.save({
+                "model_state_dict": _model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "model_config": model_config,
+                "train_config": config,
+                "epoch": epoch+1,
+            }, save_path)
+            if logger:
+                logger.info(f"Checkpoint {epoch + 1} saved!")
+            saved_models.append(save_path)
+            # remove outdated models
+            if len(saved_models) > config.keep_checkpoint_max > 0:
+                model_to_remove = saved_models.popleft()
+                try:
+                    os.remove(model_to_remove)
+                except:
+                    logger.info(f"failed to remove {model_to_remove}")
+
+    # save the best model
+    if best_challenge_metric > -np.inf:
+        if config.final_model_name:
+            save_filename = config.final_model_name
+        else:
+            save_suffix = f"BestModel_fb_{best_eval_res[4]:.2f}_gb_{best_eval_res[5]:.2f}_cm_{best_eval_res[6]:.2f}"
+            save_filename = f"{save_prefix}_{get_date_str()}_{save_suffix}.pth.tar"
+        save_path = os.path.join(config.model_dir, save_filename)
+        torch.save({
+            "model_state_dict": best_state_dict,
+            "model_config": model_config,
+            "train_config": config,
+            "epoch": best_epoch,
+        }, save_path)
+        if logger:
+            logger.info(f"Best model saved to {save_path}!")
+
+    writer.close()
+
+    if logger:
+        for h in logger.handlers:
+            h.close()
+            logger.removeHandler(h)
+        del logger
+    logging.shutdown()
+
+    return best_state_dict
 
 
 @torch.no_grad()

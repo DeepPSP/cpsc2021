@@ -236,7 +236,7 @@ def compute_challenge_metric(class_true:int,
                              endpoints_pred:Sequence[Sequence[int]],
                              onset_score_range:Sequence[float],
                              offset_score_range:Sequence[float]) -> float:
-    """ finished, NOT checked,
+    """ finished, checked,
 
     compute challenge metric for a single record
 
