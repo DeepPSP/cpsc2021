@@ -9,7 +9,7 @@ Possible Solutions
 """
 from copy import deepcopy
 from numbers import Real
-from typing import Union, Optional, Sequence, Tuple, NoReturn, Any
+from typing import Union, Optional, Sequence, Tuple, List, NoReturn, Any
 
 import numpy as np
 import pandas as pd
@@ -24,6 +24,7 @@ from torch_ecg.torch_ecg.models.unets import ECG_UNET, ECG_SUBTRACT_UNET
 from torch_ecg.torch_ecg.models.rr_lstm import RR_LSTM
 from cfg import ModelCfg
 from signal_processing.ecg_preproc import merge_rpeaks
+from utils.misc import mask_to_intervals
 
 
 __all__ = [
@@ -416,15 +417,40 @@ def _qrs_detection_post_process(pred:np.ndarray,
                                 fs:Real,
                                 reduction:int,
                                 bin_pred_thr:float=0.5,
-                                skip_dist:
+                                skip_dist:int=500,
                                 duration_thr:int=4*16,
                                 dist_thr:Union[int,Sequence[int]]=200,) -> List[np.ndarray]:
-    """ finished, NOT checked,
+    """ finished, checked,
+
+    prob --> qrs mask --> qrs intervals --> rpeaks
+
+    Parameters
+    ----------
+    pred: ndarray,
+        array of predicted probability
+    fs: real number,
+        sampling frequency of the ECG
+    reduction: int,
+        reduction (granularity) of `pred` w.r.t. the ECG
+    bin_pred_thr: float, default 0.5,
+        the threshold for making binary predictions from scalar predictions
+    skip_dist: int, default 500,
+        detected rpeaks with distance (units in ms) to two ends of the ECG will be discarded
+    duration_thr: int, default 4*16,
+        minimum duration for a "true" qrs complex, units in ms
+    dist_thr: int or sequence of int, default 200,
+        if is sequence of int,
+        (0-th element). minimum distance for two consecutive qrs complexes, units in ms;
+        (1st element).(optional) maximum distance for checking missing qrs complexes, units in ms,
+        e.g. [200, 1200]
+        if is int, then is the case of (0-th element).
     """
     batch_size, prob_arr_len = pred.shape
+    print(batch_size, prob_arr_len)
     model_spacing = 1000 / fs  # units in ms
     model_granularity = reduction
     input_len = model_granularity * prob_arr_len
+    _skip_dist = skip_dist / model_spacing  # number of samples
     _duration_thr = duration_thr / model_spacing / model_granularity
     _dist_thr = [dist_thr] if isinstance(dist_thr, int) else dist_thr
     assert len(_dist_thr) <= 2
@@ -435,8 +461,9 @@ def _qrs_detection_post_process(pred:np.ndarray,
         b_prob = pred[b_idx,...]
         b_mask = (b_prob > bin_pred_thr).astype(int)
         b_qrs_intervals = mask_to_intervals(b_mask, 1)
+        print(b_qrs_intervals)
         b_rpeaks = np.array([itv[0]+itv[1] for itv in b_qrs_intervals if itv[1]-itv[0] >= _duration_thr])
-        b_rpeaks = (model_granularity//2) * b_rpeaks
+        b_rpeaks = (model_granularity * b_rpeaks / 2).astype(int)
         # print(f"before post-process, b_qrs_intervals = {b_qrs_intervals}")
         # print(f"before post-process, b_rpeaks = {b_rpeaks}")
 
@@ -457,7 +484,7 @@ def _qrs_detection_post_process(pred:np.ndarray,
                     check = True
                     break
         if len(_dist_thr) == 1:
-            b_rpeaks = b_rpeaks[np.where((b_rpeaks>=skip_dist) & (b_rpeaks<input_len-skip_dist))[0]]
+            b_rpeaks = b_rpeaks[np.where((b_rpeaks>=_skip_dist) & (b_rpeaks<input_len-_skip_dist))[0]]
             rpeaks.append(b_rpeaks)
             continue
         check = True
@@ -489,6 +516,6 @@ def _qrs_detection_post_process(pred:np.ndarray,
                     b_rpeaks = np.insert(b_rpeaks, r+1, 4*(new_itv[0]+new_itv[1]))
                     check = True
                     break
-        b_rpeaks = b_rpeaks[np.where((b_rpeaks>=skip_dist) & (b_rpeaks<input_len-skip_dist))[0]]
+        b_rpeaks = b_rpeaks[np.where((b_rpeaks>=_skip_dist) & (b_rpeaks<input_len-_skip_dist))[0]]
         rpeaks.append(b_rpeaks)
     return rpeaks
