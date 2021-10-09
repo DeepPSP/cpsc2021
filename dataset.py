@@ -129,7 +129,7 @@ class CPSC2021(Dataset):
             self.segments = list_sum([self.__all_segments[subject] for subject in self.subjects])
             if self.training:
                 random.shuffle(self.segments)
-        elif self.task.lower() in ["rr_lstm",]:
+        elif self.task in ["rr_lstm",]:
             self.rr_seq_dirs = ED()
             self.__all_rr_seq = ED()
             self.rr_seq_json = os.path.join(self.rr_seq_base_dir, "rr_seq.json")
@@ -209,7 +209,7 @@ class CPSC2021(Dataset):
             return ED()
 
     def __getitem__(self, index:int) -> Tuple[np.ndarray, np.ndarray]:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
         """
         if self.task in ["qrs_detection", "main",]:
             seg_name = self.segments[index]
@@ -243,10 +243,12 @@ class CPSC2021(Dataset):
                 if self.config.label_smoothing > 0:
                     seg_label = (1 - self.config.label_smoothing) * seg_label \
                         + self.config.label_smoothing / (1 + self.n_classes)
+            return seg_data, seg_label
+        elif self.task in ["rr_lstm",]:
+            rr_seq = self._load_rr_seq(self.rr_seq[index])
+            return rr_seq["rr"], rr_seq["label"]
         else:
-            raise NotImplementedError
-
-        return seg_data, seg_label
+            raise NotImplementedError(f"data generator for task \042{self.task}\042 not implemented")
 
     def __len__(self) -> int:
         """ finished,
