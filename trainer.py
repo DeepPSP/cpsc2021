@@ -38,8 +38,10 @@ from model import (
     ECG_SEQ_LAB_NET_CPSC2021,
     ECG_UNET_CPSC2021, ECG_SUBTRACT_UNET_CPSC2021,
     RR_LSTM_CPSC2021,
+    _qrs_detection_post_process,
 )
 from utils.scoring_metrics import compute_challenge_metric
+from utils.aux_metrics import compute_rpeak_metric
 from cfg import BaseCfg, TrainCfg, ModelCfg
 from dataset import CPSC2021
 
@@ -151,7 +153,6 @@ def train(model:nn.Module,
         filename_suffix=f"OPT_{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_{config.train_optimizer}_LR_{lr}_BS_{batch_size}",
         comment=f"OPT_{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_{config.train_optimizer}_LR_{lr}_BS_{batch_size}",
     )
-    # TODO:
 
     msg = textwrap.dedent(f"""
         Starting training:
@@ -298,18 +299,17 @@ def train(model:nn.Module,
             # eval for each epoch using `evaluate`
             if debug:
                 eval_train_res = evaluate(model, val_train_loader, config, device, debug, logger=logger)
-                # TODO: add metric to summary writer
-                # writer.add_scalar("train/auroc", eval_train_res[0], global_step)
+                writer.add_scalar("train/task_metric", eval_train_res, global_step)
 
             eval_res = evaluate(model, val_loader, config, device, debug, logger=logger)
             model.train()
             # TODO: add metric to summary writer
-            # writer.add_scalar("test/auroc", eval_res[0], global_step)
+            writer.add_scalar("test/task_metric", eval_res, global_step)
 
             if config.lr_scheduler is None:
                 pass
             elif config.lr_scheduler.lower() == "plateau":
-                scheduler.step(metrics=eval_res[6])
+                scheduler.step(metrics=eval_res)
             elif config.lr_scheduler.lower() == "step":
                 scheduler.step()
             elif config.lr_scheduler.lower() in ["one_cycle", "onecycle",]:
@@ -317,32 +317,32 @@ def train(model:nn.Module,
 
             if debug:
                 # TODO: add msg
-                # eval_train_msg = f"""
-                # train/auroc:             {eval_train_res[0]}
-                # """
+                eval_train_msg = f"""
+                train/task_metric:       {eval_train_res}
+                """
             else:
                 eval_train_msg = ""
             # TODO: add msg
-            # msg = textwrap.dedent(f"""
-            #     Train epoch_{epoch + 1}:
-            #     --------------------
-            #     train/epoch_loss:        {epoch_loss}{eval_train_msg}
-            #     test/auroc:              {eval_res[0]}
-            #     ---------------------------------
-            #     """)
+            msg = textwrap.dedent(f"""
+                Train epoch_{epoch + 1}:
+                --------------------
+                train/epoch_loss:        {epoch_loss}{eval_train_msg}
+                test/task_metric:        {eval_res}
+                ---------------------------------
+                """)
             if logger:
                 logger.info(msg)
             else:
                 print(msg)
 
-            if eval_res[6] > best_metric:  # TODO: replace eval_res[6]
-                best_metric = eval_res[6]  # TODO: replace eval_res[6]
+            if eval_res > best_metric:
+                best_metric = eval_res
                 best_state_dict = _model.state_dict()
                 best_eval_res = deepcopy(eval_res)
                 best_epoch = epoch + 1
                 pseudo_best_epoch = epoch + 1
             elif config.early_stopping:
-                if eval_res[6] >= best_metric - config.early_stopping.min_delta:  # TODO: replace eval_res[6]
+                if eval_res >= best_metric - config.early_stopping.min_delta:
                     pseudo_best_epoch = epoch + 1
                 elif epoch - pseudo_best_epoch >= config.early_stopping.patience:
                     msg = f"early stopping is triggered at epoch {epoch + 1}"
@@ -365,7 +365,7 @@ def train(model:nn.Module,
                 os.makedirs(config.checkpoints, exist_ok=True)
             except OSError:
                 pass
-            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[6]:.2f}"  # TODO: replace eval_res[6]
+            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res:.2f}"
             save_filename = f"{save_prefix}{epoch + 1}_{get_date_str()}_{save_suffix}.pth.tar"
             save_path = os.path.join(config.checkpoints, save_filename)
             torch.save({
@@ -387,11 +387,11 @@ def train(model:nn.Module,
                     logger.info(f"failed to remove {model_to_remove}")
 
     # save the best model
-    if best_challenge_metric > -np.inf:
+    if best_metric > -np.inf:
         if config.final_model_name:
             save_filename = config.final_model_name
         else:
-            save_suffix = f"BestModel_fb_{best_eval_res[4]:.2f}_gb_{best_eval_res[5]:.2f}_cm_{best_eval_res[6]:.2f}"
+            save_suffix = f"BestModel_metric_{best_eval_res:.2f}"
             save_filename = f"{save_prefix}_{get_date_str()}_{save_suffix}.pth.tar"
         save_path = os.path.join(config.model_dir, save_filename)
         torch.save({
@@ -421,7 +421,7 @@ def evaluate(model:nn.Module,
              config:dict,
              device:torch.device,
              debug:bool=True,
-             logger:Optional[logging.Logger]=None) -> Tuple[float,...]:
+             logger:Optional[logging.Logger]=None) -> float:
     """ NOT finished, NOT checked,
 
     Parameters
@@ -442,12 +442,47 @@ def evaluate(model:nn.Module,
 
     Returns
     -------
-    eval_res: tuple of float,
-        evaluation results, including
-        auroc, auprc, accuracy, f_measure, f_beta_measure, g_beta_measure, challenge_metric
+    eval_res: float,
+        evaluation results, defined by task specific metrics
     """
     model.eval()
-    raise NotImplementedError
+    prev_aug_status = data_loader.dataset.use_augmentation
+    data_loader.dataset.disable_data_augmentation()
+
+    if type(model).__name__ in ["DataParallel",]:  # TODO: further consider "DistributedDataParallel"
+        _model = model.module
+    else:
+        _model = model
+
+    if config.task == "qrs_detection":
+        all_rpeak_preds = []
+        all_rpeak_labels = []
+        for signals, labels in data_loader:
+            signals = signals.to(device=device, dtype=_DTYPE)
+            labels = labels.numpy()
+            labels = _qrs_detection_post_process(labels, config.fs, config[config.task].reduction)
+            all_rpeak_labels += labels
+
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            prob, rpeak_preds = _model.inference(signals)
+            all_rpeak_preds += rpeak_preds
+        eval_res = compute_rpeak_metric(
+            rpeaks_truths=all_rpeak_labels,
+            rpeaks_preds=all_rpeak_preds,
+            fs=config.fs,
+            thr=config.qrs_mask_bias/config.fs,
+        )
+    elif config.task == "main":
+        raise NotImplementedError
+    elif config.task == "rr_lstm":
+        raise NotImplementedError
+
+    model.train()
+    if prev_aug_status:
+        data_loader.dataset.enable_data_augmentation()
+
+    return eval_res
 
 
 def get_args(**kwargs:Any):

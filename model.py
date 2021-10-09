@@ -435,7 +435,8 @@ def _qrs_detection_post_process(pred:np.ndarray,
     bin_pred_thr: float, default 0.5,
         the threshold for making binary predictions from scalar predictions
     skip_dist: int, default 500,
-        detected rpeaks with distance (units in ms) to two ends of the ECG will be discarded
+        detected rpeaks with distance (units in ms) shorter than `skip_dist`
+        to two ends of the ECG will be discarded
     duration_thr: int, default 4*16,
         minimum duration for a "true" qrs complex, units in ms
     dist_thr: int or sequence of int, default 200,

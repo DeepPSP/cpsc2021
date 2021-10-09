@@ -18,3 +18,4 @@ tensorboardX
 tqdm
 deprecated
 peakutils
+torch_optimizer

@@ -211,7 +211,7 @@ TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of
 TrainCfg.rr_lstm.classes = ["af",]
 
 TrainCfg.main.model_name = "seq_lab"  # "unet"
-TrainCfg.qrs_detection.reduction = 8
+TrainCfg.main.reduction = 8
 TrainCfg.main.cnn_name = "multi_scopic"
 TrainCfg.main.rnn_name = "lstm"  # "none", "lstm"
 TrainCfg.main.attn_name = "se"  # "none", "se", "gc", "nl"
