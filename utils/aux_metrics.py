@@ -13,15 +13,15 @@ import numpy as np
 
 
 __all__ = [
-    "compute_rpeak_metrics",
+    "compute_rpeak_metric",
 ]
 
 
-def compute_rpeak_metrics(rpeaks_truths:Sequence[Union[np.ndarray,Sequence[int]]],
-                          rpeaks_preds:Sequence[Union[np.ndarray,Sequence[int]]],
-                          fs:Real,
-                          thr:float=0.075,
-                          verbose:int=0) -> float:
+def compute_rpeak_metric(rpeaks_truths:Sequence[Union[np.ndarray,Sequence[int]]],
+                         rpeaks_preds:Sequence[Union[np.ndarray,Sequence[int]]],
+                         fs:Real,
+                         thr:float=0.075,
+                         verbose:int=0) -> float:
     """ finished, checked,
 
     Parameters
