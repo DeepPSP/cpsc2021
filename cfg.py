@@ -51,7 +51,7 @@ os.makedirs(BaseCfg.log_dir, exist_ok=True)
 os.makedirs(BaseCfg.model_dir, exist_ok=True)
 BaseCfg.test_data_dir = os.path.join(_BASE_DIR, "test_data")
 BaseCfg.fs = 200
-BaseCfg.n_lead = 2
+BaseCfg.n_leads = 2
 BaseCfg.torch_dtype = "float"  # "double"
 
 BaseCfg.class_fn2abbr = { # fullname to abbreviation
@@ -79,7 +79,7 @@ TrainCfg = ED()
 
 # common confis for all training tasks
 TrainCfg.fs = BaseCfg.fs
-TrainCfg.n_lead = BaseCfg.n_lead
+TrainCfg.n_leads = BaseCfg.n_leads
 TrainCfg.data_format = "channel_first"
 TrainCfg.db_dir = BaseCfg.db_dir
 TrainCfg.log_dir = BaseCfg.log_dir
@@ -203,12 +203,14 @@ TrainCfg.qrs_detection.input_len = int(30*TrainCfg.fs)
 TrainCfg.qrs_detection.overlap_len = int(15*TrainCfg.fs)
 TrainCfg.qrs_detection.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.qrs_detection.classes = ["N",]
+TrainCfg.qrs_detection.monitor = "qrs_score"  # monitor for determining the best model
 
 TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
 TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.overlap_len = 15  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.classes = ["af",]
+# TrainCfg.rr_lstm.monitor = ""  # monitor for determining the best model
 
 TrainCfg.main.model_name = "seq_lab"  # "unet"
 TrainCfg.main.reduction = 8
@@ -219,6 +221,7 @@ TrainCfg.main.input_len = int(30*TrainCfg.fs)
 TrainCfg.main.overlap_len = int(15*TrainCfg.fs)
 TrainCfg.main.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.main.classes = ["af",]
+# TrainCfg.main.monitor = ""  # monitor for determining the best model
 
 
 
@@ -230,6 +233,7 @@ TrainCfg.main.classes = ["af",]
 ModelCfg = ED()
 ModelCfg.torch_dtype = BaseCfg.torch_dtype
 ModelCfg.fs = BaseCfg.fs
+ModelCfg.n_leads = BaseCfg.n_leads
 
 for t in TrainCfg.tasks:
     ModelCfg[t] = ED()
@@ -240,6 +244,8 @@ ModelCfg.qrs_detection.rnn_name = TrainCfg.qrs_detection.rnn_name
 ModelCfg.qrs_detection.attn_name = TrainCfg.qrs_detection.attn_name
 ModelCfg.qrs_detection.input_len = TrainCfg.qrs_detection.input_len
 ModelCfg.qrs_detection.classes = TrainCfg.qrs_detection.classes
+
+ModelCfg.qrs_detection.seq_lab = deepcopy()
 
 
 ModelCfg.rr_lstm.model_name = TrainCfg.rr_lstm.model_name

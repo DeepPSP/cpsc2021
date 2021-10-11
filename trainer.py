@@ -227,7 +227,7 @@ def train(model:nn.Module,
     # scheduler = ReduceLROnPlateau(optimizer, mode="max", verbose=True, patience=6, min_lr=1e-7)
     # scheduler = CosineAnnealingWarmRestarts(optimizer, 0.001, 1e-6, 20)
 
-    save_prefix = f"{_model.__name__}{cnn_name}{rnn_name}{attn_name}_epoch"
+    save_prefix = f"{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_epoch"
 
     os.makedirs(config.checkpoints, exist_ok=True)
     os.makedirs(config.model_dir, exist_ok=True)
@@ -270,7 +270,7 @@ def train(model:nn.Module,
                     loss.backward()
                 optimizer.step()
 
-            if global_step % config.log_step == 0:
+                if global_step % config.log_step == 0:
                     writer.add_scalar("train/loss", loss.item(), global_step)
                     if scheduler:
                         writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
@@ -299,12 +299,13 @@ def train(model:nn.Module,
             # eval for each epoch using `evaluate`
             if debug:
                 eval_train_res = evaluate(model, val_train_loader, config, device, debug, logger=logger)
-                writer.add_scalar("train/task_metric", eval_train_res, global_step)
+                for k,v in eval_train_res.items():
+                    writer.add_scalar(f"train/task_metric_{k}", v, global_step)
 
             eval_res = evaluate(model, val_loader, config, device, debug, logger=logger)
             model.train()
-            # TODO: add metric to summary writer
-            writer.add_scalar("test/task_metric", eval_res, global_step)
+            for k,v in eval_res.items():
+                writer.add_scalar(f"test/task_metric_{k}", v, global_step)
 
             if config.lr_scheduler is None:
                 pass
@@ -316,33 +317,34 @@ def train(model:nn.Module,
                 scheduler.step()
 
             if debug:
-                # TODO: add msg
-                eval_train_msg = f"""
-                train/task_metric:       {eval_train_res}
-                """
+                eval_train_msg = ""
+                for k,v in eval_train_res.items():
+                    eval_train_msg += f"""
+                    train/task_metric_{k}:       {v}
+                    """
             else:
                 eval_train_msg = ""
-            # TODO: add msg
-            msg = textwrap.dedent(f"""
-                Train epoch_{epoch + 1}:
-                --------------------
-                train/epoch_loss:        {epoch_loss}{eval_train_msg}
-                test/task_metric:        {eval_res}
-                ---------------------------------
-                """)
+            for k,v in eval_res.items():
+                msg = textwrap.dedent(f"""
+                    Train epoch_{epoch + 1}:
+                    --------------------
+                    train/epoch_loss:        {epoch_loss}{eval_train_msg}
+                    test/task_metric_{k}:    {v}
+                    ---------------------------------
+                    """)
             if logger:
                 logger.info(msg)
             else:
                 print(msg)
 
-            if eval_res > best_metric:
-                best_metric = eval_res
+            if eval_res[config.monitor] > best_metric:
+                best_metric = eval_res[config.monitor]
                 best_state_dict = _model.state_dict()
                 best_eval_res = deepcopy(eval_res)
                 best_epoch = epoch + 1
                 pseudo_best_epoch = epoch + 1
             elif config.early_stopping:
-                if eval_res >= best_metric - config.early_stopping.min_delta:
+                if eval_res[config.monitor] >= best_metric - config.early_stopping.min_delta:
                     pseudo_best_epoch = epoch + 1
                 elif epoch - pseudo_best_epoch >= config.early_stopping.patience:
                     msg = f"early stopping is triggered at epoch {epoch + 1}"
@@ -365,7 +367,7 @@ def train(model:nn.Module,
                 os.makedirs(config.checkpoints, exist_ok=True)
             except OSError:
                 pass
-            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res:.2f}"
+            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[config.monitor]:.2f}"
             save_filename = f"{save_prefix}{epoch + 1}_{get_date_str()}_{save_suffix}.pth.tar"
             save_path = os.path.join(config.checkpoints, save_filename)
             torch.save({
@@ -391,8 +393,8 @@ def train(model:nn.Module,
         if config.final_model_name:
             save_filename = config.final_model_name
         else:
-            save_suffix = f"BestModel_metric_{best_eval_res:.2f}"
-            save_filename = f"{save_prefix}_{get_date_str()}_{save_suffix}.pth.tar"
+            save_suffix = f"metric_{best_eval_res[config.monitor]:.2f}"
+            save_filename = f"BestModel_{save_prefix}_{get_date_str()}_{save_suffix}.pth.tar"
         save_path = os.path.join(config.model_dir, save_filename)
         torch.save({
             "model_state_dict": best_state_dict,
@@ -421,7 +423,7 @@ def evaluate(model:nn.Module,
              config:dict,
              device:torch.device,
              debug:bool=True,
-             logger:Optional[logging.Logger]=None) -> float:
+             logger:Optional[logging.Logger]=None) -> Dict[str,float]:
     """ NOT finished, NOT checked,
 
     Parameters
@@ -442,7 +444,7 @@ def evaluate(model:nn.Module,
 
     Returns
     -------
-    eval_res: float,
+    eval_res: dict,
         evaluation results, defined by task specific metrics
     """
     model.eval()
@@ -473,6 +475,7 @@ def evaluate(model:nn.Module,
             fs=config.fs,
             thr=config.qrs_mask_bias/config.fs,
         )
+        eval_res = {"qrs_score": eval_res}  # to dict
     elif config.task == "main":
         raise NotImplementedError
     elif config.task == "rr_lstm":
