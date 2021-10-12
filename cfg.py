@@ -231,34 +231,62 @@ TrainCfg.main.classes = ["af",]
 # main task via UNets, sequence labelling using raw ECGs
 
 ModelCfg = ED()
-ModelCfg.torch_dtype = BaseCfg.torch_dtype
-ModelCfg.fs = BaseCfg.fs
-ModelCfg.n_leads = BaseCfg.n_leads
+
+_BASE_MODEL_CONFIG = ED()
+_BASE_MODEL_CONFIG.torch_dtype = BaseCfg.torch_dtype
+_BASE_MODEL_CONFIG.fs = BaseCfg.fs
+_BASE_MODEL_CONFIG.n_leads = BaseCfg.n_leads
 
 for t in TrainCfg.tasks:
-    ModelCfg[t] = ED()
+    ModelCfg[t] = deepcopy(_BASE_MODEL_CONFIG)
+    ModelCfg[t].task = t
 
+
+ModelCfg.qrs_detection.input_len = TrainCfg.qrs_detection.input_len
+ModelCfg.qrs_detection.classes = TrainCfg.qrs_detection.classes
 ModelCfg.qrs_detection.model_name = TrainCfg.qrs_detection.model_name
 ModelCfg.qrs_detection.cnn_name = TrainCfg.qrs_detection.cnn_name
 ModelCfg.qrs_detection.rnn_name = TrainCfg.qrs_detection.rnn_name
 ModelCfg.qrs_detection.attn_name = TrainCfg.qrs_detection.attn_name
-ModelCfg.qrs_detection.input_len = TrainCfg.qrs_detection.input_len
-ModelCfg.qrs_detection.classes = TrainCfg.qrs_detection.classes
 
-ModelCfg.qrs_detection.seq_lab = deepcopy()
+# the following is a comprehensive choices for different choices of qrs_detection task
+ModelCfg.qrs_detection.seq_lab = deepcopy(ECG_SEQ_LAB_NET_CONFIG)
+ModelCfg.qrs_detection.seq_lab.cnn.name = ModelCfg.qrs_detection.cnn_name
+ModelCfg.qrs_detection.seq_lab.rnn.name = ModelCfg.qrs_detection.rnn_name
+ModelCfg.qrs_detection.seq_lab.attn.name = ModelCfg.qrs_detection.attn_name
+
+ModelCfg.qrs_detection.seq_lab.cnn.multi_scopic.filter_lengths = [
+    [5, 5, 3], [7, 5, 3], [7, 5, 3],
+]
+
+ModelCfg.qrs_detection.unet = deepcopy(ECG_UNET_VANILLA_CONFIG)
 
 
-ModelCfg.rr_lstm.model_name = TrainCfg.rr_lstm.model_name
 ModelCfg.rr_lstm.input_len = TrainCfg.rr_lstm.input_len
 ModelCfg.rr_lstm.classes = TrainCfg.rr_lstm.classes
+ModelCfg.rr_lstm.model_name = TrainCfg.rr_lstm.model_name
+
+# the following is a comprehensive choices for different choices of rr_lstm task
 
 
+ModelCfg.main.input_len = TrainCfg.main.input_len
+ModelCfg.main.classes = TrainCfg.main.classes
 ModelCfg.main.model_name = TrainCfg.main.model_name
 ModelCfg.main.cnn_name = TrainCfg.main.cnn_name
 ModelCfg.main.rnn_name = TrainCfg.main.rnn_name
 ModelCfg.main.attn_name = TrainCfg.main.attn_name
-ModelCfg.main.input_len = TrainCfg.main.input_len
-ModelCfg.main.classes = TrainCfg.main.classes
+
+# the following is a comprehensive choices for different choices of main task
+ModelCfg.main.seq_lab = deepcopy(ECG_SEQ_LAB_NET_CONFIG)
+ModelCfg.main.seq_lab.cnn.name = ModelCfg.main.cnn_name
+ModelCfg.main.seq_lab.rnn.name = ModelCfg.main.rnn_name
+ModelCfg.main.seq_lab.attn.name = ModelCfg.main.attn_name
+
+ModelCfg.main.seq_lab.cnn.multi_scopic.filter_lengths = [
+    [3, 3, 3], [5, 5, 3], [7, 5, 3],
+]
+
+ModelCfg.main.unet = deepcopy(ECG_UNET_VANILLA_CONFIG)
 
 
 # configurations for visualization

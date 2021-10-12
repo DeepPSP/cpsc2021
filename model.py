@@ -41,20 +41,24 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
     __DEBUG__ = True
     __name__ = "ECG_SEQ_LAB_NET_CPSC2021"
 
-    def __init__(self, classes:Sequence[str], n_leads:int, config:Optional[ED]=None) -> NoReturn:
-        """ NOT finished, NOT checked,
+    def __init__(self, config:ED) -> NoReturn:
+        """ finished, checked,
 
         Parameters
         ----------
-        classes: list,
-            list of the classes for sequence labeling
-        n_leads: int,
-            number of leads (number of input channels)
-        config: dict, optional,
+        config: dict,
             other hyper-parameters, including kernel sizes, etc.
             ref. the corresponding config file
+
+        Usage
+        -----
+        from cfg import ModelCfg
+        task = "qrs_detection"  # or "main"
+        model_cfg = deepcopy(ModelCfg[task])
+        model_cfg.model_name = "seq_lab"
+        model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(classes, n_leads, config)
+        super().__init__(config.classes, config.n_leads, config[config.model_name])
         self.task = config.task
 
     @torch.no_grad()
@@ -62,7 +66,15 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
                   input:Union[np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Any:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
+
+        Parameters
+        ----------
+        input: ndarray or Tensor,
+            input tensor, of shape (batch_size, channels, seq_len)
+        bin_pred_thr: float, default 0.5,
+            the threshold for making binary predictions from scalar predictions
+        kwargs: task specific key word arguments
         """
         if self.task == "qrs_detection":
             return self._inference_qrs_detection(input, bin_pred_thr, **kwargs)
@@ -85,7 +97,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
                                  bin_pred_thr:float=0.5,
                                  duration_thr:int=4*16,
                                  dist_thr:Union[int,Sequence[int]]=200,) -> Tuple[np.ndarray, List[np.ndarray]]:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
         auxiliary function to `forward`, for CPSC2021,
 
         NOTE: each segment of input be better filtered using `_remove_spikes_naive`,
@@ -154,20 +166,24 @@ class ECG_UNET_CPSC2021(ECG_UNET):
     __DEBUG__ = True
     __name__ = "ECG_UNET_CPSC2021"
     
-    def __init__(self, classes:Sequence[str], n_leads:int, config:dict) -> NoReturn:
+    def __init__(self, config:ED) -> NoReturn:
         """ NOT finished, NOT checked,
 
         Parameters
         ----------
-        classes: sequence of int,
-            name of the classes
-        n_leads: int,
-            number of input leads (number of input channels)
         config: dict,
             other hyper-parameters, including kernel sizes, etc.
             ref. the corresponding config file
+
+        Usage
+        -----
+        from cfg import ModelCfg
+        task = "qrs_detection"  # or "main"
+        model_cfg = deepcopy(ModelCfg[task])
+        model_cfg.model_name = "unet"
+        model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(classes, n_leads, config)
+        super().__init__(config.classes, config.n_leads, config[config.model_name])
         self.task = config.task
 
     @torch.no_grad()
@@ -176,6 +192,14 @@ class ECG_UNET_CPSC2021(ECG_UNET):
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Any:
         """ NOT finished, NOT checked,
+
+        Parameters
+        ----------
+        input: ndarray or Tensor,
+            input tensor, of shape (batch_size, channels, seq_len)
+        bin_pred_thr: float, default 0.5,
+            the threshold for making binary predictions from scalar predictions
+        kwargs: task specific key word arguments
         """
         if self.task == "qrs_detection":
             return self._inference_qrs_detection(input, bin_pred_thr, **kwargs)
@@ -267,20 +291,24 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
     __DEBUG__ = True
     __name__ = "ECG_SUBTRACT_UNET_CPSC2021"
 
-    def __init__(self, classes:Sequence[str], n_leads:int, config:dict) -> NoReturn:
+    def __init__(self, config:ED) -> NoReturn:
         """ NOT finished, NOT checked,
 
         Parameters
         ----------
-        classes: sequence of int,
-            name of the classes
-        n_leads: int,
-            number of input leads
         config: dict,
             other hyper-parameters, including kernel sizes, etc.
             ref. the corresponding config file
+
+        Usage
+        -----
+        from cfg import ModelCfg
+        task = "qrs_detection"  # or "main"
+        model_cfg = deepcopy(ModelCfg[task])
+        model_cfg.model_name = "unet"
+        model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(classes, n_leads, config)
+        super().__init__(config.classes, config.n_leads, config[config.model_name])
         self.task = config.task
 
     @torch.no_grad()
@@ -289,6 +317,14 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Any:
         """ NOT finished, NOT checked,
+
+        Parameters
+        ----------
+        input: ndarray or Tensor,
+            input tensor, of shape (batch_size, channels, seq_len)
+        bin_pred_thr: float, default 0.5,
+            the threshold for making binary predictions from scalar predictions
+        kwargs: task specific key word arguments
         """
         if self.task == "qrs_detection":
             return self._inference_qrs_detection(input, bin_pred_thr, **kwargs)
@@ -380,26 +416,37 @@ class RR_LSTM_CPSC2021(RR_LSTM):
     __DEBUG__ = True
     __name__ = "RR_LSTM_CPSC2021"
 
-    def __init__(self, classes:Sequence[str], n_leads:int, config:Optional[ED]=None) -> NoReturn:
+    def __init__(self, config:ED) -> NoReturn:
         """ NOT finished, NOT checked,
 
         Parameters
         ----------
-        classes: list,
-            list of the classes for classification
-        n_leads: int,
-            number of leads (number of input channels)
-        config: dict, optional,
+        config: dict,
             other hyper-parameters, including kernel sizes, etc.
             ref. the corresponding config file
+
+        Usage
+        -----
+        from cfg import ModelCfg
+        task = "rr_lstm"
+        model_cfg = deepcopy(ModelCfg[task])
+        model_cfg.model_name = "rr_lstm"
+        model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(classes, n_leads, config)
+        super().__init__(config.classes, config.n_leads, config[config.model_name])
 
     @torch.no_grad()
     def inference(self,
                   input:Union[np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,) -> Any:
         """ NOT finished, NOT checked,
+
+        Parameters
+        ----------
+        input: ndarray or Tensor,
+            input tensor, of shape (batch_size, channels, seq_len)
+        bin_pred_thr: float, default 0.5,
+            the threshold for making binary predictions from scalar predictions
         """
         raise NotImplementedError
 
