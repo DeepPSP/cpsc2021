@@ -227,12 +227,12 @@ class CPSC2021(Dataset):
                     rn_mean = np.array(uniform(
                         self.config.random_normalize_mean[0],
                         self.config.random_normalize_mean[1],
-                        self.config.n_lead,
+                        self.config.n_leads,
                     ))
                     rn_std = np.array(uniform(
                         self.config.random_normalize_std[0],
                         self.config.random_normalize_std[1],
-                        self.config.n_lead,
+                        self.config.n_leads,
                     ))
                     seg_data = normalize(
                         sig=seg_data,
@@ -686,7 +686,7 @@ class CPSC2021(Dataset):
         segments = []
 
         # ordinary segments with constant forward_len
-        for idx in range(siglen//forward_len):
+        for idx in range((siglen-self.seglen)//forward_len + 1):
             start_idx = idx * forward_len
             new_seg = self.__generate_segment(
                 rec=rec, data=data, start_idx=start_idx,
@@ -755,22 +755,35 @@ class CPSC2021(Dataset):
                     start_idx = end_idx - sc_len
                 if end_idx > siglen:
                     end_idx = siglen
-                    start_idx = end_idx - sc_len
+                    start_idx = max(0, end_idx - sc_len)
+                    sc_ratio = (end_idx - start_idx) / self.seglen
                 aug_seg = data[..., start_idx: end_idx]
                 aug_seg = SS.resample(x=aug_seg, num=self.seglen, axis=1)
             else:
                 if start_idx is not None:
                     end_idx = start_idx + self.seglen
+                    if end_idx > siglen:
+                        end_idx = siglen
+                        start_idx = end_idx - self.seglen
                 else:
                     start_idx = end_idx - self.seglen
+                    if start_idx < 0:
+                        start_idx = 0
+                        end_idx = self.seglen
                 # the segment of original signal, with no augmentation
                 aug_seg = data[..., start_idx: end_idx]
                 sc_ratio = 1
         else:
             if start_idx is not None:
                 end_idx = start_idx + self.seglen
+                if end_idx > siglen:
+                    end_idx = siglen
+                    start_idx = end_idx - self.seglen
             else:
                 start_idx = end_idx - self.seglen
+                if start_idx < 0:
+                    start_idx = 0
+                    end_idx = self.seglen
             aug_seg = data[..., start_idx: end_idx]
             sc_ratio = 1
         # adjust rpeaks
