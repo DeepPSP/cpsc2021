@@ -494,7 +494,7 @@ def _qrs_detection_post_process(pred:np.ndarray,
         if is int, then is the case of (0-th element).
     """
     batch_size, prob_arr_len = pred.shape
-    print(batch_size, prob_arr_len)
+    # print(batch_size, prob_arr_len)
     model_spacing = 1000 / fs  # units in ms
     model_granularity = reduction
     input_len = model_granularity * prob_arr_len
@@ -509,7 +509,7 @@ def _qrs_detection_post_process(pred:np.ndarray,
         b_prob = pred[b_idx,...]
         b_mask = (b_prob > bin_pred_thr).astype(int)
         b_qrs_intervals = mask_to_intervals(b_mask, 1)
-        print(b_qrs_intervals)
+        # print(b_qrs_intervals)
         b_rpeaks = np.array([itv[0]+itv[1] for itv in b_qrs_intervals if itv[1]-itv[0] >= _duration_thr])
         b_rpeaks = (model_granularity * b_rpeaks / 2).astype(int)
         # print(f"before post-process, b_qrs_intervals = {b_qrs_intervals}")

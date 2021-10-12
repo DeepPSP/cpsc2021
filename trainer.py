@@ -42,6 +42,7 @@ from model import (
 )
 from utils.scoring_metrics import compute_challenge_metric
 from utils.aux_metrics import compute_rpeak_metric
+from utils.misc import mask_to_intervals
 from cfg import BaseCfg, TrainCfg, ModelCfg
 from dataset import CPSC2021
 
@@ -337,14 +338,14 @@ def train(model:nn.Module,
             else:
                 print(msg)
 
-            if eval_res[config.monitor] > best_metric:
-                best_metric = eval_res[config.monitor]
+            if eval_res[config[config.task].monitor] > best_metric:
+                best_metric = eval_res[config[config.task].monitor]
                 best_state_dict = _model.state_dict()
                 best_eval_res = deepcopy(eval_res)
                 best_epoch = epoch + 1
                 pseudo_best_epoch = epoch + 1
             elif config.early_stopping:
-                if eval_res[config.monitor] >= best_metric - config.early_stopping.min_delta:
+                if eval_res[config[config.task].monitor] >= best_metric - config.early_stopping.min_delta:
                     pseudo_best_epoch = epoch + 1
                 elif epoch - pseudo_best_epoch >= config.early_stopping.patience:
                     msg = f"early stopping is triggered at epoch {epoch + 1}"
@@ -367,7 +368,7 @@ def train(model:nn.Module,
                 os.makedirs(config.checkpoints, exist_ok=True)
             except OSError:
                 pass
-            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[config.monitor]:.2f}"
+            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[config[config.task].monitor]:.2f}"
             save_filename = f"{save_prefix}{epoch + 1}_{get_date_str()}_{save_suffix}.pth.tar"
             save_path = os.path.join(config.checkpoints, save_filename)
             torch.save({
@@ -393,7 +394,7 @@ def train(model:nn.Module,
         if config.final_model_name:
             save_filename = config.final_model_name
         else:
-            save_suffix = f"metric_{best_eval_res[config.monitor]:.2f}"
+            save_suffix = f"metric_{best_eval_res[config[config.task].monitor]:.2f}"
             save_filename = f"BestModel_{save_prefix}_{get_date_str()}_{save_suffix}.pth.tar"
         save_path = os.path.join(config.model_dir, save_filename)
         torch.save({
@@ -462,13 +463,23 @@ def evaluate(model:nn.Module,
         for signals, labels in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
             labels = labels.numpy()
-            labels = _qrs_detection_post_process(labels, config.fs, config[config.task].reduction)
+            labels = [mask_to_intervals(item, 1) for item in labels]  # intervals of qrs complexes
+            labels = [ # to indices of rpeaks in the original signal sequence
+                (config.qrs_detection.reduction * np.array([itv[0]+itv[1] for itv in item]) / 2).astype(int) \
+                    for item in labels
+            ]
+            labels = [
+                item[np.where((item>=config.rpeaks_dist2border) & (item<config.qrs_detection.input_len-config.rpeaks_dist2border))[0]] \
+                    for item in labels
+            ]
             all_rpeak_labels += labels
 
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             prob, rpeak_preds = _model.inference(signals)
             all_rpeak_preds += rpeak_preds
+        if debug:
+            pass  # TODO: add log
         eval_res = compute_rpeak_metric(
             rpeaks_truths=all_rpeak_labels,
             rpeaks_preds=all_rpeak_preds,

@@ -251,6 +251,8 @@ ModelCfg.qrs_detection.attn_name = TrainCfg.qrs_detection.attn_name
 
 # the following is a comprehensive choices for different choices of qrs_detection task
 ModelCfg.qrs_detection.seq_lab = deepcopy(ECG_SEQ_LAB_NET_CONFIG)
+ModelCfg.qrs_detection.seq_lab.fs = BaseCfg.fs
+ModelCfg.qrs_detection.seq_lab.reduction = TrainCfg.qrs_detection.reduction
 ModelCfg.qrs_detection.seq_lab.cnn.name = ModelCfg.qrs_detection.cnn_name
 ModelCfg.qrs_detection.seq_lab.rnn.name = ModelCfg.qrs_detection.rnn_name
 ModelCfg.qrs_detection.seq_lab.attn.name = ModelCfg.qrs_detection.attn_name
@@ -260,6 +262,7 @@ ModelCfg.qrs_detection.seq_lab.cnn.multi_scopic.filter_lengths = [
 ]
 
 ModelCfg.qrs_detection.unet = deepcopy(ECG_UNET_VANILLA_CONFIG)
+ModelCfg.qrs_detection.unet.fs = BaseCfg.fs
 
 
 ModelCfg.rr_lstm.input_len = TrainCfg.rr_lstm.input_len
@@ -278,6 +281,8 @@ ModelCfg.main.attn_name = TrainCfg.main.attn_name
 
 # the following is a comprehensive choices for different choices of main task
 ModelCfg.main.seq_lab = deepcopy(ECG_SEQ_LAB_NET_CONFIG)
+ModelCfg.main.seq_lab.fs = BaseCfg.fs
+ModelCfg.main.seq_lab.reduction = TrainCfg.main.reduction
 ModelCfg.main.seq_lab.cnn.name = ModelCfg.main.cnn_name
 ModelCfg.main.seq_lab.rnn.name = ModelCfg.main.rnn_name
 ModelCfg.main.seq_lab.attn.name = ModelCfg.main.attn_name
@@ -287,6 +292,7 @@ ModelCfg.main.seq_lab.cnn.multi_scopic.filter_lengths = [
 ]
 
 ModelCfg.main.unet = deepcopy(ECG_UNET_VANILLA_CONFIG)
+ModelCfg.main.unet.fs = BaseCfg.fs
 
 
 # configurations for visualization
