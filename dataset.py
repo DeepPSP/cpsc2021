@@ -435,6 +435,10 @@ class CPSC2021(Dataset):
         """
         self.__data_aug = True
 
+    @property
+    def use_augmentation(self) -> bool:
+        return self.__data_aug
+
     def persistence(self, force_recompute:bool=False, verbose:int=0) -> NoReturn:
         """ finished, checked,
 
@@ -931,7 +935,7 @@ class CPSC2021(Dataset):
         rr_seq = []
 
         # ordinary segments with constant forward_len
-        for idx in range(len(rr)//forward_len):
+        for idx in range((len(rr)-self.seglen)//forward_len + 1):
             start_idx = idx * forward_len
             end_idx = start_idx + self.seglen
             new_rr_seq = ED(
