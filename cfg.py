@@ -230,12 +230,12 @@ TrainCfg.main.classes = ["af",]
 # main task via RR-LSTM using sequence of R peaks as input
 # main task via UNets, sequence labelling using raw ECGs
 
-ModelCfg = ED()
-
 _BASE_MODEL_CONFIG = ED()
 _BASE_MODEL_CONFIG.torch_dtype = BaseCfg.torch_dtype
 _BASE_MODEL_CONFIG.fs = BaseCfg.fs
 _BASE_MODEL_CONFIG.n_leads = BaseCfg.n_leads
+
+ModelCfg = deepcopy(_BASE_MODEL_CONFIG)
 
 for t in TrainCfg.tasks:
     ModelCfg[t] = deepcopy(_BASE_MODEL_CONFIG)

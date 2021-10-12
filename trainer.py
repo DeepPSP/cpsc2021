@@ -9,7 +9,7 @@ import argparse
 import textwrap
 from copy import deepcopy
 from collections import deque, OrderedDict
-from typing import Any, Union, Optional, Tuple, Sequence, NoReturn
+from typing import Any, Union, Optional, Tuple, Sequence, NoReturn, Dict
 from numbers import Real, Number
 
 import numpy as np
@@ -555,14 +555,10 @@ if __name__ == "__main__":
     # TODO: adjust for CPSC2021
     for task in config.tasks:
         model_cls = _MODEL_MAP[config[task].model_name]
+        model_cls.__DEBUG__ = False
         config.task = task
         model_config = deepcopy(ModelCfg[task])
-        model = model_cls(
-            classes=config.classes,
-            n_leads=config.n_leads,
-            config=model_config,
-        )
-        model.__DEBUG__ = False
+        model = model_cls(config=model_config)
         if torch.cuda.device_count() > 1:
             model = DP(model)
             # model = DDP(model)
