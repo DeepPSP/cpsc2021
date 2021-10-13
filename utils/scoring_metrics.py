@@ -28,7 +28,7 @@ Written by:  Xingyao Wang, Chengyu Liu
              chengyu@seu.edu.cn
 """
 
-R = np.array([[1, -1, -.5], [-2, 1, 0], [-1, 0, 1]])  # scoring matrix
+R = np.array([[1, -1, -.5], [-2, 1, 0], [-1, 0, 1]])  # scoring matrix for classification
 
 class RefInfo():
     def __init__(self, sample_path):
