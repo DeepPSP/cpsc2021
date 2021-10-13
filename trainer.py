@@ -338,14 +338,14 @@ def train(model:nn.Module,
             else:
                 print(msg)
 
-            if eval_res[config[config.task].monitor] > best_metric:
-                best_metric = eval_res[config[config.task].monitor]
+            if eval_res[config.monitor] > best_metric:
+                best_metric = eval_res[config.monitor]
                 best_state_dict = _model.state_dict()
                 best_eval_res = deepcopy(eval_res)
                 best_epoch = epoch + 1
                 pseudo_best_epoch = epoch + 1
             elif config.early_stopping:
-                if eval_res[config[config.task].monitor] >= best_metric - config.early_stopping.min_delta:
+                if eval_res[config.monitor] >= best_metric - config.early_stopping.min_delta:
                     pseudo_best_epoch = epoch + 1
                 elif epoch - pseudo_best_epoch >= config.early_stopping.patience:
                     msg = f"early stopping is triggered at epoch {epoch + 1}"
@@ -368,7 +368,7 @@ def train(model:nn.Module,
                 os.makedirs(config.checkpoints, exist_ok=True)
             except OSError:
                 pass
-            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[config[config.task].monitor]:.2f}"
+            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[config.monitor]:.2f}"
             save_filename = f"{save_prefix}{epoch + 1}_{get_date_str()}_{save_suffix}.pth.tar"
             save_path = os.path.join(config.checkpoints, save_filename)
             torch.save({
@@ -394,7 +394,7 @@ def train(model:nn.Module,
         if config.final_model_name:
             save_filename = config.final_model_name
         else:
-            save_suffix = f"metric_{best_eval_res[config[config.task].monitor]:.2f}"
+            save_suffix = f"metric_{best_eval_res[config.monitor]:.2f}"
             save_filename = f"BestModel_{save_prefix}_{get_date_str()}_{save_suffix}.pth.tar"
         save_path = os.path.join(config.model_dir, save_filename)
         torch.save({
@@ -554,6 +554,17 @@ _MODEL_MAP = {
 }
 
 
+def _set_task(task:str, config:ED) -> NoReturn:
+    """ finished, checked,
+    """
+    assert task in config.tasks
+    config.task = task
+    for item in [
+        "classes", "monitor", "final_model_name",
+    ]:
+        config[item] = config[task][item]
+
+
 if __name__ == "__main__":
     config = get_args(**TrainCfg)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -567,7 +578,7 @@ if __name__ == "__main__":
     for task in config.tasks:
         model_cls = _MODEL_MAP[config[task].model_name]
         model_cls.__DEBUG__ = False
-        config.task = task
+        _set_task(task, config)
         model_config = deepcopy(ModelCfg[task])
         model = model_cls(config=model_config)
         if torch.cuda.device_count() > 1:

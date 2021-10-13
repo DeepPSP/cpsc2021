@@ -194,6 +194,7 @@ TrainCfg.tasks = [
 for t in TrainCfg.tasks:
     TrainCfg[t] = ED()
 
+TrainCfg.qrs_detection.final_model_name = None
 TrainCfg.qrs_detection.model_name = "seq_lab"  # "unet"
 TrainCfg.qrs_detection.reduction = 8
 TrainCfg.qrs_detection.cnn_name = "multi_scopic"
@@ -205,6 +206,7 @@ TrainCfg.qrs_detection.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.qrs_detection.classes = ["N",]
 TrainCfg.qrs_detection.monitor = "qrs_score"  # monitor for determining the best model
 
+TrainCfg.rr_lstm.final_model_name = None
 TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
 TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.overlap_len = 15  # number of rr intervals ( number of rpeaks - 1)
@@ -212,6 +214,7 @@ TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of
 TrainCfg.rr_lstm.classes = ["af",]
 # TrainCfg.rr_lstm.monitor = ""  # monitor for determining the best model
 
+TrainCfg.main.final_model_name = None
 TrainCfg.main.model_name = "seq_lab"  # "unet"
 TrainCfg.main.reduction = 8
 TrainCfg.main.cnn_name = "multi_scopic"
