@@ -41,7 +41,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
     __DEBUG__ = True
     __name__ = "ECG_SEQ_LAB_NET_CPSC2021"
 
-    def __init__(self, config:ED) -> NoReturn:
+    def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
         """ finished, checked,
 
         Parameters
@@ -58,20 +58,20 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         model_cfg.model_name = "seq_lab"
         model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(config.classes, config.n_leads, config[config.model_name])
+        super().__init__(config.classes, config.n_leads, config[config.model_name], **kwargs)
         self.task = config.task
 
     @torch.no_grad()
     def inference(self,
-                  input:Union[np.ndarray,Tensor],
+                  input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Any:
-        """ finished, checked,
+        """ NOT finished, NOT checked,
 
         Parameters
         ----------
-        input: ndarray or Tensor,
-            input tensor, of shape (batch_size, channels, seq_len)
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         kwargs: task specific key word arguments
@@ -83,7 +83,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
 
     @torch.no_grad()
     def inference_CPSC2021(self,
-                           input:Union[np.ndarray,Tensor],
+                           input:Union[Sequence[float],np.ndarray,Tensor],
                            bin_pred_thr:float=0.5,
                            **kwargs:Any) -> Any:
         """
@@ -93,7 +93,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
 
     @torch.no_grad()
     def _inference_qrs_detection(self,
-                                 input:Union[np.ndarray,Tensor],
+                                 input:Union[Sequence[float],np.ndarray,Tensor],
                                  bin_pred_thr:float=0.5,
                                  duration_thr:int=4*16,
                                  dist_thr:Union[int,Sequence[int]]=200,) -> Tuple[np.ndarray, List[np.ndarray]]:
@@ -105,8 +105,8 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
 
         Parameters
         ----------
-        input: ndarray or Tensor,
-            input tensor, of shape (batch_size, channels, seq_len)
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         duration_thr: int, default 4*16,
@@ -125,16 +125,13 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         rpeaks: list of ndarray,
             list of rpeak indices for each batch element
         """
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-        else:
-            device = torch.device("cpu")
-        self.to(device)
-        batch_size, channels, seq_len = input.shape
-        if isinstance(input, np.ndarray):
-            _input = torch.from_numpy(input).to(device)
-        else:
-            _input = input.to(device)
+        self.eval()
+        _device = next(self.parameters()).device
+        _dtype = next(self.parameters()).dtype
+        _input = torch.as_tensor(input, dtype=_dtype, device=_device)
+        if _input.ndim == 2:
+            _input = _input.unsqueeze(0)  # add a batch dimension
+        batch_size, channels, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -153,11 +150,42 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
 
     @torch.no_grad()
     def _inference_main_task(self,
-                             input:Union[np.ndarray,Tensor],
+                             input:Union[Sequence[float],np.ndarray,Tensor],
                              bin_pred_thr:float=0.5) -> Any:
+        """ NOT finished, NOT checked,
         """
-        """
+        self.eval()
+        _device = next(self.parameters()).device
+        _dtype = next(self.parameters()).dtype
+        _input = torch.as_tensor(input, dtype=_dtype, device=_device)
+        if _input.ndim == 2:
+            _input = _input.unsqueeze(0)  # add a batch dimension
         raise NotImplementedError
+
+    @staticmethod
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
+        """ finished, checked,
+
+        Parameters
+        ----------
+        path: str,
+            path of the checkpoint
+        device: torch.device, optional,
+            map location of the model parameters,
+            defaults "cuda" if available, otherwise "cpu"
+
+        Returns
+        -------
+        model: Module,
+            the model loaded from a checkpoint
+        """
+        _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+        ckpt = torch.load(path, map_location=_device)
+        aux_config = ckpt.get("train_config", None) or ckpt.get("config", None)
+        assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
+        model = ECG_SEQ_LAB_NET_CPSC2021(config=ckpt["model_config"])
+        model.load_state_dict(ckpt["model_state_dict"])
+        return model
 
 
 class ECG_UNET_CPSC2021(ECG_UNET):
@@ -166,7 +194,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
     __DEBUG__ = True
     __name__ = "ECG_UNET_CPSC2021"
     
-    def __init__(self, config:ED) -> NoReturn:
+    def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
         """ NOT finished, NOT checked,
 
         Parameters
@@ -183,20 +211,20 @@ class ECG_UNET_CPSC2021(ECG_UNET):
         model_cfg.model_name = "unet"
         model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(config.classes, config.n_leads, config[config.model_name])
+        super().__init__(config.classes, config.n_leads, config[config.model_name], **kwargs)
         self.task = config.task
 
     @torch.no_grad()
     def inference(self,
-                  input:Union[np.ndarray,Tensor],
+                  input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Any:
         """ NOT finished, NOT checked,
 
         Parameters
         ----------
-        input: ndarray or Tensor,
-            input tensor, of shape (batch_size, channels, seq_len)
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         kwargs: task specific key word arguments
@@ -208,7 +236,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
 
     @torch.no_grad()
     def inference_CPSC2021(self,
-                           input:Union[np.ndarray,Tensor],
+                           input:Union[Sequence[float],np.ndarray,Tensor],
                            bin_pred_thr:float=0.5,
                            **kwargs:Any) -> Any:
         """
@@ -218,11 +246,11 @@ class ECG_UNET_CPSC2021(ECG_UNET):
 
     @torch.no_grad()
     def _inference_qrs_detection(self,
-                                 input:Union[np.ndarray,Tensor],
+                                 input:Union[Sequence[float],np.ndarray,Tensor],
                                  bin_pred_thr:float=0.5,
                                  duration_thr:int=4*16,
                                  dist_thr:Union[int,Sequence[int]]=200,) -> Tuple[np.ndarray, List[np.ndarray]]:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
         auxiliary function to `forward`, for CPSC2021,
 
         NOTE: each segment of input be better filtered using `_remove_spikes_naive`,
@@ -230,8 +258,8 @@ class ECG_UNET_CPSC2021(ECG_UNET):
 
         Parameters
         ----------
-        input: ndarray or Tensor,
-            input tensor, of shape (batch_size, channels, seq_len)
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         duration_thr: int, default 4*16,
@@ -250,16 +278,13 @@ class ECG_UNET_CPSC2021(ECG_UNET):
         rpeaks: list of ndarray,
             list of rpeak indices for each batch element
         """
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-        else:
-            device = torch.device("cpu")
-        self.to(device)
-        batch_size, channels, seq_len = input.shape
-        if isinstance(input, np.ndarray):
-            _input = torch.from_numpy(input).to(device)
-        else:
-            _input = input.to(device)
+        self.eval()
+        _device = next(self.parameters()).device
+        _dtype = next(self.parameters()).dtype
+        _input = torch.as_tensor(input, dtype=_dtype, device=_device)
+        if _input.ndim == 2:
+            _input = _input.unsqueeze(0)  # add a batch dimension
+        batch_size, channels, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -278,11 +303,36 @@ class ECG_UNET_CPSC2021(ECG_UNET):
 
     @torch.no_grad()
     def _inference_main_task(self,
-                             input:Union[np.ndarray,Tensor],
+                             input:Union[Sequence[float],np.ndarray,Tensor],
                              bin_pred_thr:float=0.5,) -> Any:
         """
         """
         raise NotImplementedError
+
+    @staticmethod
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
+        """ finished, NOT checked,
+
+        Parameters
+        ----------
+        path: str,
+            path of the checkpoint
+        device: torch.device, optional,
+            map location of the model parameters,
+            defaults "cuda" if available, otherwise "cpu"
+
+        Returns
+        -------
+        model: Module,
+            the model loaded from a checkpoint
+        """
+        _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+        ckpt = torch.load(path, map_location=_device)
+        aux_config = ckpt.get("train_config", None) or ckpt.get("config", None)
+        assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
+        model = ECG_UNET_CPSC2021(config=ckpt["model_config"])
+        model.load_state_dict(ckpt["model_state_dict"])
+        return model
 
 
 class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
@@ -291,7 +341,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
     __DEBUG__ = True
     __name__ = "ECG_SUBTRACT_UNET_CPSC2021"
 
-    def __init__(self, config:ED) -> NoReturn:
+    def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
         """ NOT finished, NOT checked,
 
         Parameters
@@ -308,20 +358,20 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
         model_cfg.model_name = "unet"
         model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(config.classes, config.n_leads, config[config.model_name])
+        super().__init__(config.classes, config.n_leads, config[config.model_name], **kwargs)
         self.task = config.task
 
     @torch.no_grad()
     def inference(self,
-                  input:Union[np.ndarray,Tensor],
+                  input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Any:
         """ NOT finished, NOT checked,
 
         Parameters
         ----------
-        input: ndarray or Tensor,
-            input tensor, of shape (batch_size, channels, seq_len)
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         kwargs: task specific key word arguments
@@ -333,7 +383,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
 
     @torch.no_grad()
     def inference_CPSC2021(self,
-                           input:Union[np.ndarray,Tensor],
+                           input:Union[Sequence[float],np.ndarray,Tensor],
                            bin_pred_thr:float=0.5,
                            **kwargs:Any,) -> Any:
         """
@@ -343,11 +393,11 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
 
     @torch.no_grad()
     def _inference_qrs_detection(self,
-                                 input:Union[np.ndarray,Tensor],
+                                 input:Union[Sequence[float],np.ndarray,Tensor],
                                  bin_pred_thr:float=0.5,
                                  duration_thr:int=4*16,
                                  dist_thr:Union[int,Sequence[int]]=200,) -> Tuple[np.ndarray, List[np.ndarray]]:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
         auxiliary function to `forward`, for CPSC2021,
 
         NOTE: each segment of input be better filtered using `_remove_spikes_naive`,
@@ -355,8 +405,8 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
 
         Parameters
         ----------
-        input: ndarray or Tensor,
-            input tensor, of shape (batch_size, channels, seq_len)
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         duration_thr: int, default 4*16,
@@ -375,16 +425,13 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
         rpeaks: list of ndarray,
             list of rpeak indices for each batch element
         """
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-        else:
-            device = torch.device("cpu")
-        self.to(device)
-        batch_size, channels, seq_len = input.shape
-        if isinstance(input, np.ndarray):
-            _input = torch.from_numpy(input).to(device)
-        else:
-            _input = input.to(device)
+        self.eval()
+        _device = next(self.parameters()).device
+        _dtype = next(self.parameters()).dtype
+        _input = torch.as_tensor(input, dtype=_dtype, device=_device)
+        if _input.ndim == 2:
+            _input = _input.unsqueeze(0)  # add a batch dimension
+        batch_size, channels, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -403,11 +450,36 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
 
     @torch.no_grad()
     def _inference_main_task(self,
-                             input:Union[np.ndarray,Tensor],
+                             input:Union[Sequence[float],np.ndarray,Tensor],
                              bin_pred_thr:float=0.5,) -> Any:
         """
         """
         raise NotImplementedError
+
+    @staticmethod
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
+        """ finished, NOT checked,
+
+        Parameters
+        ----------
+        path: str,
+            path of the checkpoint
+        device: torch.device, optional,
+            map location of the model parameters,
+            defaults "cuda" if available, otherwise "cpu"
+
+        Returns
+        -------
+        model: Module,
+            the model loaded from a checkpoint
+        """
+        _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+        ckpt = torch.load(path, map_location=_device)
+        aux_config = ckpt.get("train_config", None) or ckpt.get("config", None)
+        assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
+        model = ECG_SUBTRACT_UNET_CPSC2021(config=ckpt["model_config"])
+        model.load_state_dict(ckpt["model_state_dict"])
+        return model
 
 
 class RR_LSTM_CPSC2021(RR_LSTM):
@@ -416,7 +488,7 @@ class RR_LSTM_CPSC2021(RR_LSTM):
     __DEBUG__ = True
     __name__ = "RR_LSTM_CPSC2021"
 
-    def __init__(self, config:ED) -> NoReturn:
+    def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
         """ NOT finished, NOT checked,
 
         Parameters
@@ -433,31 +505,65 @@ class RR_LSTM_CPSC2021(RR_LSTM):
         model_cfg.model_name = "rr_lstm"
         model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(config.classes, config.n_leads, config[config.model_name])
+        super().__init__(config.classes, config.n_leads, config[config.model_name], **kwargs)
 
     @torch.no_grad()
     def inference(self,
-                  input:Union[np.ndarray,Tensor],
+                  input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,) -> Any:
         """ NOT finished, NOT checked,
 
         Parameters
         ----------
-        input: ndarray or Tensor,
-            input tensor, of shape (batch_size, channels, seq_len)
+        input: array_like,
+            input tensor, of shape (..., seq_len)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         """
+        self.eval()
+        _device = next(self.parameters()).device
+        _dtype = next(self.parameters()).dtype
+        _input = torch.as_tensor(input, dtype=_dtype, device=_device)
+        if _input.ndim == 2:
+            _input = _input.unsqueeze(0)  # add a batch dimension
+        elif _input.ndim == 1:
+            _input = _input.unsqueeze(0).unsqueeze(0)  # add a batch dimension and a channel dimension
+        _input = _input.permute(2,0,1)  # (batch_size, n_channels, seq_len) -> (seq_len, batch_size, n_channels)
         raise NotImplementedError
 
     @torch.no_grad()
     def inference_CPSC2021(self,
-                           input:Union[np.ndarray,Tensor],
+                           input:Union[Sequence[float],np.ndarray,Tensor],
                            bin_pred_thr:float=0.5,) -> Any:
         """
         alias for `self.inference`
         """
         return self.inference(input, class_names, bin_pred_thr)
+
+    @staticmethod
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
+        """
+
+        Parameters
+        ----------
+        path: str,
+            path of the checkpoint
+        device: torch.device, optional,
+            map location of the model parameters,
+            defaults "cuda" if available, otherwise "cpu"
+
+        Returns
+        -------
+        model: Module,
+            the model loaded from a checkpoint
+        """
+        _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+        ckpt = torch.load(path, map_location=_device)
+        aux_config = ckpt.get("train_config", None) or ckpt.get("config", None)
+        assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
+        model = RR_LSTM_CPSC2021(config=ckpt["model_config"])
+        model.load_state_dict(ckpt["model_state_dict"])
+        return model
 
 
 def _qrs_detection_post_process(pred:np.ndarray,
