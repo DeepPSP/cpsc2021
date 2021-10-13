@@ -151,14 +151,5 @@ log
 *.pth
 *.pth.tar
 
+!saved_models/*.pth.tar
 
-# models used
-# to add...
-
-
-training_data
-training_workdir
-preprocessed
-rpeaks
-features
-beat_ann

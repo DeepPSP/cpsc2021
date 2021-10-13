@@ -528,7 +528,8 @@ class RR_LSTM_CPSC2021(RR_LSTM):
             _input = _input.unsqueeze(0)  # add a batch dimension
         elif _input.ndim == 1:
             _input = _input.unsqueeze(0).unsqueeze(0)  # add a batch dimension and a channel dimension
-        _input = _input.permute(2,0,1)  # (batch_size, n_channels, seq_len) -> (seq_len, batch_size, n_channels)
+        # (batch_size, n_channels, seq_len) -> (seq_len, batch_size, n_channels)
+        _input = _input.permute(2,0,1)
         raise NotImplementedError
 
     @torch.no_grad()
