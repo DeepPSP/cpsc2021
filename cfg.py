@@ -151,7 +151,7 @@ TrainCfg.flip = [-1] + [1]*4  # making the signal upside down, with probability 
 # TODO: explore and add more data augmentations
 
 # configs of training epochs, batch, etc.
-TrainCfg.n_epochs = 100
+TrainCfg.n_epochs = 20
 TrainCfg.batch_size = 64
 TrainCfg.train_ratio = 0.8
 
@@ -171,11 +171,11 @@ TrainCfg.max_lr = 1e-2  # for "one_cycle" scheduler, to adjust via expriments
 
 TrainCfg.early_stopping = ED()  # early stopping according to challenge metric
 TrainCfg.early_stopping.min_delta = 0.001  # should be non-negative
-TrainCfg.early_stopping.patience = 8
+TrainCfg.early_stopping.patience = 5
 
 # configs of loss function
 TrainCfg.loss = "BCEWithLogitsLoss"
-# TrainCfg.loss = "BCEWithLogitsWithClassWeightLoss"
+# TrainCfg.loss = "BCEWithLogitsWithClassWeightLoss"  # "BCELoss"
 TrainCfg.flooding_level = 0.0  # flooding performed if positive, typically 0.45-0.55 for cinc2021?
 
 TrainCfg.log_step = 20
@@ -205,14 +205,16 @@ TrainCfg.qrs_detection.overlap_len = int(15*TrainCfg.fs)
 TrainCfg.qrs_detection.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.qrs_detection.classes = ["N",]
 TrainCfg.qrs_detection.monitor = "qrs_score"  # monitor for determining the best model
+TrainCfg.qrs_detection.loss = TrainCfg.loss
 
 TrainCfg.rr_lstm.final_model_name = None
-TrainCfg.rr_lstm.model_name = "lstm_crf"  # "lstm", "lstm_crf"
+TrainCfg.rr_lstm.model_name = "lstm"  # "lstm", "lstm_crf"
 TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.overlap_len = 15  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.classes = ["af",]
-# TrainCfg.rr_lstm.monitor = ""  # monitor for determining the best model
+TrainCfg.rr_lstm.monitor = "rr_score"  # monitor for determining the best model
+TrainCfg.rr_lstm.loss = TrainCfg.loss
 
 TrainCfg.main.final_model_name = None
 TrainCfg.main.model_name = "seq_lab"  # "unet"
@@ -225,6 +227,7 @@ TrainCfg.main.overlap_len = int(15*TrainCfg.fs)
 TrainCfg.main.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.main.classes = ["af",]
 # TrainCfg.main.monitor = ""  # monitor for determining the best model
+TrainCfg.qrs_detection.loss = TrainCfg.loss
 
 
 
@@ -272,6 +275,30 @@ ModelCfg.rr_lstm.input_len = TrainCfg.rr_lstm.input_len
 ModelCfg.rr_lstm.classes = TrainCfg.rr_lstm.classes
 ModelCfg.rr_lstm.model_name = TrainCfg.rr_lstm.model_name
 
+ModelCfg.rr_lstm.lstm = deepcopy(RR_AF_VANILLA_CONFIG)
+ModelCfg.rr_lstm.lstm.global_pool = "none"
+ModelCfg.rr_lstm.lstm.attn = ED()
+ModelCfg.rr_lstm.lstm.attn.name = "se"  # "gc"
+ModelCfg.rr_lstm.lstm.attn.se = ED()
+ModelCfg.rr_lstm.lstm.attn.se.reduction = 8  # not including the last linear layer
+ModelCfg.rr_lstm.lstm.attn.se.activation = "relu"
+ModelCfg.rr_lstm.lstm.attn.se.kw_activation = ED(inplace=True)
+ModelCfg.rr_lstm.lstm.attn.se.bias = True
+ModelCfg.rr_lstm.lstm.attn.se.kernel_initializer = "he_normal"
+
+ModelCfg.rr_lstm.lstm_crf = deepcopy(RR_AF_CRF_CONFIG)
+ModelCfg.rr_lstm.lstm_crf.attn = ED()
+ModelCfg.rr_lstm.lstm_crf.attn.name = "se"  # "gc"
+ModelCfg.rr_lstm.lstm_crf.attn.se = ED()
+ModelCfg.rr_lstm.lstm_crf.attn.se.reduction = 8  # not including the last linear layer
+ModelCfg.rr_lstm.lstm_crf.attn.se.activation = "relu"
+ModelCfg.rr_lstm.lstm_crf.attn.se.kw_activation = ED(inplace=True)
+ModelCfg.rr_lstm.lstm_crf.attn.se.bias = True
+ModelCfg.rr_lstm.lstm_crf.attn.se.kernel_initializer = "he_normal"
+
+if ModelCfg.rr_lstm[ModelCfg.rr_lstm.model_name].clf.name == "crf":
+    TrainCfg.rr_lstm.loss = "BCELoss"
+
 # the following is a comprehensive choices for different choices of rr_lstm task
 
 
@@ -291,7 +318,7 @@ ModelCfg.main.seq_lab.rnn.name = ModelCfg.main.rnn_name
 ModelCfg.main.seq_lab.attn.name = ModelCfg.main.attn_name
 
 ModelCfg.main.seq_lab.cnn.multi_scopic.filter_lengths = [
-    [3, 3, 3], [5, 5, 3], [7, 5, 3],
+    [2, 2, 2], [5, 5, 3], [7, 5, 3],
 ]
 
 ModelCfg.main.unet = deepcopy(ECG_UNET_VANILLA_CONFIG)

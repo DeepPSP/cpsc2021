@@ -41,7 +41,11 @@ from model import (
     _qrs_detection_post_process,
 )
 from utils.scoring_metrics import compute_challenge_metric
-from utils.aux_metrics import compute_rpeak_metric
+from utils.aux_metrics import (
+    compute_rpeak_metric,
+    compute_rr_metric,
+    compute_main_task_metric,
+)
 from utils.misc import mask_to_intervals
 from cfg import BaseCfg, TrainCfg, ModelCfg
 from dataset import CPSC2021
@@ -223,6 +227,8 @@ def train(model:nn.Module,
         criterion = BCEWithLogitsWithClassWeightLoss(
             class_weight=train_dataset.class_weights.to(device=device, dtype=_DTYPE)
         )
+    elif config.loss == "BCELoss":
+        criterion = nn.BCELoss()
     else:
         raise NotImplementedError(f"loss `{config.loss}` not implemented!")
     # scheduler = ReduceLROnPlateau(optimizer, mode="max", verbose=True, patience=6, min_lr=1e-7)
@@ -259,7 +265,7 @@ def train(model:nn.Module,
                 labels = labels.to(device=device, dtype=_DTYPE)
 
                 preds = model(signals)
-                loss = criterion(preds, labels)
+                loss = criterion(preds, labels).to(_DTYPE)
                 if config.flooding_level > 0:
                     flood = (loss - config.flooding_level).abs() + config.flooding_level
                     epoch_loss += loss.item()
@@ -487,9 +493,20 @@ def evaluate(model:nn.Module,
             thr=config.qrs_mask_bias/config.fs,
         )
         eval_res = {"qrs_score": eval_res}  # to dict
-    elif config.task == "main":
-        raise NotImplementedError
     elif config.task == "rr_lstm":
+        all_preds = np.array([]).reshape((0, config[config.task].input_len))
+        all_labels = np.array([]).reshape((0, config[config.task].input_len))
+        for signals, labels in data_loader:
+            signals = signals.to(device=device, dtype=_DTYPE)
+            labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            all_labels = np.concatenate((all_labels, labels))
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            preds = _model.inference(signals)
+            all_preds = np.concatenate((all_preds, preds))
+            eval_res = compute_rr_metric(all_labels, all_preds)
+            eval_res = {"rr_score": eval_res}  # to dict
+    elif config.task == "main":
         raise NotImplementedError
 
     model.train()
@@ -560,7 +577,7 @@ def _set_task(task:str, config:ED) -> NoReturn:
     assert task in config.tasks
     config.task = task
     for item in [
-        "classes", "monitor", "final_model_name",
+        "classes", "monitor", "final_model_name", "loss",
     ]:
         config[item] = config[task][item]
 
@@ -581,7 +598,7 @@ if __name__ == "__main__":
         _set_task(task, config)
         model_config = deepcopy(ModelCfg[task])
         model = model_cls(config=model_config)
-        if torch.cuda.device_count() > 1:
+        if torch.cuda.device_count() > 1 or task not in ["rr_lstm",]:
             model = DP(model)
             # model = DDP(model)
         model.to(device=device)
