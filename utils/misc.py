@@ -502,7 +502,7 @@ def init_logger(log_dir:str, log_file:Optional[str]=None, mode:str="a", verbose:
     log_file = os.path.join(log_dir, log_file)
     print(f"log file path: {log_file}")
 
-    logger = logging.getLogger("CinC2021")
+    logger = logging.getLogger("CPSC2021")
 
     c_handler = logging.StreamHandler(sys.stdout)
     f_handler = logging.FileHandler(log_file)
@@ -725,7 +725,9 @@ def masks_to_waveforms(masks:np.ndarray,
     return waves
 
 
-def mask_to_intervals(mask:np.ndarray, vals:Optional[Union[int,Sequence[int]]]=None) -> Union[list, dict]:
+def mask_to_intervals(mask:np.ndarray,
+                      vals:Optional[Union[int,Sequence[int]]]=None,
+                      right_inclusive:bool=False) -> Union[list, dict]:
     """ finished, checked,
 
     Parameters
@@ -734,13 +736,16 @@ def mask_to_intervals(mask:np.ndarray, vals:Optional[Union[int,Sequence[int]]]=N
         1d mask
     vals: int or sequence of int, optional,
         values in `mask` to obtain intervals
+    right_inclusive: bool, default False,
+        if True, the intervals will be right inclusive
+        otherwise, right exclusive
 
     Returns
     -------
     intervals: dict or list,
         the intervals corr. to each value in `vals` if `vals` is `None` or `Sequence`;
         or the intervals corr. to `vals` if `vals` is int.
-        each interval is of the form `[a,b]`, left inclusive, right exclusive
+        each interval is of the form `[a,b]`
     """
     if vals is None:
         _vals = list(set(mask))
@@ -749,6 +754,7 @@ def mask_to_intervals(mask:np.ndarray, vals:Optional[Union[int,Sequence[int]]]=N
     else:
         _vals = vals
     # assert set(_vals) & set(mask) == set(_vals)
+    bias = 0 if right_inclusive else 1
 
     intervals = {v:[] for v in _vals}
     for v in _vals:
@@ -760,7 +766,7 @@ def mask_to_intervals(mask:np.ndarray, vals:Optional[Union[int,Sequence[int]]]=N
         split_indices = sorted([0] + split_indices + [len(valid_inds)-1])
         for idx in range(len(split_indices)//2):
             intervals[v].append(
-                [valid_inds[split_indices[2*idx]], valid_inds[split_indices[2*idx+1]]+1]
+                [valid_inds[split_indices[2*idx]], valid_inds[split_indices[2*idx+1]]+bias]
             )
     
     if isinstance(vals, int):

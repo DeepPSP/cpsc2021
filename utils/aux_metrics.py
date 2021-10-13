@@ -6,14 +6,18 @@ References
 [1] http://2019.icbeb.org/Challenge.html
 """
 import math
+import multiprocessing as mp
 from typing import Union, Optional, Sequence
 from numbers import Real
 
 import numpy as np
 
+from .misc import mask_to_intervals
+
 
 __all__ = [
     "compute_rpeak_metric",
+    "compute_rr_metric",
 ]
 
 
@@ -92,3 +96,44 @@ def compute_rpeak_metric(rpeaks_truths:Sequence[Union[np.ndarray,Sequence[int]]]
         print('Scoring complete.')
 
     return rec_acc
+
+
+def compute_rr_metric(rr_truths:Sequence[Union[np.ndarray,Sequence[int]]],
+                      rr_preds:Sequence[Union[np.ndarray,Sequence[int]]],
+                      verbose:int=0) -> float:
+    """ finished, checked,
+
+    this metric imitates the metric provided by the organizers of CPSC2021
+
+    Parameters
+    ----------
+    rr_truths: array_like,
+        sequences of AF labels on rr intervals, of shape (n_samples, seq_len)
+    rr_truths: array_like,
+        sequences of AF predictions on rr intervals, of shape (n_samples, seq_len)
+
+    Returns
+    -------
+    score: float,
+        the score, similar to CPSC2021 challenge metric
+    """
+    with mp.Pool(processes=max(1,mp.cpu_count())) as pool:
+        af_episode_truths = pool.starmap(
+            func=mask_to_intervals,
+            iterable=[(row,1,True) for row in rr_truths]
+        )
+    with mp.Pool(processes=max(1,mp.cpu_count())) as pool:
+        af_episode_preds = pool.starmap(
+            func=mask_to_intervals,
+            iterable=[(row,1,True) for row in rr_preds]
+        )
+    scoring_mask = np.zeros_like(np.array(rr_truths))
+    n_samples, seq_len = scoring_mask.shape
+    for idx, sample in enumerate(af_episode_truths):
+        for itv in sample:
+            scoring_mask[idx][max(0,itv[0]-2):min(seq_len,itv[0]+2)] = 0.5
+            scoring_mask[idx][max(0,itv[1]-2):min(seq_len,itv[1]+3)] = 0.5
+            scoring_mask[idx][max(0,itv[0]-1):min(seq_len,itv[0]+2)] = 1
+            scoring_mask[idx][max(0,itv[1]-1):min(seq_len,itv[0]+2)] = 1
+    score = sum([scoring_mask[idx][itv].sum() for idx in range(n_samples) for itv in af_episode_preds[idx]])
+    return score
