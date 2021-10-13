@@ -505,18 +505,18 @@ class RR_LSTM_CPSC2021(RR_LSTM):
         model_cfg.model_name = "rr_lstm"
         model = ECG_SEQ_LAB_NET_CPSC2021(model_cfg)
         """
-        super().__init__(config.classes, config.n_leads, config[config.model_name], **kwargs)
+        super().__init__(config.classes, config[config.model_name], **kwargs)
 
     @torch.no_grad()
     def inference(self,
                   input:Union[Sequence[float],np.ndarray,Tensor],
-                  bin_pred_thr:float=0.5,) -> Any:
+                  bin_pred_thr:float=0.5,) -> np.ndarray:
         """ NOT finished, NOT checked,
 
         Parameters
         ----------
         input: array_like,
-            input tensor, of shape (..., seq_len)
+            input tensor, of shape (..., seq_len, ...)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
         """
@@ -527,10 +527,14 @@ class RR_LSTM_CPSC2021(RR_LSTM):
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
         elif _input.ndim == 1:
-            _input = _input.unsqueeze(0).unsqueeze(0)  # add a batch dimension and a channel dimension
-        # (batch_size, n_channels, seq_len) -> (seq_len, batch_size, n_channels)
-        _input = _input.permute(2,0,1)
-        raise NotImplementedError
+            _input = _input.unsqueeze(0).unsqueeze(-1)  # add a batch dimension and a channel dimension
+        # (batch_size, seq_len, n_channels) -> (seq_len, batch_size, n_channels)
+        _input = _input.permute(1,0,2)
+        pred = self.forward(_input)
+        if self.config.clf.name != "crf":
+            pred = self.sigmoid(pred)
+        pred = pred.cpu().detach().numpy().squeeze(-1)
+        return pred
 
     @torch.no_grad()
     def inference_CPSC2021(self,
