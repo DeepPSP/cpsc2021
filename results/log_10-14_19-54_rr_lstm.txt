@@ -1,0 +1,2381 @@
+2021-10-14 19:54:54,379 - CPSC2021 - INFO - 
+********************   Start Training   ********************
+
+2021-10-14 19:54:54,381 - CPSC2021 - INFO - Using device cuda
+2021-10-14 19:54:54,382 - CPSC2021 - INFO - Using torch of version 1.8.1+cu111
+2021-10-14 19:54:54,384 - CPSC2021 - INFO - with configuration
+{
+    "fs": 200,
+    "n_leads": 2,
+    "data_format": "channel_first",
+    "db_dir": "/home/wenhao/Jupyter/wenhao/data/CPSC2021/",
+    "log_dir": "/home/wenhao/Jupyter/wenhao/workspace/cpsc2021/log",
+    "model_dir": "/home/wenhao/Jupyter/wenhao/workspace/cpsc2021/saved_models",
+    "checkpoints": "/home/wenhao/Jupyter/wenhao/workspace/cpsc2021/checkpoints",
+    "keep_checkpoint_max": 20,
+    "debug": True,
+    "preproc": [
+        "bandpass"
+    ],
+    "filter_band": [
+        0.5, 45
+    ],
+    "rpeaks_dist2border": 100,
+    "qrs_mask_bias": 15,
+    "normalize_data": True,
+    "label_smoothing": 0.1,
+    "random_mask": 0,
+    "stretch_compress": 5,
+    "stretch_compress_prob": 0.3,
+    "random_normalize": True,
+    "random_normalize_mean": [
+        -0.05, 0.1
+    ],
+    "random_normalize_std": [
+        0.08, 0.32
+    ],
+    "flip": [
+        -1, 1, 1, 1, 1
+    ],
+    "n_epochs": 20,
+    "batch_size": 64,
+    "train_ratio": 0.8,
+    "train_optimizer": "adamw_amsgrad",
+    "momentum": 0.949,
+    "betas": [
+        0.9, 0.999
+    ],
+    "decay": 0.01,
+    "learning_rate": 0.001,
+    "lr": 0.001,
+    "lr_scheduler": None,
+    "lr_step_size": 50,
+    "lr_gamma": 0.1,
+    "max_lr": 0.01,
+    "early_stopping": {
+        "min_delta": 0.001,
+        "patience": 5
+    },
+    "loss": "MaskedBCEWithLogitsLoss",
+    "flooding_level": 0.0,
+    "log_step": 20,
+    "eval_every": 20,
+    "tasks": [
+        "qrs_detection",
+        "rr_lstm",
+        "main"
+    ],
+    "qrs_detection": {
+        "final_model_name": None,
+        "model_name": "seq_lab",
+        "reduction": 8,
+        "cnn_name": "multi_scopic",
+        "rnn_name": "lstm",
+        "attn_name": "se",
+        "input_len": 6000,
+        "overlap_len": 3000,
+        "critical_overlap_len": 5000,
+        "classes": [
+            "N"
+        ],
+        "monitor": "qrs_score",
+        "loss": "BCEWithLogitsLoss"
+    },
+    "rr_lstm": {
+        "final_model_name": None,
+        "model_name": "lstm",
+        "input_len": 30,
+        "overlap_len": 15,
+        "critical_overlap_len": 25,
+        "classes": [
+            "af"
+        ],
+        "monitor": "rr_score",
+        "loss": "MaskedBCEWithLogitsLoss"
+    },
+    "main": {
+        "final_model_name": None,
+        "model_name": "seq_lab",
+        "reduction": 8,
+        "cnn_name": "multi_scopic",
+        "rnn_name": "lstm",
+        "attn_name": "se",
+        "input_len": 6000,
+        "overlap_len": 3000,
+        "critical_overlap_len": 5000,
+        "classes": [
+            "af"
+        ],
+        "monitor": "rr_score",
+        "loss": "MaskedBCEWithLogitsLoss"
+    },
+    "task": "rr_lstm",
+    "classes": [
+        "af"
+    ],
+    "monitor": "rr_score",
+    "final_model_name": None
+}
+2021-10-14 19:54:54,419 - CPSC2021 - INFO - training configurations are as follows:
+{
+    "fs": 200,
+    "n_leads": 2,
+    "data_format": "channel_first",
+    "db_dir": "/home/wenhao/Jupyter/wenhao/data/CPSC2021/",
+    "log_dir": "/home/wenhao/Jupyter/wenhao/workspace/cpsc2021/log",
+    "model_dir": "/home/wenhao/Jupyter/wenhao/workspace/cpsc2021/saved_models",
+    "checkpoints": "/home/wenhao/Jupyter/wenhao/workspace/cpsc2021/checkpoints",
+    "keep_checkpoint_max": 20,
+    "debug": True,
+    "preproc": [
+        "bandpass"
+    ],
+    "filter_band": [
+        0.5, 45
+    ],
+    "rpeaks_dist2border": 100,
+    "qrs_mask_bias": 15,
+    "normalize_data": True,
+    "label_smoothing": 0.1,
+    "random_mask": 0,
+    "stretch_compress": 5,
+    "stretch_compress_prob": 0.3,
+    "random_normalize": True,
+    "random_normalize_mean": [
+        -0.05, 0.1
+    ],
+    "random_normalize_std": [
+        0.08, 0.32
+    ],
+    "flip": [
+        -1, 1, 1, 1, 1
+    ],
+    "n_epochs": 20,
+    "batch_size": 64,
+    "train_ratio": 0.8,
+    "train_optimizer": "adamw_amsgrad",
+    "momentum": 0.949,
+    "betas": [
+        0.9, 0.999
+    ],
+    "decay": 0.01,
+    "learning_rate": 0.001,
+    "lr": 0.001,
+    "lr_scheduler": None,
+    "lr_step_size": 50,
+    "lr_gamma": 0.1,
+    "max_lr": 0.01,
+    "early_stopping": {
+        "min_delta": 0.001,
+        "patience": 5
+    },
+    "loss": "MaskedBCEWithLogitsLoss",
+    "flooding_level": 0.0,
+    "log_step": 20,
+    "eval_every": 20,
+    "tasks": [
+        "qrs_detection",
+        "rr_lstm",
+        "main"
+    ],
+    "qrs_detection": {
+        "final_model_name": None,
+        "model_name": "seq_lab",
+        "reduction": 8,
+        "cnn_name": "multi_scopic",
+        "rnn_name": "lstm",
+        "attn_name": "se",
+        "input_len": 6000,
+        "overlap_len": 3000,
+        "critical_overlap_len": 5000,
+        "classes": [
+            "N"
+        ],
+        "monitor": "qrs_score",
+        "loss": "BCEWithLogitsLoss"
+    },
+    "rr_lstm": {
+        "final_model_name": None,
+        "model_name": "lstm",
+        "input_len": 30,
+        "overlap_len": 15,
+        "critical_overlap_len": 25,
+        "classes": [
+            "af"
+        ],
+        "monitor": "rr_score",
+        "loss": "MaskedBCEWithLogitsLoss"
+    },
+    "main": {
+        "final_model_name": None,
+        "model_name": "seq_lab",
+        "reduction": 8,
+        "cnn_name": "multi_scopic",
+        "rnn_name": "lstm",
+        "attn_name": "se",
+        "input_len": 6000,
+        "overlap_len": 3000,
+        "critical_overlap_len": 5000,
+        "classes": [
+            "af"
+        ],
+        "monitor": "rr_score",
+        "loss": "MaskedBCEWithLogitsLoss"
+    },
+    "task": "rr_lstm",
+    "classes": [
+        "af"
+    ],
+    "monitor": "rr_score",
+    "final_model_name": None
+}
+2021-10-14 19:54:54,764 - CPSC2021 - INFO - 
+Starting training:
+------------------
+Task:            rr_lstm
+Epochs:          20
+Batch size:      64
+Learning rate:   0.001
+Training size:   118683
+Validation size: 29253
+Device:          cuda
+Optimizer:       adamw_amsgrad
+Dataset classes: ['af']
+---------------------------------------------------
+
+2021-10-14 19:54:55,631 - CPSC2021 - INFO - Train step_20: loss : 1.0252798795700073
+2021-10-14 19:54:55,999 - CPSC2021 - INFO - Train step_40: loss : 0.9879550337791443
+2021-10-14 19:54:56,375 - CPSC2021 - INFO - Train step_60: loss : 1.0289227962493896
+2021-10-14 19:54:56,736 - CPSC2021 - INFO - Train step_80: loss : 1.0119835138320923
+2021-10-14 19:54:57,092 - CPSC2021 - INFO - Train step_100: loss : 0.9288122057914734
+2021-10-14 19:54:57,442 - CPSC2021 - INFO - Train step_120: loss : 0.9734868407249451
+2021-10-14 19:54:57,806 - CPSC2021 - INFO - Train step_140: loss : 0.9843835830688477
+2021-10-14 19:54:58,169 - CPSC2021 - INFO - Train step_160: loss : 0.9871742129325867
+2021-10-14 19:54:58,518 - CPSC2021 - INFO - Train step_180: loss : 0.8946479558944702
+2021-10-14 19:54:58,872 - CPSC2021 - INFO - Train step_200: loss : 1.0072182416915894
+2021-10-14 19:54:59,244 - CPSC2021 - INFO - Train step_220: loss : 0.9629499316215515
+2021-10-14 19:54:59,602 - CPSC2021 - INFO - Train step_240: loss : 0.9814748764038086
+2021-10-14 19:54:59,962 - CPSC2021 - INFO - Train step_260: loss : 0.9447097182273865
+2021-10-14 19:55:00,311 - CPSC2021 - INFO - Train step_280: loss : 0.856391191482544
+2021-10-14 19:55:00,668 - CPSC2021 - INFO - Train step_300: loss : 0.9455074071884155
+2021-10-14 19:55:01,028 - CPSC2021 - INFO - Train step_320: loss : 0.8950546979904175
+2021-10-14 19:55:01,401 - CPSC2021 - INFO - Train step_340: loss : 0.9964732527732849
+2021-10-14 19:55:01,762 - CPSC2021 - INFO - Train step_360: loss : 0.8457881212234497
+2021-10-14 19:55:02,121 - CPSC2021 - INFO - Train step_380: loss : 0.8532626032829285
+2021-10-14 19:55:02,465 - CPSC2021 - INFO - Train step_400: loss : 0.8125508427619934
+2021-10-14 19:55:02,823 - CPSC2021 - INFO - Train step_420: loss : 0.8024120330810547
+2021-10-14 19:55:03,188 - CPSC2021 - INFO - Train step_440: loss : 0.6608532071113586
+2021-10-14 19:55:03,552 - CPSC2021 - INFO - Train step_460: loss : 0.6836369037628174
+2021-10-14 19:55:03,906 - CPSC2021 - INFO - Train step_480: loss : 0.528148353099823
+2021-10-14 19:55:04,272 - CPSC2021 - INFO - Train step_500: loss : 0.5160472989082336
+2021-10-14 19:55:04,627 - CPSC2021 - INFO - Train step_520: loss : 0.6758926510810852
+2021-10-14 19:55:04,952 - CPSC2021 - INFO - Train step_540: loss : 0.5882460474967957
+2021-10-14 19:55:05,287 - CPSC2021 - INFO - Train step_560: loss : 0.5385184288024902
+2021-10-14 19:55:05,624 - CPSC2021 - INFO - Train step_580: loss : 0.5902525782585144
+2021-10-14 19:55:05,973 - CPSC2021 - INFO - Train step_600: loss : 0.8853281140327454
+2021-10-14 19:55:06,315 - CPSC2021 - INFO - Train step_620: loss : 0.5311967730522156
+2021-10-14 19:55:06,671 - CPSC2021 - INFO - Train step_640: loss : 0.5166875720024109
+2021-10-14 19:55:07,033 - CPSC2021 - INFO - Train step_660: loss : 0.6399277448654175
+2021-10-14 19:55:07,400 - CPSC2021 - INFO - Train step_680: loss : 0.4897628426551819
+2021-10-14 19:55:07,775 - CPSC2021 - INFO - Train step_700: loss : 0.4937373101711273
+2021-10-14 19:55:08,134 - CPSC2021 - INFO - Train step_720: loss : 0.5291039943695068
+2021-10-14 19:55:08,503 - CPSC2021 - INFO - Train step_740: loss : 0.3392409384250641
+2021-10-14 19:55:08,862 - CPSC2021 - INFO - Train step_760: loss : 0.4510285258293152
+2021-10-14 19:55:09,215 - CPSC2021 - INFO - Train step_780: loss : 0.4954789876937866
+2021-10-14 19:55:09,581 - CPSC2021 - INFO - Train step_800: loss : 0.45815426111221313
+2021-10-14 19:55:09,942 - CPSC2021 - INFO - Train step_820: loss : 0.8105833530426025
+2021-10-14 19:55:10,318 - CPSC2021 - INFO - Train step_840: loss : 0.5645339488983154
+2021-10-14 19:55:10,684 - CPSC2021 - INFO - Train step_860: loss : 0.3836418390274048
+2021-10-14 19:55:11,049 - CPSC2021 - INFO - Train step_880: loss : 0.4693566858768463
+2021-10-14 19:55:11,418 - CPSC2021 - INFO - Train step_900: loss : 0.4353249669075012
+2021-10-14 19:55:11,776 - CPSC2021 - INFO - Train step_920: loss : 0.45158833265304565
+2021-10-14 19:55:12,133 - CPSC2021 - INFO - Train step_940: loss : 0.461437851190567
+2021-10-14 19:55:12,493 - CPSC2021 - INFO - Train step_960: loss : 0.4366655647754669
+2021-10-14 19:55:12,866 - CPSC2021 - INFO - Train step_980: loss : 0.34810563921928406
+2021-10-14 19:55:13,231 - CPSC2021 - INFO - Train step_1000: loss : 0.4160324037075043
+2021-10-14 19:55:13,580 - CPSC2021 - INFO - Train step_1020: loss : 0.5335522890090942
+2021-10-14 19:55:13,940 - CPSC2021 - INFO - Train step_1040: loss : 0.21582767367362976
+2021-10-14 19:55:14,293 - CPSC2021 - INFO - Train step_1060: loss : 0.28634828329086304
+2021-10-14 19:55:14,672 - CPSC2021 - INFO - Train step_1080: loss : 0.37757936120033264
+2021-10-14 19:55:15,028 - CPSC2021 - INFO - Train step_1100: loss : 0.4199063777923584
+2021-10-14 19:55:15,386 - CPSC2021 - INFO - Train step_1120: loss : 0.3261174261569977
+2021-10-14 19:55:15,752 - CPSC2021 - INFO - Train step_1140: loss : 0.44166871905326843
+2021-10-14 19:55:16,104 - CPSC2021 - INFO - Train step_1160: loss : 0.22435981035232544
+2021-10-14 19:55:16,464 - CPSC2021 - INFO - Train step_1180: loss : 0.3507298231124878
+2021-10-14 19:55:16,823 - CPSC2021 - INFO - Train step_1200: loss : 0.3659123182296753
+2021-10-14 19:55:17,183 - CPSC2021 - INFO - Train step_1220: loss : 0.31007665395736694
+2021-10-14 19:55:17,542 - CPSC2021 - INFO - Train step_1240: loss : 0.2281935214996338
+2021-10-14 19:55:17,900 - CPSC2021 - INFO - Train step_1260: loss : 0.5891824960708618
+2021-10-14 19:55:18,262 - CPSC2021 - INFO - Train step_1280: loss : 0.3356427550315857
+2021-10-14 19:55:18,629 - CPSC2021 - INFO - Train step_1300: loss : 0.35548439621925354
+2021-10-14 19:55:18,990 - CPSC2021 - INFO - Train step_1320: loss : 0.36341923475265503
+2021-10-14 19:55:19,354 - CPSC2021 - INFO - Train step_1340: loss : 0.32139989733695984
+2021-10-14 19:55:19,713 - CPSC2021 - INFO - Train step_1360: loss : 0.3688909411430359
+2021-10-14 19:55:20,068 - CPSC2021 - INFO - Train step_1380: loss : 0.5121692419052124
+2021-10-14 19:55:20,422 - CPSC2021 - INFO - Train step_1400: loss : 0.21824103593826294
+2021-10-14 19:55:20,780 - CPSC2021 - INFO - Train step_1420: loss : 0.2877257764339447
+2021-10-14 19:55:21,139 - CPSC2021 - INFO - Train step_1440: loss : 0.20228669047355652
+2021-10-14 19:55:21,502 - CPSC2021 - INFO - Train step_1460: loss : 0.5443101525306702
+2021-10-14 19:55:21,866 - CPSC2021 - INFO - Train step_1480: loss : 0.2827674448490143
+2021-10-14 19:55:22,217 - CPSC2021 - INFO - Train step_1500: loss : 0.3554465174674988
+2021-10-14 19:55:22,580 - CPSC2021 - INFO - Train step_1520: loss : 0.33639511466026306
+2021-10-14 19:55:22,939 - CPSC2021 - INFO - Train step_1540: loss : 0.27561455965042114
+2021-10-14 19:55:23,301 - CPSC2021 - INFO - Train step_1560: loss : 0.27067166566848755
+2021-10-14 19:55:23,663 - CPSC2021 - INFO - Train step_1580: loss : 0.15048278868198395
+2021-10-14 19:55:24,025 - CPSC2021 - INFO - Train step_1600: loss : 0.1348493993282318
+2021-10-14 19:55:24,386 - CPSC2021 - INFO - Train step_1620: loss : 0.35726702213287354
+2021-10-14 19:55:24,737 - CPSC2021 - INFO - Train step_1640: loss : 0.15518411993980408
+2021-10-14 19:55:25,100 - CPSC2021 - INFO - Train step_1660: loss : 0.23462004959583282
+2021-10-14 19:55:25,492 - CPSC2021 - INFO - Train step_1680: loss : 0.19353419542312622
+2021-10-14 19:55:25,863 - CPSC2021 - INFO - Train step_1700: loss : 0.2264266461133957
+2021-10-14 19:55:26,244 - CPSC2021 - INFO - Train step_1720: loss : 0.390705943107605
+2021-10-14 19:55:26,637 - CPSC2021 - INFO - Train step_1740: loss : 0.1779235452413559
+2021-10-14 19:55:27,039 - CPSC2021 - INFO - Train step_1760: loss : 0.09708621352910995
+2021-10-14 19:55:27,424 - CPSC2021 - INFO - Train step_1780: loss : 0.12361490726470947
+2021-10-14 19:55:27,821 - CPSC2021 - INFO - Train step_1800: loss : 0.09903014451265335
+2021-10-14 19:55:28,211 - CPSC2021 - INFO - Train step_1820: loss : 0.11637146025896072
+2021-10-14 19:55:28,604 - CPSC2021 - INFO - Train step_1840: loss : 0.2861987054347992
+2021-10-14 19:55:58,171 - CPSC2021 - INFO - 
+Train epoch_1:
+--------------------
+train/epoch_loss:        930.1215145140886
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 19:55:58,178 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 19:55:58,202 - CPSC2021 - INFO - Checkpoint 1 saved!
+2021-10-14 19:55:58,695 - CPSC2021 - INFO - Train step_1860: loss : 0.20252156257629395
+2021-10-14 19:55:59,087 - CPSC2021 - INFO - Train step_1880: loss : 0.18520700931549072
+2021-10-14 19:55:59,497 - CPSC2021 - INFO - Train step_1900: loss : 0.220039963722229
+2021-10-14 19:55:59,864 - CPSC2021 - INFO - Train step_1920: loss : 0.21651843190193176
+2021-10-14 19:56:00,223 - CPSC2021 - INFO - Train step_1940: loss : 0.2164367139339447
+2021-10-14 19:56:00,597 - CPSC2021 - INFO - Train step_1960: loss : 0.22058244049549103
+2021-10-14 19:56:00,957 - CPSC2021 - INFO - Train step_1980: loss : 0.18427427113056183
+2021-10-14 19:56:01,307 - CPSC2021 - INFO - Train step_2000: loss : 0.18033462762832642
+2021-10-14 19:56:01,657 - CPSC2021 - INFO - Train step_2020: loss : 0.2281511127948761
+2021-10-14 19:56:02,017 - CPSC2021 - INFO - Train step_2040: loss : 0.1556188017129898
+2021-10-14 19:56:02,382 - CPSC2021 - INFO - Train step_2060: loss : 0.25531256198883057
+2021-10-14 19:56:02,748 - CPSC2021 - INFO - Train step_2080: loss : 0.35829973220825195
+2021-10-14 19:56:03,112 - CPSC2021 - INFO - Train step_2100: loss : 0.1564941108226776
+2021-10-14 19:56:03,469 - CPSC2021 - INFO - Train step_2120: loss : 0.13238514959812164
+2021-10-14 19:56:03,812 - CPSC2021 - INFO - Train step_2140: loss : 0.09814082831144333
+2021-10-14 19:56:04,183 - CPSC2021 - INFO - Train step_2160: loss : 0.2043604552745819
+2021-10-14 19:56:04,533 - CPSC2021 - INFO - Train step_2180: loss : 0.16367557644844055
+2021-10-14 19:56:04,894 - CPSC2021 - INFO - Train step_2200: loss : 0.29574450850486755
+2021-10-14 19:56:05,254 - CPSC2021 - INFO - Train step_2220: loss : 0.20161336660385132
+2021-10-14 19:56:05,607 - CPSC2021 - INFO - Train step_2240: loss : 0.15700919926166534
+2021-10-14 19:56:05,938 - CPSC2021 - INFO - Train step_2260: loss : 0.11551077663898468
+2021-10-14 19:56:06,270 - CPSC2021 - INFO - Train step_2280: loss : 0.0652795284986496
+2021-10-14 19:56:06,616 - CPSC2021 - INFO - Train step_2300: loss : 0.15672440826892853
+2021-10-14 19:56:06,970 - CPSC2021 - INFO - Train step_2320: loss : 0.30366599559783936
+2021-10-14 19:56:07,323 - CPSC2021 - INFO - Train step_2340: loss : 0.29407477378845215
+2021-10-14 19:56:07,675 - CPSC2021 - INFO - Train step_2360: loss : 0.1803368180990219
+2021-10-14 19:56:08,043 - CPSC2021 - INFO - Train step_2380: loss : 0.24202068150043488
+2021-10-14 19:56:08,393 - CPSC2021 - INFO - Train step_2400: loss : 0.0967484712600708
+2021-10-14 19:56:08,746 - CPSC2021 - INFO - Train step_2420: loss : 0.20834454894065857
+2021-10-14 19:56:09,095 - CPSC2021 - INFO - Train step_2440: loss : 0.2101719081401825
+2021-10-14 19:56:09,457 - CPSC2021 - INFO - Train step_2460: loss : 0.04304441809654236
+2021-10-14 19:56:09,810 - CPSC2021 - INFO - Train step_2480: loss : 0.12244654446840286
+2021-10-14 19:56:10,172 - CPSC2021 - INFO - Train step_2500: loss : 0.15513819456100464
+2021-10-14 19:56:10,540 - CPSC2021 - INFO - Train step_2520: loss : 0.15798984467983246
+2021-10-14 19:56:10,902 - CPSC2021 - INFO - Train step_2540: loss : 0.14686086773872375
+2021-10-14 19:56:11,258 - CPSC2021 - INFO - Train step_2560: loss : 0.2543901205062866
+2021-10-14 19:56:11,620 - CPSC2021 - INFO - Train step_2580: loss : 0.10233693569898605
+2021-10-14 19:56:11,987 - CPSC2021 - INFO - Train step_2600: loss : 0.14126715064048767
+2021-10-14 19:56:12,344 - CPSC2021 - INFO - Train step_2620: loss : 0.20272868871688843
+2021-10-14 19:56:12,713 - CPSC2021 - INFO - Train step_2640: loss : 0.22725144028663635
+2021-10-14 19:56:13,061 - CPSC2021 - INFO - Train step_2660: loss : 0.3208810091018677
+2021-10-14 19:56:13,428 - CPSC2021 - INFO - Train step_2680: loss : 0.15038245916366577
+2021-10-14 19:56:13,798 - CPSC2021 - INFO - Train step_2700: loss : 0.18609032034873962
+2021-10-14 19:56:14,167 - CPSC2021 - INFO - Train step_2720: loss : 0.17806406319141388
+2021-10-14 19:56:14,535 - CPSC2021 - INFO - Train step_2740: loss : 0.245218887925148
+2021-10-14 19:56:14,892 - CPSC2021 - INFO - Train step_2760: loss : 0.2930263578891754
+2021-10-14 19:56:15,247 - CPSC2021 - INFO - Train step_2780: loss : 0.26823073625564575
+2021-10-14 19:56:15,607 - CPSC2021 - INFO - Train step_2800: loss : 0.14135462045669556
+2021-10-14 19:56:15,964 - CPSC2021 - INFO - Train step_2820: loss : 0.10462246835231781
+2021-10-14 19:56:16,325 - CPSC2021 - INFO - Train step_2840: loss : 0.24107180535793304
+2021-10-14 19:56:16,675 - CPSC2021 - INFO - Train step_2860: loss : 0.14583460986614227
+2021-10-14 19:56:17,031 - CPSC2021 - INFO - Train step_2880: loss : 0.3233061730861664
+2021-10-14 19:56:17,386 - CPSC2021 - INFO - Train step_2900: loss : 0.059466078877449036
+2021-10-14 19:56:17,737 - CPSC2021 - INFO - Train step_2920: loss : 0.1209380105137825
+2021-10-14 19:56:18,096 - CPSC2021 - INFO - Train step_2940: loss : 0.2742026150226593
+2021-10-14 19:56:18,443 - CPSC2021 - INFO - Train step_2960: loss : 0.23706786334514618
+2021-10-14 19:56:18,789 - CPSC2021 - INFO - Train step_2980: loss : 0.15385375916957855
+2021-10-14 19:56:19,149 - CPSC2021 - INFO - Train step_3000: loss : 0.18817314505577087
+2021-10-14 19:56:19,509 - CPSC2021 - INFO - Train step_3020: loss : 0.18350987136363983
+2021-10-14 19:56:19,870 - CPSC2021 - INFO - Train step_3040: loss : 0.09413674473762512
+2021-10-14 19:56:20,226 - CPSC2021 - INFO - Train step_3060: loss : 0.1365468055009842
+2021-10-14 19:56:20,577 - CPSC2021 - INFO - Train step_3080: loss : 0.17647863924503326
+2021-10-14 19:56:20,941 - CPSC2021 - INFO - Train step_3100: loss : 0.1829766035079956
+2021-10-14 19:56:21,301 - CPSC2021 - INFO - Train step_3120: loss : 0.275911420583725
+2021-10-14 19:56:21,663 - CPSC2021 - INFO - Train step_3140: loss : 0.3495071530342102
+2021-10-14 19:56:22,020 - CPSC2021 - INFO - Train step_3160: loss : 0.08897655457258224
+2021-10-14 19:56:22,376 - CPSC2021 - INFO - Train step_3180: loss : 0.2060927152633667
+2021-10-14 19:56:22,724 - CPSC2021 - INFO - Train step_3200: loss : 0.13925963640213013
+2021-10-14 19:56:23,086 - CPSC2021 - INFO - Train step_3220: loss : 0.1535741239786148
+2021-10-14 19:56:23,451 - CPSC2021 - INFO - Train step_3240: loss : 0.20916339755058289
+2021-10-14 19:56:23,803 - CPSC2021 - INFO - Train step_3260: loss : 0.10279986262321472
+2021-10-14 19:56:24,156 - CPSC2021 - INFO - Train step_3280: loss : 0.3176797330379486
+2021-10-14 19:56:24,511 - CPSC2021 - INFO - Train step_3300: loss : 0.10279673337936401
+2021-10-14 19:56:24,858 - CPSC2021 - INFO - Train step_3320: loss : 0.14167439937591553
+2021-10-14 19:56:25,213 - CPSC2021 - INFO - Train step_3340: loss : 0.08263610303401947
+2021-10-14 19:56:25,566 - CPSC2021 - INFO - Train step_3360: loss : 0.08077611029148102
+2021-10-14 19:56:25,922 - CPSC2021 - INFO - Train step_3380: loss : 0.13083416223526
+2021-10-14 19:56:26,275 - CPSC2021 - INFO - Train step_3400: loss : 0.10669660568237305
+2021-10-14 19:56:26,632 - CPSC2021 - INFO - Train step_3420: loss : 0.1401941478252411
+2021-10-14 19:56:26,985 - CPSC2021 - INFO - Train step_3440: loss : 0.13157442212104797
+2021-10-14 19:56:27,340 - CPSC2021 - INFO - Train step_3460: loss : 0.14856374263763428
+2021-10-14 19:56:27,699 - CPSC2021 - INFO - Train step_3480: loss : 0.34249985218048096
+2021-10-14 19:56:28,066 - CPSC2021 - INFO - Train step_3500: loss : 0.11894021928310394
+2021-10-14 19:56:28,427 - CPSC2021 - INFO - Train step_3520: loss : 0.08889071643352509
+2021-10-14 19:56:28,789 - CPSC2021 - INFO - Train step_3540: loss : 0.2922874093055725
+2021-10-14 19:56:29,156 - CPSC2021 - INFO - Train step_3560: loss : 0.09518912434577942
+2021-10-14 19:56:29,503 - CPSC2021 - INFO - Train step_3580: loss : 0.09112531691789627
+2021-10-14 19:56:29,863 - CPSC2021 - INFO - Train step_3600: loss : 0.20336966216564178
+2021-10-14 19:56:30,224 - CPSC2021 - INFO - Train step_3620: loss : 0.15503613650798798
+2021-10-14 19:56:30,595 - CPSC2021 - INFO - Train step_3640: loss : 0.11844725906848907
+2021-10-14 19:56:30,958 - CPSC2021 - INFO - Train step_3660: loss : 0.12197599560022354
+2021-10-14 19:56:31,331 - CPSC2021 - INFO - Train step_3680: loss : 0.1413000077009201
+2021-10-14 19:56:31,688 - CPSC2021 - INFO - Train step_3700: loss : 0.0904741883277893
+2021-10-14 19:57:02,959 - CPSC2021 - INFO - 
+Train epoch_2:
+--------------------
+train/epoch_loss:        331.2950942106545
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 19:57:02,961 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 19:57:02,984 - CPSC2021 - INFO - Checkpoint 2 saved!
+2021-10-14 19:57:03,565 - CPSC2021 - INFO - Train step_3720: loss : 0.17938865721225739
+2021-10-14 19:57:03,913 - CPSC2021 - INFO - Train step_3740: loss : 0.14205271005630493
+2021-10-14 19:57:04,262 - CPSC2021 - INFO - Train step_3760: loss : 0.17790696024894714
+2021-10-14 19:57:04,609 - CPSC2021 - INFO - Train step_3780: loss : 0.15141761302947998
+2021-10-14 19:57:04,952 - CPSC2021 - INFO - Train step_3800: loss : 0.2247975766658783
+2021-10-14 19:57:05,301 - CPSC2021 - INFO - Train step_3820: loss : 0.24407294392585754
+2021-10-14 19:57:05,644 - CPSC2021 - INFO - Train step_3840: loss : 0.13349013030529022
+2021-10-14 19:57:05,948 - CPSC2021 - INFO - Train step_3860: loss : 0.16434593498706818
+2021-10-14 19:57:06,237 - CPSC2021 - INFO - Train step_3880: loss : 0.10863631218671799
+2021-10-14 19:57:06,535 - CPSC2021 - INFO - Train step_3900: loss : 0.1198962852358818
+2021-10-14 19:57:06,850 - CPSC2021 - INFO - Train step_3920: loss : 0.24794265627861023
+2021-10-14 19:57:07,144 - CPSC2021 - INFO - Train step_3940: loss : 0.15762345492839813
+2021-10-14 19:57:07,441 - CPSC2021 - INFO - Train step_3960: loss : 0.15386860072612762
+2021-10-14 19:57:07,744 - CPSC2021 - INFO - Train step_3980: loss : 0.18866074085235596
+2021-10-14 19:57:08,055 - CPSC2021 - INFO - Train step_4000: loss : 0.07458760589361191
+2021-10-14 19:57:08,352 - CPSC2021 - INFO - Train step_4020: loss : 0.07302011549472809
+2021-10-14 19:57:08,649 - CPSC2021 - INFO - Train step_4040: loss : 0.06658885627985
+2021-10-14 19:57:08,949 - CPSC2021 - INFO - Train step_4060: loss : 0.14761623740196228
+2021-10-14 19:57:09,248 - CPSC2021 - INFO - Train step_4080: loss : 0.11751405894756317
+2021-10-14 19:57:09,583 - CPSC2021 - INFO - Train step_4100: loss : 0.07143094390630722
+2021-10-14 19:57:09,945 - CPSC2021 - INFO - Train step_4120: loss : 0.25614210963249207
+2021-10-14 19:57:10,294 - CPSC2021 - INFO - Train step_4140: loss : 0.14145956933498383
+2021-10-14 19:57:10,638 - CPSC2021 - INFO - Train step_4160: loss : 0.2204776555299759
+2021-10-14 19:57:10,982 - CPSC2021 - INFO - Train step_4180: loss : 0.15782639384269714
+2021-10-14 19:57:11,327 - CPSC2021 - INFO - Train step_4200: loss : 0.09881925582885742
+2021-10-14 19:57:11,672 - CPSC2021 - INFO - Train step_4220: loss : 0.15098837018013
+2021-10-14 19:57:12,010 - CPSC2021 - INFO - Train step_4240: loss : 0.39402320981025696
+2021-10-14 19:57:12,355 - CPSC2021 - INFO - Train step_4260: loss : 0.0667254775762558
+2021-10-14 19:57:12,697 - CPSC2021 - INFO - Train step_4280: loss : 0.19180935621261597
+2021-10-14 19:57:13,043 - CPSC2021 - INFO - Train step_4300: loss : 0.055631671100854874
+2021-10-14 19:57:13,385 - CPSC2021 - INFO - Train step_4320: loss : 0.12589123845100403
+2021-10-14 19:57:13,725 - CPSC2021 - INFO - Train step_4340: loss : 0.09256992489099503
+2021-10-14 19:57:14,067 - CPSC2021 - INFO - Train step_4360: loss : 0.18092277646064758
+2021-10-14 19:57:14,402 - CPSC2021 - INFO - Train step_4380: loss : 0.14967264235019684
+2021-10-14 19:57:14,744 - CPSC2021 - INFO - Train step_4400: loss : 0.24052605032920837
+2021-10-14 19:57:15,088 - CPSC2021 - INFO - Train step_4420: loss : 0.0883881077170372
+2021-10-14 19:57:15,430 - CPSC2021 - INFO - Train step_4440: loss : 0.10462990403175354
+2021-10-14 19:57:15,774 - CPSC2021 - INFO - Train step_4460: loss : 0.05711004510521889
+2021-10-14 19:57:16,112 - CPSC2021 - INFO - Train step_4480: loss : 0.1037859320640564
+2021-10-14 19:57:16,454 - CPSC2021 - INFO - Train step_4500: loss : 0.09637505561113358
+2021-10-14 19:57:16,804 - CPSC2021 - INFO - Train step_4520: loss : 0.10058514773845673
+2021-10-14 19:57:17,150 - CPSC2021 - INFO - Train step_4540: loss : 0.08632776141166687
+2021-10-14 19:57:17,494 - CPSC2021 - INFO - Train step_4560: loss : 0.06049215793609619
+2021-10-14 19:57:17,840 - CPSC2021 - INFO - Train step_4580: loss : 0.2142370641231537
+2021-10-14 19:57:18,191 - CPSC2021 - INFO - Train step_4600: loss : 0.08906789869070053
+2021-10-14 19:57:18,535 - CPSC2021 - INFO - Train step_4620: loss : 0.18372251093387604
+2021-10-14 19:57:18,876 - CPSC2021 - INFO - Train step_4640: loss : 0.13252036273479462
+2021-10-14 19:57:19,217 - CPSC2021 - INFO - Train step_4660: loss : 0.10007010400295258
+2021-10-14 19:57:19,569 - CPSC2021 - INFO - Train step_4680: loss : 0.23868303000926971
+2021-10-14 19:57:19,911 - CPSC2021 - INFO - Train step_4700: loss : 0.1528373509645462
+2021-10-14 19:57:20,255 - CPSC2021 - INFO - Train step_4720: loss : 0.19450914859771729
+2021-10-14 19:57:20,603 - CPSC2021 - INFO - Train step_4740: loss : 0.07406000792980194
+2021-10-14 19:57:20,946 - CPSC2021 - INFO - Train step_4760: loss : 0.04522474855184555
+2021-10-14 19:57:21,290 - CPSC2021 - INFO - Train step_4780: loss : 0.16901011765003204
+2021-10-14 19:57:21,630 - CPSC2021 - INFO - Train step_4800: loss : 0.09953803569078445
+2021-10-14 19:57:21,975 - CPSC2021 - INFO - Train step_4820: loss : 0.17140688002109528
+2021-10-14 19:57:22,320 - CPSC2021 - INFO - Train step_4840: loss : 0.22636516392230988
+2021-10-14 19:57:22,662 - CPSC2021 - INFO - Train step_4860: loss : 0.2516385018825531
+2021-10-14 19:57:23,001 - CPSC2021 - INFO - Train step_4880: loss : 0.18516868352890015
+2021-10-14 19:57:23,337 - CPSC2021 - INFO - Train step_4900: loss : 0.20049481093883514
+2021-10-14 19:57:23,679 - CPSC2021 - INFO - Train step_4920: loss : 0.12894386053085327
+2021-10-14 19:57:24,024 - CPSC2021 - INFO - Train step_4940: loss : 0.0962672233581543
+2021-10-14 19:57:24,366 - CPSC2021 - INFO - Train step_4960: loss : 0.10359244048595428
+2021-10-14 19:57:24,708 - CPSC2021 - INFO - Train step_4980: loss : 0.1920103132724762
+2021-10-14 19:57:25,051 - CPSC2021 - INFO - Train step_5000: loss : 0.0668892115354538
+2021-10-14 19:57:25,392 - CPSC2021 - INFO - Train step_5020: loss : 0.13180682063102722
+2021-10-14 19:57:25,739 - CPSC2021 - INFO - Train step_5040: loss : 0.15514631569385529
+2021-10-14 19:57:26,072 - CPSC2021 - INFO - Train step_5060: loss : 0.1613432914018631
+2021-10-14 19:57:26,416 - CPSC2021 - INFO - Train step_5080: loss : 0.17352032661437988
+2021-10-14 19:57:26,754 - CPSC2021 - INFO - Train step_5100: loss : 0.14030717313289642
+2021-10-14 19:57:27,084 - CPSC2021 - INFO - Train step_5120: loss : 0.0567786730825901
+2021-10-14 19:57:27,420 - CPSC2021 - INFO - Train step_5140: loss : 0.1325143277645111
+2021-10-14 19:57:27,747 - CPSC2021 - INFO - Train step_5160: loss : 0.09756769984960556
+2021-10-14 19:57:28,088 - CPSC2021 - INFO - Train step_5180: loss : 0.171151265501976
+2021-10-14 19:57:28,431 - CPSC2021 - INFO - Train step_5200: loss : 0.13465043902397156
+2021-10-14 19:57:28,778 - CPSC2021 - INFO - Train step_5220: loss : 0.13668735325336456
+2021-10-14 19:57:29,111 - CPSC2021 - INFO - Train step_5240: loss : 0.17926573753356934
+2021-10-14 19:57:29,449 - CPSC2021 - INFO - Train step_5260: loss : 0.20029222965240479
+2021-10-14 19:57:29,794 - CPSC2021 - INFO - Train step_5280: loss : 0.06630215793848038
+2021-10-14 19:57:30,130 - CPSC2021 - INFO - Train step_5300: loss : 0.09851336479187012
+2021-10-14 19:57:30,469 - CPSC2021 - INFO - Train step_5320: loss : 0.149860680103302
+2021-10-14 19:57:30,801 - CPSC2021 - INFO - Train step_5340: loss : 0.1551528424024582
+2021-10-14 19:57:31,145 - CPSC2021 - INFO - Train step_5360: loss : 0.10012292861938477
+2021-10-14 19:57:31,494 - CPSC2021 - INFO - Train step_5380: loss : 0.16316178441047668
+2021-10-14 19:57:31,841 - CPSC2021 - INFO - Train step_5400: loss : 0.09402202814817429
+2021-10-14 19:57:32,180 - CPSC2021 - INFO - Train step_5420: loss : 0.04946593567728996
+2021-10-14 19:57:32,524 - CPSC2021 - INFO - Train step_5440: loss : 0.13901858031749725
+2021-10-14 19:57:32,857 - CPSC2021 - INFO - Train step_5460: loss : 0.42301905155181885
+2021-10-14 19:57:33,201 - CPSC2021 - INFO - Train step_5480: loss : 0.1349458396434784
+2021-10-14 19:57:33,545 - CPSC2021 - INFO - Train step_5500: loss : 0.0470624715089798
+2021-10-14 19:57:33,884 - CPSC2021 - INFO - Train step_5520: loss : 0.08083144575357437
+2021-10-14 19:57:34,233 - CPSC2021 - INFO - Train step_5540: loss : 0.21276652812957764
+2021-10-14 19:57:34,577 - CPSC2021 - INFO - Train step_5560: loss : 0.1794164776802063
+2021-10-14 19:58:05,201 - CPSC2021 - INFO - 
+Train epoch_3:
+--------------------
+train/epoch_loss:        266.43132803589106
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 19:58:05,205 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 19:58:05,229 - CPSC2021 - INFO - Checkpoint 3 saved!
+2021-10-14 19:58:05,877 - CPSC2021 - INFO - Train step_5580: loss : 0.16263949871063232
+2021-10-14 19:58:06,230 - CPSC2021 - INFO - Train step_5600: loss : 0.05776295065879822
+2021-10-14 19:58:06,602 - CPSC2021 - INFO - Train step_5620: loss : 0.07394180446863174
+2021-10-14 19:58:06,977 - CPSC2021 - INFO - Train step_5640: loss : 0.07282024621963501
+2021-10-14 19:58:07,334 - CPSC2021 - INFO - Train step_5660: loss : 0.10273578017950058
+2021-10-14 19:58:07,687 - CPSC2021 - INFO - Train step_5680: loss : 0.14261111617088318
+2021-10-14 19:58:08,028 - CPSC2021 - INFO - Train step_5700: loss : 0.1260087788105011
+2021-10-14 19:58:08,374 - CPSC2021 - INFO - Train step_5720: loss : 0.10042940825223923
+2021-10-14 19:58:08,727 - CPSC2021 - INFO - Train step_5740: loss : 0.03369786962866783
+2021-10-14 19:58:09,088 - CPSC2021 - INFO - Train step_5760: loss : 0.16270463168621063
+2021-10-14 19:58:09,443 - CPSC2021 - INFO - Train step_5780: loss : 0.15612399578094482
+2021-10-14 19:58:09,806 - CPSC2021 - INFO - Train step_5800: loss : 0.06009063124656677
+2021-10-14 19:58:10,176 - CPSC2021 - INFO - Train step_5820: loss : 0.13748019933700562
+2021-10-14 19:58:10,536 - CPSC2021 - INFO - Train step_5840: loss : 0.17348776757717133
+2021-10-14 19:58:10,886 - CPSC2021 - INFO - Train step_5860: loss : 0.08064278215169907
+2021-10-14 19:58:11,228 - CPSC2021 - INFO - Train step_5880: loss : 0.16760241985321045
+2021-10-14 19:58:11,579 - CPSC2021 - INFO - Train step_5900: loss : 0.12679770588874817
+2021-10-14 19:58:11,933 - CPSC2021 - INFO - Train step_5920: loss : 0.05522165074944496
+2021-10-14 19:58:12,280 - CPSC2021 - INFO - Train step_5940: loss : 0.06433272361755371
+2021-10-14 19:58:12,631 - CPSC2021 - INFO - Train step_5960: loss : 0.14206431806087494
+2021-10-14 19:58:12,986 - CPSC2021 - INFO - Train step_5980: loss : 0.10838203132152557
+2021-10-14 19:58:13,337 - CPSC2021 - INFO - Train step_6000: loss : 0.21334147453308105
+2021-10-14 19:58:13,688 - CPSC2021 - INFO - Train step_6020: loss : 0.19295184314250946
+2021-10-14 19:58:14,049 - CPSC2021 - INFO - Train step_6040: loss : 0.4734364449977875
+2021-10-14 19:58:14,385 - CPSC2021 - INFO - Train step_6060: loss : 0.10513473302125931
+2021-10-14 19:58:14,739 - CPSC2021 - INFO - Train step_6080: loss : 0.17874178290367126
+2021-10-14 19:58:15,094 - CPSC2021 - INFO - Train step_6100: loss : 0.10984944552183151
+2021-10-14 19:58:15,446 - CPSC2021 - INFO - Train step_6120: loss : 0.038554929196834564
+2021-10-14 19:58:15,799 - CPSC2021 - INFO - Train step_6140: loss : 0.28518253564834595
+2021-10-14 19:58:16,158 - CPSC2021 - INFO - Train step_6160: loss : 0.11309438943862915
+2021-10-14 19:58:16,518 - CPSC2021 - INFO - Train step_6180: loss : 0.09798258543014526
+2021-10-14 19:58:16,873 - CPSC2021 - INFO - Train step_6200: loss : 0.054241519421339035
+2021-10-14 19:58:17,231 - CPSC2021 - INFO - Train step_6220: loss : 0.11096447706222534
+2021-10-14 19:58:17,576 - CPSC2021 - INFO - Train step_6240: loss : 0.12609702348709106
+2021-10-14 19:58:17,917 - CPSC2021 - INFO - Train step_6260: loss : 0.14657028019428253
+2021-10-14 19:58:18,261 - CPSC2021 - INFO - Train step_6280: loss : 0.06464436650276184
+2021-10-14 19:58:18,603 - CPSC2021 - INFO - Train step_6300: loss : 0.20899337530136108
+2021-10-14 19:58:18,950 - CPSC2021 - INFO - Train step_6320: loss : 0.04669462516903877
+2021-10-14 19:58:19,293 - CPSC2021 - INFO - Train step_6340: loss : 0.10002874583005905
+2021-10-14 19:58:19,644 - CPSC2021 - INFO - Train step_6360: loss : 0.15007108449935913
+2021-10-14 19:58:19,985 - CPSC2021 - INFO - Train step_6380: loss : 0.17516636848449707
+2021-10-14 19:58:20,330 - CPSC2021 - INFO - Train step_6400: loss : 0.14390018582344055
+2021-10-14 19:58:20,669 - CPSC2021 - INFO - Train step_6420: loss : 0.16150423884391785
+2021-10-14 19:58:21,013 - CPSC2021 - INFO - Train step_6440: loss : 0.1476365178823471
+2021-10-14 19:58:21,353 - CPSC2021 - INFO - Train step_6460: loss : 0.12359139323234558
+2021-10-14 19:58:21,694 - CPSC2021 - INFO - Train step_6480: loss : 0.16368699073791504
+2021-10-14 19:58:22,027 - CPSC2021 - INFO - Train step_6500: loss : 0.04820223152637482
+2021-10-14 19:58:22,370 - CPSC2021 - INFO - Train step_6520: loss : 0.1233544647693634
+2021-10-14 19:58:22,710 - CPSC2021 - INFO - Train step_6540: loss : 0.1889677792787552
+2021-10-14 19:58:23,046 - CPSC2021 - INFO - Train step_6560: loss : 0.1291748732328415
+2021-10-14 19:58:23,383 - CPSC2021 - INFO - Train step_6580: loss : 0.2007465809583664
+2021-10-14 19:58:23,731 - CPSC2021 - INFO - Train step_6600: loss : 0.2344893366098404
+2021-10-14 19:58:24,077 - CPSC2021 - INFO - Train step_6620: loss : 0.07199414819478989
+2021-10-14 19:58:24,417 - CPSC2021 - INFO - Train step_6640: loss : 0.09977686405181885
+2021-10-14 19:58:24,750 - CPSC2021 - INFO - Train step_6660: loss : 0.12943334877490997
+2021-10-14 19:58:25,098 - CPSC2021 - INFO - Train step_6680: loss : 0.27774229645729065
+2021-10-14 19:58:25,438 - CPSC2021 - INFO - Train step_6700: loss : 0.11011320352554321
+2021-10-14 19:58:25,788 - CPSC2021 - INFO - Train step_6720: loss : 0.0758403018116951
+2021-10-14 19:58:26,140 - CPSC2021 - INFO - Train step_6740: loss : 0.14991290867328644
+2021-10-14 19:58:26,496 - CPSC2021 - INFO - Train step_6760: loss : 0.14274142682552338
+2021-10-14 19:58:26,854 - CPSC2021 - INFO - Train step_6780: loss : 0.10629747807979584
+2021-10-14 19:58:27,208 - CPSC2021 - INFO - Train step_6800: loss : 0.1873527616262436
+2021-10-14 19:58:27,553 - CPSC2021 - INFO - Train step_6820: loss : 0.1610696166753769
+2021-10-14 19:58:27,899 - CPSC2021 - INFO - Train step_6840: loss : 0.16235099732875824
+2021-10-14 19:58:28,245 - CPSC2021 - INFO - Train step_6860: loss : 0.11933550983667374
+2021-10-14 19:58:28,601 - CPSC2021 - INFO - Train step_6880: loss : 0.1548527628183365
+2021-10-14 19:58:28,965 - CPSC2021 - INFO - Train step_6900: loss : 0.08161826431751251
+2021-10-14 19:58:29,326 - CPSC2021 - INFO - Train step_6920: loss : 0.05331435427069664
+2021-10-14 19:58:29,687 - CPSC2021 - INFO - Train step_6940: loss : 0.0342508964240551
+2021-10-14 19:58:30,049 - CPSC2021 - INFO - Train step_6960: loss : 0.158680260181427
+2021-10-14 19:58:30,409 - CPSC2021 - INFO - Train step_6980: loss : 0.05974329635500908
+2021-10-14 19:58:30,758 - CPSC2021 - INFO - Train step_7000: loss : 0.2554817199707031
+2021-10-14 19:58:31,111 - CPSC2021 - INFO - Train step_7020: loss : 0.15966276824474335
+2021-10-14 19:58:31,465 - CPSC2021 - INFO - Train step_7040: loss : 0.08381172269582748
+2021-10-14 19:58:31,823 - CPSC2021 - INFO - Train step_7060: loss : 0.06184505298733711
+2021-10-14 19:58:32,175 - CPSC2021 - INFO - Train step_7080: loss : 0.058417197316884995
+2021-10-14 19:58:32,533 - CPSC2021 - INFO - Train step_7100: loss : 0.07090265303850174
+2021-10-14 19:58:32,921 - CPSC2021 - INFO - Train step_7120: loss : 0.09376807510852814
+2021-10-14 19:58:33,305 - CPSC2021 - INFO - Train step_7140: loss : 0.18241845071315765
+2021-10-14 19:58:33,680 - CPSC2021 - INFO - Train step_7160: loss : 0.11493341624736786
+2021-10-14 19:58:34,031 - CPSC2021 - INFO - Train step_7180: loss : 0.14342419803142548
+2021-10-14 19:58:34,369 - CPSC2021 - INFO - Train step_7200: loss : 0.018319910392165184
+2021-10-14 19:58:34,699 - CPSC2021 - INFO - Train step_7220: loss : 0.06202653795480728
+2021-10-14 19:58:35,034 - CPSC2021 - INFO - Train step_7240: loss : 0.04815784469246864
+2021-10-14 19:58:35,361 - CPSC2021 - INFO - Train step_7260: loss : 0.08815080672502518
+2021-10-14 19:58:35,701 - CPSC2021 - INFO - Train step_7280: loss : 0.10424041002988815
+2021-10-14 19:58:36,039 - CPSC2021 - INFO - Train step_7300: loss : 0.05973602458834648
+2021-10-14 19:58:36,369 - CPSC2021 - INFO - Train step_7320: loss : 0.12944826483726501
+2021-10-14 19:58:36,711 - CPSC2021 - INFO - Train step_7340: loss : 0.07955483347177505
+2021-10-14 19:58:37,040 - CPSC2021 - INFO - Train step_7360: loss : 0.15338583290576935
+2021-10-14 19:58:37,378 - CPSC2021 - INFO - Train step_7380: loss : 0.16722361743450165
+2021-10-14 19:58:37,721 - CPSC2021 - INFO - Train step_7400: loss : 0.06756714731454849
+2021-10-14 19:58:38,057 - CPSC2021 - INFO - Train step_7420: loss : 0.0931275337934494
+2021-10-14 19:59:08,391 - CPSC2021 - INFO - 
+Train epoch_4:
+--------------------
+train/epoch_loss:        229.83921842090786
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 19:59:08,396 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 19:59:08,419 - CPSC2021 - INFO - Checkpoint 4 saved!
+2021-10-14 19:59:09,162 - CPSC2021 - INFO - Train step_7440: loss : 0.055551834404468536
+2021-10-14 19:59:09,511 - CPSC2021 - INFO - Train step_7460: loss : 0.1096452996134758
+2021-10-14 19:59:09,860 - CPSC2021 - INFO - Train step_7480: loss : 0.10402945429086685
+2021-10-14 19:59:10,219 - CPSC2021 - INFO - Train step_7500: loss : 0.09732714295387268
+2021-10-14 19:59:10,574 - CPSC2021 - INFO - Train step_7520: loss : 0.12591637670993805
+2021-10-14 19:59:10,928 - CPSC2021 - INFO - Train step_7540: loss : 0.16787037253379822
+2021-10-14 19:59:11,275 - CPSC2021 - INFO - Train step_7560: loss : 0.12739919126033783
+2021-10-14 19:59:11,631 - CPSC2021 - INFO - Train step_7580: loss : 0.08071484416723251
+2021-10-14 19:59:11,994 - CPSC2021 - INFO - Train step_7600: loss : 0.026334894821047783
+2021-10-14 19:59:12,367 - CPSC2021 - INFO - Train step_7620: loss : 0.17343884706497192
+2021-10-14 19:59:12,738 - CPSC2021 - INFO - Train step_7640: loss : 0.04619399830698967
+2021-10-14 19:59:13,099 - CPSC2021 - INFO - Train step_7660: loss : 0.035538408905267715
+2021-10-14 19:59:13,470 - CPSC2021 - INFO - Train step_7680: loss : 0.13217304646968842
+2021-10-14 19:59:13,833 - CPSC2021 - INFO - Train step_7700: loss : 0.07154010981321335
+2021-10-14 19:59:14,205 - CPSC2021 - INFO - Train step_7720: loss : 0.15921969711780548
+2021-10-14 19:59:14,571 - CPSC2021 - INFO - Train step_7740: loss : 0.056856442242860794
+2021-10-14 19:59:14,936 - CPSC2021 - INFO - Train step_7760: loss : 0.2422848641872406
+2021-10-14 19:59:15,300 - CPSC2021 - INFO - Train step_7780: loss : 0.07792311906814575
+2021-10-14 19:59:15,659 - CPSC2021 - INFO - Train step_7800: loss : 0.04320010915398598
+2021-10-14 19:59:16,022 - CPSC2021 - INFO - Train step_7820: loss : 0.13372591137886047
+2021-10-14 19:59:16,382 - CPSC2021 - INFO - Train step_7840: loss : 0.07360465079545975
+2021-10-14 19:59:16,742 - CPSC2021 - INFO - Train step_7860: loss : 0.08133069425821304
+2021-10-14 19:59:17,090 - CPSC2021 - INFO - Train step_7880: loss : 0.05597720295190811
+2021-10-14 19:59:17,433 - CPSC2021 - INFO - Train step_7900: loss : 0.060732170939445496
+2021-10-14 19:59:17,783 - CPSC2021 - INFO - Train step_7920: loss : 0.13676710426807404
+2021-10-14 19:59:18,144 - CPSC2021 - INFO - Train step_7940: loss : 0.28124314546585083
+2021-10-14 19:59:18,498 - CPSC2021 - INFO - Train step_7960: loss : 0.06986907869577408
+2021-10-14 19:59:18,845 - CPSC2021 - INFO - Train step_7980: loss : 0.06077168881893158
+2021-10-14 19:59:19,191 - CPSC2021 - INFO - Train step_8000: loss : 0.09037518501281738
+2021-10-14 19:59:19,527 - CPSC2021 - INFO - Train step_8020: loss : 0.1642884910106659
+2021-10-14 19:59:19,874 - CPSC2021 - INFO - Train step_8040: loss : 0.10773961246013641
+2021-10-14 19:59:20,210 - CPSC2021 - INFO - Train step_8060: loss : 0.049449265003204346
+2021-10-14 19:59:20,550 - CPSC2021 - INFO - Train step_8080: loss : 0.10153576731681824
+2021-10-14 19:59:20,903 - CPSC2021 - INFO - Train step_8100: loss : 0.11772800236940384
+2021-10-14 19:59:21,266 - CPSC2021 - INFO - Train step_8120: loss : 0.06253547221422195
+2021-10-14 19:59:21,619 - CPSC2021 - INFO - Train step_8140: loss : 0.07064886391162872
+2021-10-14 19:59:21,974 - CPSC2021 - INFO - Train step_8160: loss : 0.045615073293447495
+2021-10-14 19:59:22,325 - CPSC2021 - INFO - Train step_8180: loss : 0.04346773028373718
+2021-10-14 19:59:22,674 - CPSC2021 - INFO - Train step_8200: loss : 0.08909650146961212
+2021-10-14 19:59:23,031 - CPSC2021 - INFO - Train step_8220: loss : 0.1271917223930359
+2021-10-14 19:59:23,379 - CPSC2021 - INFO - Train step_8240: loss : 0.03958878666162491
+2021-10-14 19:59:23,741 - CPSC2021 - INFO - Train step_8260: loss : 0.031971003860235214
+2021-10-14 19:59:24,095 - CPSC2021 - INFO - Train step_8280: loss : 0.12998291850090027
+2021-10-14 19:59:24,462 - CPSC2021 - INFO - Train step_8300: loss : 0.16784758865833282
+2021-10-14 19:59:24,824 - CPSC2021 - INFO - Train step_8320: loss : 0.12378833442926407
+2021-10-14 19:59:25,181 - CPSC2021 - INFO - Train step_8340: loss : 0.18010595440864563
+2021-10-14 19:59:25,538 - CPSC2021 - INFO - Train step_8360: loss : 0.10884278267621994
+2021-10-14 19:59:25,887 - CPSC2021 - INFO - Train step_8380: loss : 0.06829836219549179
+2021-10-14 19:59:26,240 - CPSC2021 - INFO - Train step_8400: loss : 0.032049164175987244
+2021-10-14 19:59:26,580 - CPSC2021 - INFO - Train step_8420: loss : 0.06922616064548492
+2021-10-14 19:59:26,913 - CPSC2021 - INFO - Train step_8440: loss : 0.12764421105384827
+2021-10-14 19:59:27,255 - CPSC2021 - INFO - Train step_8460: loss : 0.01883835718035698
+2021-10-14 19:59:27,613 - CPSC2021 - INFO - Train step_8480: loss : 0.19462859630584717
+2021-10-14 19:59:27,958 - CPSC2021 - INFO - Train step_8500: loss : 0.23665474355220795
+2021-10-14 19:59:28,293 - CPSC2021 - INFO - Train step_8520: loss : 0.13288383185863495
+2021-10-14 19:59:28,640 - CPSC2021 - INFO - Train step_8540: loss : 0.19483570754528046
+2021-10-14 19:59:28,986 - CPSC2021 - INFO - Train step_8560: loss : 0.08120231330394745
+2021-10-14 19:59:29,340 - CPSC2021 - INFO - Train step_8580: loss : 0.07425763458013535
+2021-10-14 19:59:29,690 - CPSC2021 - INFO - Train step_8600: loss : 0.05748787894845009
+2021-10-14 19:59:30,033 - CPSC2021 - INFO - Train step_8620: loss : 0.23050855100154877
+2021-10-14 19:59:30,373 - CPSC2021 - INFO - Train step_8640: loss : 0.1293097585439682
+2021-10-14 19:59:30,718 - CPSC2021 - INFO - Train step_8660: loss : 0.09640325605869293
+2021-10-14 19:59:31,071 - CPSC2021 - INFO - Train step_8680: loss : 0.038961999118328094
+2021-10-14 19:59:31,434 - CPSC2021 - INFO - Train step_8700: loss : 0.11916472762823105
+2021-10-14 19:59:31,794 - CPSC2021 - INFO - Train step_8720: loss : 0.065040722489357
+2021-10-14 19:59:32,142 - CPSC2021 - INFO - Train step_8740: loss : 0.028935151174664497
+2021-10-14 19:59:32,500 - CPSC2021 - INFO - Train step_8760: loss : 0.09505916386842728
+2021-10-14 19:59:32,818 - CPSC2021 - INFO - Train step_8780: loss : 0.07251923531293869
+2021-10-14 19:59:33,123 - CPSC2021 - INFO - Train step_8800: loss : 0.0797809287905693
+2021-10-14 19:59:33,425 - CPSC2021 - INFO - Train step_8820: loss : 0.18835113942623138
+2021-10-14 19:59:33,736 - CPSC2021 - INFO - Train step_8840: loss : 0.1125204861164093
+2021-10-14 19:59:34,041 - CPSC2021 - INFO - Train step_8860: loss : 0.18442301452159882
+2021-10-14 19:59:34,340 - CPSC2021 - INFO - Train step_8880: loss : 0.06208936870098114
+2021-10-14 19:59:34,652 - CPSC2021 - INFO - Train step_8900: loss : 0.10399582237005234
+2021-10-14 19:59:34,953 - CPSC2021 - INFO - Train step_8920: loss : 0.039787955582141876
+2021-10-14 19:59:35,265 - CPSC2021 - INFO - Train step_8940: loss : 0.019974233582615852
+2021-10-14 19:59:35,619 - CPSC2021 - INFO - Train step_8960: loss : 0.06884067505598068
+2021-10-14 19:59:35,972 - CPSC2021 - INFO - Train step_8980: loss : 0.08098272979259491
+2021-10-14 19:59:36,332 - CPSC2021 - INFO - Train step_9000: loss : 0.05093783885240555
+2021-10-14 19:59:36,675 - CPSC2021 - INFO - Train step_9020: loss : 0.07996028661727905
+2021-10-14 19:59:37,021 - CPSC2021 - INFO - Train step_9040: loss : 0.09758930653333664
+2021-10-14 19:59:37,353 - CPSC2021 - INFO - Train step_9060: loss : 0.08450837433338165
+2021-10-14 19:59:37,682 - CPSC2021 - INFO - Train step_9080: loss : 0.2169523984193802
+2021-10-14 19:59:38,041 - CPSC2021 - INFO - Train step_9100: loss : 0.12056966125965118
+2021-10-14 19:59:38,398 - CPSC2021 - INFO - Train step_9120: loss : 0.03570331260561943
+2021-10-14 19:59:38,759 - CPSC2021 - INFO - Train step_9140: loss : 0.1751498430967331
+2021-10-14 19:59:39,112 - CPSC2021 - INFO - Train step_9160: loss : 0.31718704104423523
+2021-10-14 19:59:39,485 - CPSC2021 - INFO - Train step_9180: loss : 0.06762085109949112
+2021-10-14 19:59:39,838 - CPSC2021 - INFO - Train step_9200: loss : 0.13157567381858826
+2021-10-14 19:59:40,212 - CPSC2021 - INFO - Train step_9220: loss : 0.17673635482788086
+2021-10-14 19:59:40,579 - CPSC2021 - INFO - Train step_9240: loss : 0.04287809878587723
+2021-10-14 19:59:40,933 - CPSC2021 - INFO - Train step_9260: loss : 0.1306961625814438
+2021-10-14 20:00:11,615 - CPSC2021 - INFO - 
+Train epoch_5:
+--------------------
+train/epoch_loss:        200.6859342334792
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:00:11,619 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:00:11,642 - CPSC2021 - INFO - Checkpoint 5 saved!
+2021-10-14 20:00:12,119 - CPSC2021 - INFO - Train step_9280: loss : 0.05361117050051689
+2021-10-14 20:00:12,473 - CPSC2021 - INFO - Train step_9300: loss : 0.16752701997756958
+2021-10-14 20:00:12,837 - CPSC2021 - INFO - Train step_9320: loss : 0.1290968805551529
+2021-10-14 20:00:13,201 - CPSC2021 - INFO - Train step_9340: loss : 0.14187659323215485
+2021-10-14 20:00:13,571 - CPSC2021 - INFO - Train step_9360: loss : 0.10420724004507065
+2021-10-14 20:00:13,941 - CPSC2021 - INFO - Train step_9380: loss : 0.08708912134170532
+2021-10-14 20:00:14,303 - CPSC2021 - INFO - Train step_9400: loss : 0.20131446421146393
+2021-10-14 20:00:14,669 - CPSC2021 - INFO - Train step_9420: loss : 0.07579018920660019
+2021-10-14 20:00:15,039 - CPSC2021 - INFO - Train step_9440: loss : 0.08134712278842926
+2021-10-14 20:00:15,401 - CPSC2021 - INFO - Train step_9460: loss : 0.15647999942302704
+2021-10-14 20:00:15,769 - CPSC2021 - INFO - Train step_9480: loss : 0.1858159750699997
+2021-10-14 20:00:16,140 - CPSC2021 - INFO - Train step_9500: loss : 0.07880888134241104
+2021-10-14 20:00:16,501 - CPSC2021 - INFO - Train step_9520: loss : 0.08794276416301727
+2021-10-14 20:00:16,866 - CPSC2021 - INFO - Train step_9540: loss : 0.11670025438070297
+2021-10-14 20:00:17,224 - CPSC2021 - INFO - Train step_9560: loss : 0.2756054401397705
+2021-10-14 20:00:17,594 - CPSC2021 - INFO - Train step_9580: loss : 0.0390799380838871
+2021-10-14 20:00:17,949 - CPSC2021 - INFO - Train step_9600: loss : 0.07193631678819656
+2021-10-14 20:00:18,324 - CPSC2021 - INFO - Train step_9620: loss : 0.07673605531454086
+2021-10-14 20:00:18,683 - CPSC2021 - INFO - Train step_9640: loss : 0.05598818510770798
+2021-10-14 20:00:19,053 - CPSC2021 - INFO - Train step_9660: loss : 0.09475546330213547
+2021-10-14 20:00:19,412 - CPSC2021 - INFO - Train step_9680: loss : 0.2797037363052368
+2021-10-14 20:00:19,777 - CPSC2021 - INFO - Train step_9700: loss : 0.029039734974503517
+2021-10-14 20:00:20,136 - CPSC2021 - INFO - Train step_9720: loss : 0.1360929310321808
+2021-10-14 20:00:20,506 - CPSC2021 - INFO - Train step_9740: loss : 0.04300856590270996
+2021-10-14 20:00:20,871 - CPSC2021 - INFO - Train step_9760: loss : 0.03918737918138504
+2021-10-14 20:00:21,230 - CPSC2021 - INFO - Train step_9780: loss : 0.3068879246711731
+2021-10-14 20:00:21,578 - CPSC2021 - INFO - Train step_9800: loss : 0.163339301943779
+2021-10-14 20:00:21,927 - CPSC2021 - INFO - Train step_9820: loss : 0.0800752341747284
+2021-10-14 20:00:22,286 - CPSC2021 - INFO - Train step_9840: loss : 0.06681273132562637
+2021-10-14 20:00:22,645 - CPSC2021 - INFO - Train step_9860: loss : 0.04996852949261665
+2021-10-14 20:00:23,006 - CPSC2021 - INFO - Train step_9880: loss : 0.07739974558353424
+2021-10-14 20:00:23,367 - CPSC2021 - INFO - Train step_9900: loss : 0.15719500184059143
+2021-10-14 20:00:23,715 - CPSC2021 - INFO - Train step_9920: loss : 0.3321479260921478
+2021-10-14 20:00:24,088 - CPSC2021 - INFO - Train step_9940: loss : 0.12919002771377563
+2021-10-14 20:00:24,429 - CPSC2021 - INFO - Train step_9960: loss : 0.10016293078660965
+2021-10-14 20:00:24,782 - CPSC2021 - INFO - Train step_9980: loss : 0.1034204438328743
+2021-10-14 20:00:25,139 - CPSC2021 - INFO - Train step_10000: loss : 0.10585302114486694
+2021-10-14 20:00:25,510 - CPSC2021 - INFO - Train step_10020: loss : 0.07348314672708511
+2021-10-14 20:00:25,876 - CPSC2021 - INFO - Train step_10040: loss : 0.16932475566864014
+2021-10-14 20:00:26,235 - CPSC2021 - INFO - Train step_10060: loss : 0.013414610177278519
+2021-10-14 20:00:26,596 - CPSC2021 - INFO - Train step_10080: loss : 0.14758437871932983
+2021-10-14 20:00:26,955 - CPSC2021 - INFO - Train step_10100: loss : 0.11681884527206421
+2021-10-14 20:00:27,317 - CPSC2021 - INFO - Train step_10120: loss : 0.09219031035900116
+2021-10-14 20:00:27,680 - CPSC2021 - INFO - Train step_10140: loss : 0.10050491243600845
+2021-10-14 20:00:28,043 - CPSC2021 - INFO - Train step_10160: loss : 0.06411156058311462
+2021-10-14 20:00:28,403 - CPSC2021 - INFO - Train step_10180: loss : 0.07744168490171432
+2021-10-14 20:00:28,768 - CPSC2021 - INFO - Train step_10200: loss : 0.17348450422286987
+2021-10-14 20:00:29,134 - CPSC2021 - INFO - Train step_10220: loss : 0.04635557159781456
+2021-10-14 20:00:29,499 - CPSC2021 - INFO - Train step_10240: loss : 0.08936180919408798
+2021-10-14 20:00:29,858 - CPSC2021 - INFO - Train step_10260: loss : 0.08889712393283844
+2021-10-14 20:00:30,215 - CPSC2021 - INFO - Train step_10280: loss : 0.13274092972278595
+2021-10-14 20:00:30,571 - CPSC2021 - INFO - Train step_10300: loss : 0.038056034594774246
+2021-10-14 20:00:30,939 - CPSC2021 - INFO - Train step_10320: loss : 0.08406946063041687
+2021-10-14 20:00:31,301 - CPSC2021 - INFO - Train step_10340: loss : 0.09357742220163345
+2021-10-14 20:00:31,674 - CPSC2021 - INFO - Train step_10360: loss : 0.08925028890371323
+2021-10-14 20:00:32,030 - CPSC2021 - INFO - Train step_10380: loss : 0.1280095875263214
+2021-10-14 20:00:32,396 - CPSC2021 - INFO - Train step_10400: loss : 0.05007047951221466
+2021-10-14 20:00:32,753 - CPSC2021 - INFO - Train step_10420: loss : 0.11978500336408615
+2021-10-14 20:00:33,112 - CPSC2021 - INFO - Train step_10440: loss : 0.06010708212852478
+2021-10-14 20:00:33,482 - CPSC2021 - INFO - Train step_10460: loss : 0.03630487993359566
+2021-10-14 20:00:33,845 - CPSC2021 - INFO - Train step_10480: loss : 0.22594329714775085
+2021-10-14 20:00:34,204 - CPSC2021 - INFO - Train step_10500: loss : 0.042921848595142365
+2021-10-14 20:00:34,566 - CPSC2021 - INFO - Train step_10520: loss : 0.03201678395271301
+2021-10-14 20:00:34,920 - CPSC2021 - INFO - Train step_10540: loss : 0.015814799815416336
+2021-10-14 20:00:35,280 - CPSC2021 - INFO - Train step_10560: loss : 0.03845827281475067
+2021-10-14 20:00:35,642 - CPSC2021 - INFO - Train step_10580: loss : 0.1870986372232437
+2021-10-14 20:00:36,000 - CPSC2021 - INFO - Train step_10600: loss : 0.1533505767583847
+2021-10-14 20:00:36,356 - CPSC2021 - INFO - Train step_10620: loss : 0.2469434291124344
+2021-10-14 20:00:36,729 - CPSC2021 - INFO - Train step_10640: loss : 0.22479602694511414
+2021-10-14 20:00:37,080 - CPSC2021 - INFO - Train step_10660: loss : 0.054927486926317215
+2021-10-14 20:00:37,439 - CPSC2021 - INFO - Train step_10680: loss : 0.15924197435379028
+2021-10-14 20:00:37,801 - CPSC2021 - INFO - Train step_10700: loss : 0.11005587875843048
+2021-10-14 20:00:38,166 - CPSC2021 - INFO - Train step_10720: loss : 0.0550590455532074
+2021-10-14 20:00:38,525 - CPSC2021 - INFO - Train step_10740: loss : 0.05701258406043053
+2021-10-14 20:00:38,884 - CPSC2021 - INFO - Train step_10760: loss : 0.14815589785575867
+2021-10-14 20:00:39,256 - CPSC2021 - INFO - Train step_10780: loss : 0.13783478736877441
+2021-10-14 20:00:39,618 - CPSC2021 - INFO - Train step_10800: loss : 0.09389865398406982
+2021-10-14 20:00:39,988 - CPSC2021 - INFO - Train step_10820: loss : 0.014164692722260952
+2021-10-14 20:00:40,348 - CPSC2021 - INFO - Train step_10840: loss : 0.10931839048862457
+2021-10-14 20:00:40,710 - CPSC2021 - INFO - Train step_10860: loss : 0.14367571473121643
+2021-10-14 20:00:41,077 - CPSC2021 - INFO - Train step_10880: loss : 0.0886886939406395
+2021-10-14 20:00:41,434 - CPSC2021 - INFO - Train step_10900: loss : 0.03277813643217087
+2021-10-14 20:00:41,796 - CPSC2021 - INFO - Train step_10920: loss : 0.33825230598449707
+2021-10-14 20:00:42,157 - CPSC2021 - INFO - Train step_10940: loss : 0.1237107664346695
+2021-10-14 20:00:42,514 - CPSC2021 - INFO - Train step_10960: loss : 0.12184754014015198
+2021-10-14 20:00:42,872 - CPSC2021 - INFO - Train step_10980: loss : 0.16946202516555786
+2021-10-14 20:00:43,233 - CPSC2021 - INFO - Train step_11000: loss : 0.11902249604463577
+2021-10-14 20:00:43,592 - CPSC2021 - INFO - Train step_11020: loss : 0.03083980269730091
+2021-10-14 20:00:43,946 - CPSC2021 - INFO - Train step_11040: loss : 0.06417606770992279
+2021-10-14 20:00:44,306 - CPSC2021 - INFO - Train step_11060: loss : 0.20847992599010468
+2021-10-14 20:00:44,664 - CPSC2021 - INFO - Train step_11080: loss : 0.04576846584677696
+2021-10-14 20:00:45,027 - CPSC2021 - INFO - Train step_11100: loss : 0.020500928163528442
+2021-10-14 20:00:45,391 - CPSC2021 - INFO - Train step_11120: loss : 0.09581920504570007
+2021-10-14 20:01:15,533 - CPSC2021 - INFO - 
+Train epoch_6:
+--------------------
+train/epoch_loss:        183.80563400220126
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:01:15,537 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:01:15,562 - CPSC2021 - INFO - Checkpoint 6 saved!
+2021-10-14 20:01:16,141 - CPSC2021 - INFO - Train step_11140: loss : 0.08712846040725708
+2021-10-14 20:01:16,491 - CPSC2021 - INFO - Train step_11160: loss : 0.1455361545085907
+2021-10-14 20:01:16,868 - CPSC2021 - INFO - Train step_11180: loss : 0.06262069940567017
+2021-10-14 20:01:17,229 - CPSC2021 - INFO - Train step_11200: loss : 0.06619400531053543
+2021-10-14 20:01:17,595 - CPSC2021 - INFO - Train step_11220: loss : 0.10956995189189911
+2021-10-14 20:01:17,958 - CPSC2021 - INFO - Train step_11240: loss : 0.025500226765871048
+2021-10-14 20:01:18,322 - CPSC2021 - INFO - Train step_11260: loss : 0.11828341335058212
+2021-10-14 20:01:18,684 - CPSC2021 - INFO - Train step_11280: loss : 0.10286948084831238
+2021-10-14 20:01:19,043 - CPSC2021 - INFO - Train step_11300: loss : 0.05386370047926903
+2021-10-14 20:01:19,412 - CPSC2021 - INFO - Train step_11320: loss : 0.06169943884015083
+2021-10-14 20:01:19,776 - CPSC2021 - INFO - Train step_11340: loss : 0.0915789008140564
+2021-10-14 20:01:20,138 - CPSC2021 - INFO - Train step_11360: loss : 0.06577195227146149
+2021-10-14 20:01:20,505 - CPSC2021 - INFO - Train step_11380: loss : 0.07215915620326996
+2021-10-14 20:01:20,863 - CPSC2021 - INFO - Train step_11400: loss : 0.1656574308872223
+2021-10-14 20:01:21,231 - CPSC2021 - INFO - Train step_11420: loss : 0.04682442918419838
+2021-10-14 20:01:21,593 - CPSC2021 - INFO - Train step_11440: loss : 0.04400649294257164
+2021-10-14 20:01:21,954 - CPSC2021 - INFO - Train step_11460: loss : 0.05477258935570717
+2021-10-14 20:01:22,309 - CPSC2021 - INFO - Train step_11480: loss : 0.18565960228443146
+2021-10-14 20:01:22,667 - CPSC2021 - INFO - Train step_11500: loss : 0.15122954547405243
+2021-10-14 20:01:23,025 - CPSC2021 - INFO - Train step_11520: loss : 0.0583626851439476
+2021-10-14 20:01:23,382 - CPSC2021 - INFO - Train step_11540: loss : 0.22014819085597992
+2021-10-14 20:01:23,729 - CPSC2021 - INFO - Train step_11560: loss : 0.03474034368991852
+2021-10-14 20:01:24,074 - CPSC2021 - INFO - Train step_11580: loss : 0.05095523223280907
+2021-10-14 20:01:24,415 - CPSC2021 - INFO - Train step_11600: loss : 0.08755415678024292
+2021-10-14 20:01:24,762 - CPSC2021 - INFO - Train step_11620: loss : 0.10609593987464905
+2021-10-14 20:01:25,112 - CPSC2021 - INFO - Train step_11640: loss : 0.10030567646026611
+2021-10-14 20:01:25,455 - CPSC2021 - INFO - Train step_11660: loss : 0.2568572163581848
+2021-10-14 20:01:25,810 - CPSC2021 - INFO - Train step_11680: loss : 0.0529477633535862
+2021-10-14 20:01:26,156 - CPSC2021 - INFO - Train step_11700: loss : 0.07681850343942642
+2021-10-14 20:01:26,497 - CPSC2021 - INFO - Train step_11720: loss : 0.050381749868392944
+2021-10-14 20:01:26,844 - CPSC2021 - INFO - Train step_11740: loss : 0.11299008876085281
+2021-10-14 20:01:27,187 - CPSC2021 - INFO - Train step_11760: loss : 0.15186506509780884
+2021-10-14 20:01:27,528 - CPSC2021 - INFO - Train step_11780: loss : 0.05727339908480644
+2021-10-14 20:01:27,877 - CPSC2021 - INFO - Train step_11800: loss : 0.1257832944393158
+2021-10-14 20:01:28,241 - CPSC2021 - INFO - Train step_11820: loss : 0.05167069286108017
+2021-10-14 20:01:28,608 - CPSC2021 - INFO - Train step_11840: loss : 0.08151110261678696
+2021-10-14 20:01:28,969 - CPSC2021 - INFO - Train step_11860: loss : 0.06993277370929718
+2021-10-14 20:01:29,327 - CPSC2021 - INFO - Train step_11880: loss : 0.04969583824276924
+2021-10-14 20:01:29,682 - CPSC2021 - INFO - Train step_11900: loss : 0.041166745126247406
+2021-10-14 20:01:30,042 - CPSC2021 - INFO - Train step_11920: loss : 0.23924574255943298
+2021-10-14 20:01:30,380 - CPSC2021 - INFO - Train step_11940: loss : 0.02541435696184635
+2021-10-14 20:01:30,726 - CPSC2021 - INFO - Train step_11960: loss : 0.0732528492808342
+2021-10-14 20:01:31,085 - CPSC2021 - INFO - Train step_11980: loss : 0.059663087129592896
+2021-10-14 20:01:31,424 - CPSC2021 - INFO - Train step_12000: loss : 0.0706736370921135
+2021-10-14 20:01:31,762 - CPSC2021 - INFO - Train step_12020: loss : 0.04640277102589607
+2021-10-14 20:01:32,101 - CPSC2021 - INFO - Train step_12040: loss : 0.029758095741271973
+2021-10-14 20:01:32,453 - CPSC2021 - INFO - Train step_12060: loss : 0.03361359238624573
+2021-10-14 20:01:32,815 - CPSC2021 - INFO - Train step_12080: loss : 0.06501582264900208
+2021-10-14 20:01:33,168 - CPSC2021 - INFO - Train step_12100: loss : 0.21915796399116516
+2021-10-14 20:01:33,535 - CPSC2021 - INFO - Train step_12120: loss : 0.029518326744437218
+2021-10-14 20:01:33,911 - CPSC2021 - INFO - Train step_12140: loss : 0.06491514295339584
+2021-10-14 20:01:34,268 - CPSC2021 - INFO - Train step_12160: loss : 0.08409490436315536
+2021-10-14 20:01:34,623 - CPSC2021 - INFO - Train step_12180: loss : 0.134341299533844
+2021-10-14 20:01:34,986 - CPSC2021 - INFO - Train step_12200: loss : 0.032463133335113525
+2021-10-14 20:01:35,340 - CPSC2021 - INFO - Train step_12220: loss : 0.07008606195449829
+2021-10-14 20:01:35,681 - CPSC2021 - INFO - Train step_12240: loss : 0.05106072872877121
+2021-10-14 20:01:36,031 - CPSC2021 - INFO - Train step_12260: loss : 0.05450456961989403
+2021-10-14 20:01:36,393 - CPSC2021 - INFO - Train step_12280: loss : 0.07483761012554169
+2021-10-14 20:01:36,752 - CPSC2021 - INFO - Train step_12300: loss : 0.054670508950948715
+2021-10-14 20:01:37,113 - CPSC2021 - INFO - Train step_12320: loss : 0.10782232880592346
+2021-10-14 20:01:37,474 - CPSC2021 - INFO - Train step_12340: loss : 0.05661497265100479
+2021-10-14 20:01:37,834 - CPSC2021 - INFO - Train step_12360: loss : 0.14132830500602722
+2021-10-14 20:01:38,210 - CPSC2021 - INFO - Train step_12380: loss : 0.06482807546854019
+2021-10-14 20:01:38,569 - CPSC2021 - INFO - Train step_12400: loss : 0.0805555135011673
+2021-10-14 20:01:38,918 - CPSC2021 - INFO - Train step_12420: loss : 0.19969981908798218
+2021-10-14 20:01:39,277 - CPSC2021 - INFO - Train step_12440: loss : 0.06498070061206818
+2021-10-14 20:01:39,637 - CPSC2021 - INFO - Train step_12460: loss : 0.08985403925180435
+2021-10-14 20:01:39,990 - CPSC2021 - INFO - Train step_12480: loss : 0.07292741537094116
+2021-10-14 20:01:40,335 - CPSC2021 - INFO - Train step_12500: loss : 0.03694816678762436
+2021-10-14 20:01:40,681 - CPSC2021 - INFO - Train step_12520: loss : 0.05974264442920685
+2021-10-14 20:01:41,031 - CPSC2021 - INFO - Train step_12540: loss : 0.09781623631715775
+2021-10-14 20:01:41,392 - CPSC2021 - INFO - Train step_12560: loss : 0.17960040271282196
+2021-10-14 20:01:41,763 - CPSC2021 - INFO - Train step_12580: loss : 0.09636980295181274
+2021-10-14 20:01:42,138 - CPSC2021 - INFO - Train step_12600: loss : 0.010769834741950035
+2021-10-14 20:01:42,503 - CPSC2021 - INFO - Train step_12620: loss : 0.06523067504167557
+2021-10-14 20:01:42,848 - CPSC2021 - INFO - Train step_12640: loss : 0.09065810590982437
+2021-10-14 20:01:43,205 - CPSC2021 - INFO - Train step_12660: loss : 0.07989247888326645
+2021-10-14 20:01:43,546 - CPSC2021 - INFO - Train step_12680: loss : 0.08731618523597717
+2021-10-14 20:01:43,898 - CPSC2021 - INFO - Train step_12700: loss : 0.05661368742585182
+2021-10-14 20:01:44,229 - CPSC2021 - INFO - Train step_12720: loss : 0.047081511467695236
+2021-10-14 20:01:44,572 - CPSC2021 - INFO - Train step_12740: loss : 0.05194743722677231
+2021-10-14 20:01:44,902 - CPSC2021 - INFO - Train step_12760: loss : 0.050725311040878296
+2021-10-14 20:01:45,229 - CPSC2021 - INFO - Train step_12780: loss : 0.028861917555332184
+2021-10-14 20:01:45,592 - CPSC2021 - INFO - Train step_12800: loss : 0.10258235782384872
+2021-10-14 20:01:45,936 - CPSC2021 - INFO - Train step_12820: loss : 0.0236204843968153
+2021-10-14 20:01:46,272 - CPSC2021 - INFO - Train step_12840: loss : 0.06904979050159454
+2021-10-14 20:01:46,603 - CPSC2021 - INFO - Train step_12860: loss : 0.07921785116195679
+2021-10-14 20:01:46,929 - CPSC2021 - INFO - Train step_12880: loss : 0.057961516082286835
+2021-10-14 20:01:47,261 - CPSC2021 - INFO - Train step_12900: loss : 0.06327779591083527
+2021-10-14 20:01:47,592 - CPSC2021 - INFO - Train step_12920: loss : 0.05016254633665085
+2021-10-14 20:01:47,927 - CPSC2021 - INFO - Train step_12940: loss : 0.15846256911754608
+2021-10-14 20:01:48,258 - CPSC2021 - INFO - Train step_12960: loss : 0.027408525347709656
+2021-10-14 20:01:48,609 - CPSC2021 - INFO - Train step_12980: loss : 0.24614837765693665
+2021-10-14 20:02:18,633 - CPSC2021 - INFO - 
+Train epoch_7:
+--------------------
+train/epoch_loss:        166.854163760785
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:02:18,636 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:02:18,661 - CPSC2021 - INFO - Checkpoint 7 saved!
+2021-10-14 20:02:19,328 - CPSC2021 - INFO - Train step_13000: loss : 0.09751727432012558
+2021-10-14 20:02:19,691 - CPSC2021 - INFO - Train step_13020: loss : 0.02224896103143692
+2021-10-14 20:02:20,053 - CPSC2021 - INFO - Train step_13040: loss : 0.08140696585178375
+2021-10-14 20:02:20,418 - CPSC2021 - INFO - Train step_13060: loss : 0.13031521439552307
+2021-10-14 20:02:20,777 - CPSC2021 - INFO - Train step_13080: loss : 0.1439729928970337
+2021-10-14 20:02:21,149 - CPSC2021 - INFO - Train step_13100: loss : 0.10860621929168701
+2021-10-14 20:02:21,512 - CPSC2021 - INFO - Train step_13120: loss : 0.12801747024059296
+2021-10-14 20:02:21,871 - CPSC2021 - INFO - Train step_13140: loss : 0.11355511844158173
+2021-10-14 20:02:22,235 - CPSC2021 - INFO - Train step_13160: loss : 0.05091863498091698
+2021-10-14 20:02:22,609 - CPSC2021 - INFO - Train step_13180: loss : 0.053341660648584366
+2021-10-14 20:02:22,954 - CPSC2021 - INFO - Train step_13200: loss : 0.014585064724087715
+2021-10-14 20:02:23,319 - CPSC2021 - INFO - Train step_13220: loss : 0.022467054426670074
+2021-10-14 20:02:23,680 - CPSC2021 - INFO - Train step_13240: loss : 0.030098550021648407
+2021-10-14 20:02:24,043 - CPSC2021 - INFO - Train step_13260: loss : 0.14607417583465576
+2021-10-14 20:02:24,410 - CPSC2021 - INFO - Train step_13280: loss : 0.05959906429052353
+2021-10-14 20:02:24,774 - CPSC2021 - INFO - Train step_13300: loss : 0.10099133849143982
+2021-10-14 20:02:25,127 - CPSC2021 - INFO - Train step_13320: loss : 0.06527618318796158
+2021-10-14 20:02:25,487 - CPSC2021 - INFO - Train step_13340: loss : 0.10374242067337036
+2021-10-14 20:02:25,864 - CPSC2021 - INFO - Train step_13360: loss : 0.07539788633584976
+2021-10-14 20:02:26,221 - CPSC2021 - INFO - Train step_13380: loss : 0.01323722768574953
+2021-10-14 20:02:26,523 - CPSC2021 - INFO - Train step_13400: loss : 0.10048512369394302
+2021-10-14 20:02:26,839 - CPSC2021 - INFO - Train step_13420: loss : 0.0872776210308075
+2021-10-14 20:02:27,140 - CPSC2021 - INFO - Train step_13440: loss : 0.0438227541744709
+2021-10-14 20:02:27,432 - CPSC2021 - INFO - Train step_13460: loss : 0.07401984930038452
+2021-10-14 20:02:27,714 - CPSC2021 - INFO - Train step_13480: loss : 0.046643465757369995
+2021-10-14 20:02:28,011 - CPSC2021 - INFO - Train step_13500: loss : 0.10795749723911285
+2021-10-14 20:02:28,340 - CPSC2021 - INFO - Train step_13520: loss : 0.060430001467466354
+2021-10-14 20:02:28,720 - CPSC2021 - INFO - Train step_13540: loss : 0.07903295010328293
+2021-10-14 20:02:29,102 - CPSC2021 - INFO - Train step_13560: loss : 0.07380824536085129
+2021-10-14 20:02:29,487 - CPSC2021 - INFO - Train step_13580: loss : 0.028978921473026276
+2021-10-14 20:02:29,855 - CPSC2021 - INFO - Train step_13600: loss : 0.027934042736887932
+2021-10-14 20:02:30,192 - CPSC2021 - INFO - Train step_13620: loss : 0.048200156539678574
+2021-10-14 20:02:30,545 - CPSC2021 - INFO - Train step_13640: loss : 0.10286422818899155
+2021-10-14 20:02:30,903 - CPSC2021 - INFO - Train step_13660: loss : 0.08828207850456238
+2021-10-14 20:02:31,238 - CPSC2021 - INFO - Train step_13680: loss : 0.06213672086596489
+2021-10-14 20:02:31,576 - CPSC2021 - INFO - Train step_13700: loss : 0.09136738628149033
+2021-10-14 20:02:31,939 - CPSC2021 - INFO - Train step_13720: loss : 0.021406011655926704
+2021-10-14 20:02:32,311 - CPSC2021 - INFO - Train step_13740: loss : 0.037710949778556824
+2021-10-14 20:02:32,659 - CPSC2021 - INFO - Train step_13760: loss : 0.02403087355196476
+2021-10-14 20:02:32,990 - CPSC2021 - INFO - Train step_13780: loss : 0.045217204838991165
+2021-10-14 20:02:33,341 - CPSC2021 - INFO - Train step_13800: loss : 0.11058168858289719
+2021-10-14 20:02:33,713 - CPSC2021 - INFO - Train step_13820: loss : 0.03620464354753494
+2021-10-14 20:02:34,092 - CPSC2021 - INFO - Train step_13840: loss : 0.07120706886053085
+2021-10-14 20:02:34,471 - CPSC2021 - INFO - Train step_13860: loss : 0.032018281519412994
+2021-10-14 20:02:34,819 - CPSC2021 - INFO - Train step_13880: loss : 0.14732491970062256
+2021-10-14 20:02:35,172 - CPSC2021 - INFO - Train step_13900: loss : 0.03354504331946373
+2021-10-14 20:02:35,538 - CPSC2021 - INFO - Train step_13920: loss : 0.14223168790340424
+2021-10-14 20:02:35,910 - CPSC2021 - INFO - Train step_13940: loss : 0.16755914688110352
+2021-10-14 20:02:36,265 - CPSC2021 - INFO - Train step_13960: loss : 0.12203843146562576
+2021-10-14 20:02:36,631 - CPSC2021 - INFO - Train step_13980: loss : 0.017461545765399933
+2021-10-14 20:02:36,993 - CPSC2021 - INFO - Train step_14000: loss : 0.08992912620306015
+2021-10-14 20:02:37,367 - CPSC2021 - INFO - Train step_14020: loss : 0.05595043674111366
+2021-10-14 20:02:37,749 - CPSC2021 - INFO - Train step_14040: loss : 0.07085806876420975
+2021-10-14 20:02:38,137 - CPSC2021 - INFO - Train step_14060: loss : 0.06107515096664429
+2021-10-14 20:02:38,514 - CPSC2021 - INFO - Train step_14080: loss : 0.10514741390943527
+2021-10-14 20:02:38,891 - CPSC2021 - INFO - Train step_14100: loss : 0.07671941816806793
+2021-10-14 20:02:39,274 - CPSC2021 - INFO - Train step_14120: loss : 0.18865849077701569
+2021-10-14 20:02:39,655 - CPSC2021 - INFO - Train step_14140: loss : 0.22473913431167603
+2021-10-14 20:02:40,036 - CPSC2021 - INFO - Train step_14160: loss : 0.07924050092697144
+2021-10-14 20:02:40,405 - CPSC2021 - INFO - Train step_14180: loss : 0.05453241989016533
+2021-10-14 20:02:40,768 - CPSC2021 - INFO - Train step_14200: loss : 0.1563197672367096
+2021-10-14 20:02:41,131 - CPSC2021 - INFO - Train step_14220: loss : 0.04694081470370293
+2021-10-14 20:02:41,496 - CPSC2021 - INFO - Train step_14240: loss : 0.09676840901374817
+2021-10-14 20:02:41,876 - CPSC2021 - INFO - Train step_14260: loss : 0.02872292324900627
+2021-10-14 20:02:42,247 - CPSC2021 - INFO - Train step_14280: loss : 0.09975957125425339
+2021-10-14 20:02:42,629 - CPSC2021 - INFO - Train step_14300: loss : 0.060024723410606384
+2021-10-14 20:02:43,008 - CPSC2021 - INFO - Train step_14320: loss : 0.11404244601726532
+2021-10-14 20:02:43,388 - CPSC2021 - INFO - Train step_14340: loss : 0.11863420903682709
+2021-10-14 20:02:43,761 - CPSC2021 - INFO - Train step_14360: loss : 0.0454251654446125
+2021-10-14 20:02:44,143 - CPSC2021 - INFO - Train step_14380: loss : 0.18100552260875702
+2021-10-14 20:02:44,518 - CPSC2021 - INFO - Train step_14400: loss : 0.05847575142979622
+2021-10-14 20:02:44,893 - CPSC2021 - INFO - Train step_14420: loss : 0.015153138898313046
+2021-10-14 20:02:45,267 - CPSC2021 - INFO - Train step_14440: loss : 0.23408228158950806
+2021-10-14 20:02:45,637 - CPSC2021 - INFO - Train step_14460: loss : 0.12525419890880585
+2021-10-14 20:02:45,998 - CPSC2021 - INFO - Train step_14480: loss : 0.04808134585618973
+2021-10-14 20:02:46,335 - CPSC2021 - INFO - Train step_14500: loss : 0.07286255061626434
+2021-10-14 20:02:46,673 - CPSC2021 - INFO - Train step_14520: loss : 0.029157591983675957
+2021-10-14 20:02:47,022 - CPSC2021 - INFO - Train step_14540: loss : 0.0745110735297203
+2021-10-14 20:02:47,357 - CPSC2021 - INFO - Train step_14560: loss : 0.051014870405197144
+2021-10-14 20:02:47,693 - CPSC2021 - INFO - Train step_14580: loss : 0.07480736076831818
+2021-10-14 20:02:48,041 - CPSC2021 - INFO - Train step_14600: loss : 0.06727077066898346
+2021-10-14 20:02:48,383 - CPSC2021 - INFO - Train step_14620: loss : 0.13091617822647095
+2021-10-14 20:02:48,724 - CPSC2021 - INFO - Train step_14640: loss : 0.06816589087247849
+2021-10-14 20:02:49,061 - CPSC2021 - INFO - Train step_14660: loss : 0.13729913532733917
+2021-10-14 20:02:49,398 - CPSC2021 - INFO - Train step_14680: loss : 0.10979503393173218
+2021-10-14 20:02:49,741 - CPSC2021 - INFO - Train step_14700: loss : 0.05778595060110092
+2021-10-14 20:02:50,082 - CPSC2021 - INFO - Train step_14720: loss : 0.11852545291185379
+2021-10-14 20:02:50,437 - CPSC2021 - INFO - Train step_14740: loss : 0.06574904918670654
+2021-10-14 20:02:50,776 - CPSC2021 - INFO - Train step_14760: loss : 0.08434312045574188
+2021-10-14 20:02:51,115 - CPSC2021 - INFO - Train step_14780: loss : 0.09111881256103516
+2021-10-14 20:02:51,463 - CPSC2021 - INFO - Train step_14800: loss : 0.1244460791349411
+2021-10-14 20:02:51,806 - CPSC2021 - INFO - Train step_14820: loss : 0.061456676572561264
+2021-10-14 20:02:52,137 - CPSC2021 - INFO - Train step_14840: loss : 0.0487506166100502
+2021-10-14 20:03:21,918 - CPSC2021 - INFO - 
+Train epoch_8:
+--------------------
+train/epoch_loss:        155.7400666885078
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:03:21,921 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:03:21,944 - CPSC2021 - INFO - Checkpoint 8 saved!
+2021-10-14 20:03:22,695 - CPSC2021 - INFO - Train step_14860: loss : 0.110789455473423
+2021-10-14 20:03:23,055 - CPSC2021 - INFO - Train step_14880: loss : 0.3272320628166199
+2021-10-14 20:03:23,419 - CPSC2021 - INFO - Train step_14900: loss : 0.023903118446469307
+2021-10-14 20:03:23,780 - CPSC2021 - INFO - Train step_14920: loss : 0.0795406848192215
+2021-10-14 20:03:24,140 - CPSC2021 - INFO - Train step_14940: loss : 0.020662711933255196
+2021-10-14 20:03:24,501 - CPSC2021 - INFO - Train step_14960: loss : 0.028074337169528008
+2021-10-14 20:03:24,862 - CPSC2021 - INFO - Train step_14980: loss : 0.0323854498565197
+2021-10-14 20:03:25,220 - CPSC2021 - INFO - Train step_15000: loss : 0.1665392518043518
+2021-10-14 20:03:25,586 - CPSC2021 - INFO - Train step_15020: loss : 0.15610729157924652
+2021-10-14 20:03:25,950 - CPSC2021 - INFO - Train step_15040: loss : 0.020264796912670135
+2021-10-14 20:03:26,314 - CPSC2021 - INFO - Train step_15060: loss : 0.11986207962036133
+2021-10-14 20:03:26,674 - CPSC2021 - INFO - Train step_15080: loss : 0.17917482554912567
+2021-10-14 20:03:27,041 - CPSC2021 - INFO - Train step_15100: loss : 0.1486266851425171
+2021-10-14 20:03:27,406 - CPSC2021 - INFO - Train step_15120: loss : 0.018193842843174934
+2021-10-14 20:03:27,769 - CPSC2021 - INFO - Train step_15140: loss : 0.16558322310447693
+2021-10-14 20:03:28,129 - CPSC2021 - INFO - Train step_15160: loss : 0.06989911943674088
+2021-10-14 20:03:28,491 - CPSC2021 - INFO - Train step_15180: loss : 0.06131334602832794
+2021-10-14 20:03:28,851 - CPSC2021 - INFO - Train step_15200: loss : 0.11614436656236649
+2021-10-14 20:03:29,211 - CPSC2021 - INFO - Train step_15220: loss : 0.0361468531191349
+2021-10-14 20:03:29,570 - CPSC2021 - INFO - Train step_15240: loss : 0.11091875284910202
+2021-10-14 20:03:29,931 - CPSC2021 - INFO - Train step_15260: loss : 0.07862349599599838
+2021-10-14 20:03:30,293 - CPSC2021 - INFO - Train step_15280: loss : 0.08278239518404007
+2021-10-14 20:03:30,654 - CPSC2021 - INFO - Train step_15300: loss : 0.06775716692209244
+2021-10-14 20:03:31,015 - CPSC2021 - INFO - Train step_15320: loss : 0.04008941352367401
+2021-10-14 20:03:31,381 - CPSC2021 - INFO - Train step_15340: loss : 0.04367033392190933
+2021-10-14 20:03:31,742 - CPSC2021 - INFO - Train step_15360: loss : 0.12020885199308395
+2021-10-14 20:03:32,104 - CPSC2021 - INFO - Train step_15380: loss : 0.03596198931336403
+2021-10-14 20:03:32,460 - CPSC2021 - INFO - Train step_15400: loss : 0.04650309309363365
+2021-10-14 20:03:32,823 - CPSC2021 - INFO - Train step_15420: loss : 0.07125069200992584
+2021-10-14 20:03:33,180 - CPSC2021 - INFO - Train step_15440: loss : 0.10005046427249908
+2021-10-14 20:03:33,541 - CPSC2021 - INFO - Train step_15460: loss : 0.021906644105911255
+2021-10-14 20:03:33,899 - CPSC2021 - INFO - Train step_15480: loss : 0.03406452760100365
+2021-10-14 20:03:34,261 - CPSC2021 - INFO - Train step_15500: loss : 0.09819123148918152
+2021-10-14 20:03:34,624 - CPSC2021 - INFO - Train step_15520: loss : 0.06918822973966599
+2021-10-14 20:03:34,986 - CPSC2021 - INFO - Train step_15540: loss : 0.12747326493263245
+2021-10-14 20:03:35,351 - CPSC2021 - INFO - Train step_15560: loss : 0.013268282637000084
+2021-10-14 20:03:35,709 - CPSC2021 - INFO - Train step_15580: loss : 0.10273999720811844
+2021-10-14 20:03:36,064 - CPSC2021 - INFO - Train step_15600: loss : 0.0679447203874588
+2021-10-14 20:03:36,424 - CPSC2021 - INFO - Train step_15620: loss : 0.1277247816324234
+2021-10-14 20:03:36,785 - CPSC2021 - INFO - Train step_15640: loss : 0.13710932433605194
+2021-10-14 20:03:37,148 - CPSC2021 - INFO - Train step_15660: loss : 0.0959368646144867
+2021-10-14 20:03:37,506 - CPSC2021 - INFO - Train step_15680: loss : 0.26641136407852173
+2021-10-14 20:03:37,862 - CPSC2021 - INFO - Train step_15700: loss : 0.006702485028654337
+2021-10-14 20:03:38,220 - CPSC2021 - INFO - Train step_15720: loss : 0.16582877933979034
+2021-10-14 20:03:38,589 - CPSC2021 - INFO - Train step_15740: loss : 0.0602465458214283
+2021-10-14 20:03:38,948 - CPSC2021 - INFO - Train step_15760: loss : 0.02979034185409546
+2021-10-14 20:03:39,303 - CPSC2021 - INFO - Train step_15780: loss : 0.09801720827817917
+2021-10-14 20:03:39,661 - CPSC2021 - INFO - Train step_15800: loss : 0.08297277241945267
+2021-10-14 20:03:40,019 - CPSC2021 - INFO - Train step_15820: loss : 0.09361164271831512
+2021-10-14 20:03:40,380 - CPSC2021 - INFO - Train step_15840: loss : 0.07754747569561005
+2021-10-14 20:03:40,734 - CPSC2021 - INFO - Train step_15860: loss : 0.025777539238333702
+2021-10-14 20:03:41,094 - CPSC2021 - INFO - Train step_15880: loss : 0.1049358919262886
+2021-10-14 20:03:41,455 - CPSC2021 - INFO - Train step_15900: loss : 0.04645451530814171
+2021-10-14 20:03:41,808 - CPSC2021 - INFO - Train step_15920: loss : 0.11526405066251755
+2021-10-14 20:03:42,165 - CPSC2021 - INFO - Train step_15940: loss : 0.017870400100946426
+2021-10-14 20:03:42,522 - CPSC2021 - INFO - Train step_15960: loss : 0.07015611976385117
+2021-10-14 20:03:42,882 - CPSC2021 - INFO - Train step_15980: loss : 0.07524441182613373
+2021-10-14 20:03:43,238 - CPSC2021 - INFO - Train step_16000: loss : 0.090714231133461
+2021-10-14 20:03:43,599 - CPSC2021 - INFO - Train step_16020: loss : 0.12100494652986526
+2021-10-14 20:03:43,957 - CPSC2021 - INFO - Train step_16040: loss : 0.04114370793104172
+2021-10-14 20:03:44,319 - CPSC2021 - INFO - Train step_16060: loss : 0.027199653908610344
+2021-10-14 20:03:44,673 - CPSC2021 - INFO - Train step_16080: loss : 0.05390332639217377
+2021-10-14 20:03:45,030 - CPSC2021 - INFO - Train step_16100: loss : 0.12267227470874786
+2021-10-14 20:03:45,389 - CPSC2021 - INFO - Train step_16120: loss : 0.16115054488182068
+2021-10-14 20:03:45,748 - CPSC2021 - INFO - Train step_16140: loss : 0.12533217668533325
+2021-10-14 20:03:46,107 - CPSC2021 - INFO - Train step_16160: loss : 0.059262312948703766
+2021-10-14 20:03:46,468 - CPSC2021 - INFO - Train step_16180: loss : 0.051718372851610184
+2021-10-14 20:03:46,828 - CPSC2021 - INFO - Train step_16200: loss : 0.07460804283618927
+2021-10-14 20:03:47,191 - CPSC2021 - INFO - Train step_16220: loss : 0.048427388072013855
+2021-10-14 20:03:47,550 - CPSC2021 - INFO - Train step_16240: loss : 0.012439541518688202
+2021-10-14 20:03:47,902 - CPSC2021 - INFO - Train step_16260: loss : 0.1314103752374649
+2021-10-14 20:03:48,259 - CPSC2021 - INFO - Train step_16280: loss : 0.03815589100122452
+2021-10-14 20:03:48,617 - CPSC2021 - INFO - Train step_16300: loss : 0.2393762171268463
+2021-10-14 20:03:48,973 - CPSC2021 - INFO - Train step_16320: loss : 0.04708753526210785
+2021-10-14 20:03:49,331 - CPSC2021 - INFO - Train step_16340: loss : 0.07833239436149597
+2021-10-14 20:03:49,715 - CPSC2021 - INFO - Train step_16360: loss : 0.052759163081645966
+2021-10-14 20:03:50,099 - CPSC2021 - INFO - Train step_16380: loss : 0.06770563125610352
+2021-10-14 20:03:50,481 - CPSC2021 - INFO - Train step_16400: loss : 0.04928368330001831
+2021-10-14 20:03:50,858 - CPSC2021 - INFO - Train step_16420: loss : 0.04550129175186157
+2021-10-14 20:03:51,237 - CPSC2021 - INFO - Train step_16440: loss : 0.016073834151029587
+2021-10-14 20:03:51,616 - CPSC2021 - INFO - Train step_16460: loss : 0.0476713664829731
+2021-10-14 20:03:52,009 - CPSC2021 - INFO - Train step_16480: loss : 0.05484401807188988
+2021-10-14 20:03:52,397 - CPSC2021 - INFO - Train step_16500: loss : 0.03076327033340931
+2021-10-14 20:03:52,780 - CPSC2021 - INFO - Train step_16520: loss : 0.13442273437976837
+2021-10-14 20:03:53,167 - CPSC2021 - INFO - Train step_16540: loss : 0.049139656126499176
+2021-10-14 20:03:53,528 - CPSC2021 - INFO - Train step_16560: loss : 0.15512961149215698
+2021-10-14 20:03:53,891 - CPSC2021 - INFO - Train step_16580: loss : 0.04286147281527519
+2021-10-14 20:03:54,256 - CPSC2021 - INFO - Train step_16600: loss : 0.03454205393791199
+2021-10-14 20:03:54,617 - CPSC2021 - INFO - Train step_16620: loss : 0.10621292144060135
+2021-10-14 20:03:54,985 - CPSC2021 - INFO - Train step_16640: loss : 0.1462927907705307
+2021-10-14 20:03:55,349 - CPSC2021 - INFO - Train step_16660: loss : 0.08023346960544586
+2021-10-14 20:03:55,709 - CPSC2021 - INFO - Train step_16680: loss : 0.07419107854366302
+2021-10-14 20:04:25,444 - CPSC2021 - INFO - 
+Train epoch_9:
+--------------------
+train/epoch_loss:        143.94480661023408
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:04:25,446 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:04:25,468 - CPSC2021 - INFO - Checkpoint 9 saved!
+2021-10-14 20:04:25,953 - CPSC2021 - INFO - Train step_16700: loss : 0.06672070920467377
+2021-10-14 20:04:26,308 - CPSC2021 - INFO - Train step_16720: loss : 0.19725164771080017
+2021-10-14 20:04:26,664 - CPSC2021 - INFO - Train step_16740: loss : 0.031736232340335846
+2021-10-14 20:04:27,016 - CPSC2021 - INFO - Train step_16760: loss : 0.04280109703540802
+2021-10-14 20:04:27,364 - CPSC2021 - INFO - Train step_16780: loss : 0.12452414631843567
+2021-10-14 20:04:27,719 - CPSC2021 - INFO - Train step_16800: loss : 0.035866878926754
+2021-10-14 20:04:28,079 - CPSC2021 - INFO - Train step_16820: loss : 0.025796327739953995
+2021-10-14 20:04:28,438 - CPSC2021 - INFO - Train step_16840: loss : 0.05595232918858528
+2021-10-14 20:04:28,790 - CPSC2021 - INFO - Train step_16860: loss : 0.06696805357933044
+2021-10-14 20:04:29,141 - CPSC2021 - INFO - Train step_16880: loss : 0.1108410581946373
+2021-10-14 20:04:29,474 - CPSC2021 - INFO - Train step_16900: loss : 0.052601128816604614
+2021-10-14 20:04:29,828 - CPSC2021 - INFO - Train step_16920: loss : 0.0329914465546608
+2021-10-14 20:04:30,170 - CPSC2021 - INFO - Train step_16940: loss : 0.05426260828971863
+2021-10-14 20:04:30,507 - CPSC2021 - INFO - Train step_16960: loss : 0.0911833867430687
+2021-10-14 20:04:30,850 - CPSC2021 - INFO - Train step_16980: loss : 0.017141001299023628
+2021-10-14 20:04:31,185 - CPSC2021 - INFO - Train step_17000: loss : 0.0644165426492691
+2021-10-14 20:04:31,524 - CPSC2021 - INFO - Train step_17020: loss : 0.10320074111223221
+2021-10-14 20:04:31,864 - CPSC2021 - INFO - Train step_17040: loss : 0.029468117281794548
+2021-10-14 20:04:32,201 - CPSC2021 - INFO - Train step_17060: loss : 0.07076558470726013
+2021-10-14 20:04:32,558 - CPSC2021 - INFO - Train step_17080: loss : 0.08032959699630737
+2021-10-14 20:04:32,896 - CPSC2021 - INFO - Train step_17100: loss : 0.03681053966283798
+2021-10-14 20:04:33,240 - CPSC2021 - INFO - Train step_17120: loss : 0.07907115668058395
+2021-10-14 20:04:33,579 - CPSC2021 - INFO - Train step_17140: loss : 0.11606288701295853
+2021-10-14 20:04:33,921 - CPSC2021 - INFO - Train step_17160: loss : 0.11813072115182877
+2021-10-14 20:04:34,271 - CPSC2021 - INFO - Train step_17180: loss : 0.1327231526374817
+2021-10-14 20:04:34,627 - CPSC2021 - INFO - Train step_17200: loss : 0.045613955706357956
+2021-10-14 20:04:34,992 - CPSC2021 - INFO - Train step_17220: loss : 0.09301740676164627
+2021-10-14 20:04:35,352 - CPSC2021 - INFO - Train step_17240: loss : 0.049327343702316284
+2021-10-14 20:04:35,712 - CPSC2021 - INFO - Train step_17260: loss : 0.09655186533927917
+2021-10-14 20:04:36,069 - CPSC2021 - INFO - Train step_17280: loss : 0.05640936642885208
+2021-10-14 20:04:36,425 - CPSC2021 - INFO - Train step_17300: loss : 0.05976796895265579
+2021-10-14 20:04:36,796 - CPSC2021 - INFO - Train step_17320: loss : 0.0822134017944336
+2021-10-14 20:04:37,155 - CPSC2021 - INFO - Train step_17340: loss : 0.18237368762493134
+2021-10-14 20:04:37,507 - CPSC2021 - INFO - Train step_17360: loss : 0.1021764948964119
+2021-10-14 20:04:37,861 - CPSC2021 - INFO - Train step_17380: loss : 0.023910481482744217
+2021-10-14 20:04:38,213 - CPSC2021 - INFO - Train step_17400: loss : 0.027001606300473213
+2021-10-14 20:04:38,563 - CPSC2021 - INFO - Train step_17420: loss : 0.0577695332467556
+2021-10-14 20:04:38,905 - CPSC2021 - INFO - Train step_17440: loss : 0.023944025859236717
+2021-10-14 20:04:39,251 - CPSC2021 - INFO - Train step_17460: loss : 0.04522816091775894
+2021-10-14 20:04:39,600 - CPSC2021 - INFO - Train step_17480: loss : 0.018909912556409836
+2021-10-14 20:04:39,945 - CPSC2021 - INFO - Train step_17500: loss : 0.1080399751663208
+2021-10-14 20:04:40,292 - CPSC2021 - INFO - Train step_17520: loss : 0.04416140913963318
+2021-10-14 20:04:40,640 - CPSC2021 - INFO - Train step_17540: loss : 0.010378707200288773
+2021-10-14 20:04:40,992 - CPSC2021 - INFO - Train step_17560: loss : 0.07276392728090286
+2021-10-14 20:04:41,342 - CPSC2021 - INFO - Train step_17580: loss : 0.04725857824087143
+2021-10-14 20:04:41,695 - CPSC2021 - INFO - Train step_17600: loss : 0.09087055921554565
+2021-10-14 20:04:42,045 - CPSC2021 - INFO - Train step_17620: loss : 0.05845065414905548
+2021-10-14 20:04:42,387 - CPSC2021 - INFO - Train step_17640: loss : 0.02327072061598301
+2021-10-14 20:04:42,738 - CPSC2021 - INFO - Train step_17660: loss : 0.0638732761144638
+2021-10-14 20:04:43,091 - CPSC2021 - INFO - Train step_17680: loss : 0.0474369153380394
+2021-10-14 20:04:43,431 - CPSC2021 - INFO - Train step_17700: loss : 0.08368600159883499
+2021-10-14 20:04:43,781 - CPSC2021 - INFO - Train step_17720: loss : 0.04839831963181496
+2021-10-14 20:04:44,122 - CPSC2021 - INFO - Train step_17740: loss : 0.11355656385421753
+2021-10-14 20:04:44,460 - CPSC2021 - INFO - Train step_17760: loss : 0.030257385224103928
+2021-10-14 20:04:44,806 - CPSC2021 - INFO - Train step_17780: loss : 0.035661276429891586
+2021-10-14 20:04:45,157 - CPSC2021 - INFO - Train step_17800: loss : 0.10174378752708435
+2021-10-14 20:04:45,513 - CPSC2021 - INFO - Train step_17820: loss : 0.045459259301424026
+2021-10-14 20:04:45,867 - CPSC2021 - INFO - Train step_17840: loss : 0.047660116106271744
+2021-10-14 20:04:46,221 - CPSC2021 - INFO - Train step_17860: loss : 0.015673700720071793
+2021-10-14 20:04:46,580 - CPSC2021 - INFO - Train step_17880: loss : 0.08995378762483597
+2021-10-14 20:04:46,936 - CPSC2021 - INFO - Train step_17900: loss : 0.008884476497769356
+2021-10-14 20:04:47,300 - CPSC2021 - INFO - Train step_17920: loss : 0.039702408015728
+2021-10-14 20:04:47,652 - CPSC2021 - INFO - Train step_17940: loss : 0.05697823688387871
+2021-10-14 20:04:47,999 - CPSC2021 - INFO - Train step_17960: loss : 0.15000221133232117
+2021-10-14 20:04:48,353 - CPSC2021 - INFO - Train step_17980: loss : 0.07213495671749115
+2021-10-14 20:04:48,700 - CPSC2021 - INFO - Train step_18000: loss : 0.044944170862436295
+2021-10-14 20:04:49,047 - CPSC2021 - INFO - Train step_18020: loss : 0.08910694718360901
+2021-10-14 20:04:49,366 - CPSC2021 - INFO - Train step_18040: loss : 0.09666808694601059
+2021-10-14 20:04:49,687 - CPSC2021 - INFO - Train step_18060: loss : 0.13983729481697083
+2021-10-14 20:04:50,037 - CPSC2021 - INFO - Train step_18080: loss : 0.13902194797992706
+2021-10-14 20:04:50,387 - CPSC2021 - INFO - Train step_18100: loss : 0.05495699867606163
+2021-10-14 20:04:50,745 - CPSC2021 - INFO - Train step_18120: loss : 0.031226616352796555
+2021-10-14 20:04:51,108 - CPSC2021 - INFO - Train step_18140: loss : 0.024288102984428406
+2021-10-14 20:04:51,468 - CPSC2021 - INFO - Train step_18160: loss : 0.0455474890768528
+2021-10-14 20:04:51,840 - CPSC2021 - INFO - Train step_18180: loss : 0.04141085222363472
+2021-10-14 20:04:52,200 - CPSC2021 - INFO - Train step_18200: loss : 0.03905196487903595
+2021-10-14 20:04:52,563 - CPSC2021 - INFO - Train step_18220: loss : 0.017547572031617165
+2021-10-14 20:04:52,923 - CPSC2021 - INFO - Train step_18240: loss : 0.0594981387257576
+2021-10-14 20:04:53,272 - CPSC2021 - INFO - Train step_18260: loss : 0.04347188025712967
+2021-10-14 20:04:53,623 - CPSC2021 - INFO - Train step_18280: loss : 0.022311193868517876
+2021-10-14 20:04:53,977 - CPSC2021 - INFO - Train step_18300: loss : 0.06638824939727783
+2021-10-14 20:04:54,325 - CPSC2021 - INFO - Train step_18320: loss : 0.09610485285520554
+2021-10-14 20:04:54,681 - CPSC2021 - INFO - Train step_18340: loss : 0.19429148733615875
+2021-10-14 20:04:55,043 - CPSC2021 - INFO - Train step_18360: loss : 0.0910739153623581
+2021-10-14 20:04:55,407 - CPSC2021 - INFO - Train step_18380: loss : 0.18503515422344208
+2021-10-14 20:04:55,766 - CPSC2021 - INFO - Train step_18400: loss : 0.24003541469573975
+2021-10-14 20:04:56,132 - CPSC2021 - INFO - Train step_18420: loss : 0.10818229615688324
+2021-10-14 20:04:56,498 - CPSC2021 - INFO - Train step_18440: loss : 0.03840353712439537
+2021-10-14 20:04:56,859 - CPSC2021 - INFO - Train step_18460: loss : 0.12759605050086975
+2021-10-14 20:04:57,201 - CPSC2021 - INFO - Train step_18480: loss : 0.10827139765024185
+2021-10-14 20:04:57,536 - CPSC2021 - INFO - Train step_18500: loss : 0.07804577797651291
+2021-10-14 20:04:57,882 - CPSC2021 - INFO - Train step_18520: loss : 0.0880051925778389
+2021-10-14 20:04:58,226 - CPSC2021 - INFO - Train step_18540: loss : 0.022906901314854622
+2021-10-14 20:05:27,912 - CPSC2021 - INFO - 
+Train epoch_10:
+--------------------
+train/epoch_loss:        135.3408109410666
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:05:27,916 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:05:27,940 - CPSC2021 - INFO - Checkpoint 10 saved!
+2021-10-14 20:05:28,517 - CPSC2021 - INFO - Train step_18560: loss : 0.07110058516263962
+2021-10-14 20:05:28,866 - CPSC2021 - INFO - Train step_18580: loss : 0.07503064721822739
+2021-10-14 20:05:29,215 - CPSC2021 - INFO - Train step_18600: loss : 0.03744439408183098
+2021-10-14 20:05:29,559 - CPSC2021 - INFO - Train step_18620: loss : 0.0667930394411087
+2021-10-14 20:05:29,902 - CPSC2021 - INFO - Train step_18640: loss : 0.13777269423007965
+2021-10-14 20:05:30,247 - CPSC2021 - INFO - Train step_18660: loss : 0.3427892327308655
+2021-10-14 20:05:30,598 - CPSC2021 - INFO - Train step_18680: loss : 0.01194782555103302
+2021-10-14 20:05:30,943 - CPSC2021 - INFO - Train step_18700: loss : 0.07808198034763336
+2021-10-14 20:05:31,291 - CPSC2021 - INFO - Train step_18720: loss : 0.022824812680482864
+2021-10-14 20:05:31,636 - CPSC2021 - INFO - Train step_18740: loss : 0.06819894164800644
+2021-10-14 20:05:31,981 - CPSC2021 - INFO - Train step_18760: loss : 0.09104916453361511
+2021-10-14 20:05:32,333 - CPSC2021 - INFO - Train step_18780: loss : 0.02532844990491867
+2021-10-14 20:05:32,679 - CPSC2021 - INFO - Train step_18800: loss : 0.054799750447273254
+2021-10-14 20:05:33,026 - CPSC2021 - INFO - Train step_18820: loss : 0.04046382009983063
+2021-10-14 20:05:33,379 - CPSC2021 - INFO - Train step_18840: loss : 0.02351507917046547
+2021-10-14 20:05:33,726 - CPSC2021 - INFO - Train step_18860: loss : 0.06089278310537338
+2021-10-14 20:05:34,071 - CPSC2021 - INFO - Train step_18880: loss : 0.06051786616444588
+2021-10-14 20:05:34,418 - CPSC2021 - INFO - Train step_18900: loss : 0.06085806339979172
+2021-10-14 20:05:34,755 - CPSC2021 - INFO - Train step_18920: loss : 0.04728606715798378
+2021-10-14 20:05:35,095 - CPSC2021 - INFO - Train step_18940: loss : 0.021918099373579025
+2021-10-14 20:05:35,439 - CPSC2021 - INFO - Train step_18960: loss : 0.08494970202445984
+2021-10-14 20:05:35,779 - CPSC2021 - INFO - Train step_18980: loss : 0.08739122003316879
+2021-10-14 20:05:36,120 - CPSC2021 - INFO - Train step_19000: loss : 0.06988877058029175
+2021-10-14 20:05:36,461 - CPSC2021 - INFO - Train step_19020: loss : 0.033716365694999695
+2021-10-14 20:05:36,815 - CPSC2021 - INFO - Train step_19040: loss : 0.025842024013400078
+2021-10-14 20:05:37,166 - CPSC2021 - INFO - Train step_19060: loss : 0.05170683562755585
+2021-10-14 20:05:37,517 - CPSC2021 - INFO - Train step_19080: loss : 0.11788535863161087
+2021-10-14 20:05:37,858 - CPSC2021 - INFO - Train step_19100: loss : 0.07437209784984589
+2021-10-14 20:05:38,198 - CPSC2021 - INFO - Train step_19120: loss : 0.06294956058263779
+2021-10-14 20:05:38,551 - CPSC2021 - INFO - Train step_19140: loss : 0.03205806016921997
+2021-10-14 20:05:38,900 - CPSC2021 - INFO - Train step_19160: loss : 0.03656936436891556
+2021-10-14 20:05:39,245 - CPSC2021 - INFO - Train step_19180: loss : 0.1267690360546112
+2021-10-14 20:05:39,586 - CPSC2021 - INFO - Train step_19200: loss : 0.05846069008111954
+2021-10-14 20:05:39,918 - CPSC2021 - INFO - Train step_19220: loss : 0.08919164538383484
+2021-10-14 20:05:40,259 - CPSC2021 - INFO - Train step_19240: loss : 0.10675076395273209
+2021-10-14 20:05:40,605 - CPSC2021 - INFO - Train step_19260: loss : 0.024464644491672516
+2021-10-14 20:05:40,948 - CPSC2021 - INFO - Train step_19280: loss : 0.05988645926117897
+2021-10-14 20:05:41,283 - CPSC2021 - INFO - Train step_19300: loss : 0.05876979976892471
+2021-10-14 20:05:41,624 - CPSC2021 - INFO - Train step_19320: loss : 0.10363010317087173
+2021-10-14 20:05:41,969 - CPSC2021 - INFO - Train step_19340: loss : 0.07937505096197128
+2021-10-14 20:05:42,315 - CPSC2021 - INFO - Train step_19360: loss : 0.10423783212900162
+2021-10-14 20:05:42,655 - CPSC2021 - INFO - Train step_19380: loss : 0.02999711222946644
+2021-10-14 20:05:42,999 - CPSC2021 - INFO - Train step_19400: loss : 0.052916936576366425
+2021-10-14 20:05:43,342 - CPSC2021 - INFO - Train step_19420: loss : 0.044242314994335175
+2021-10-14 20:05:43,688 - CPSC2021 - INFO - Train step_19440: loss : 0.16798043251037598
+2021-10-14 20:05:44,032 - CPSC2021 - INFO - Train step_19460: loss : 0.014325294643640518
+2021-10-14 20:05:44,378 - CPSC2021 - INFO - Train step_19480: loss : 0.011886360123753548
+2021-10-14 20:05:44,719 - CPSC2021 - INFO - Train step_19500: loss : 0.00510323466733098
+2021-10-14 20:05:45,061 - CPSC2021 - INFO - Train step_19520: loss : 0.023811371996998787
+2021-10-14 20:05:45,402 - CPSC2021 - INFO - Train step_19540: loss : 0.050833266228437424
+2021-10-14 20:05:45,743 - CPSC2021 - INFO - Train step_19560: loss : 0.023699039593338966
+2021-10-14 20:05:46,090 - CPSC2021 - INFO - Train step_19580: loss : 0.1421191543340683
+2021-10-14 20:05:46,431 - CPSC2021 - INFO - Train step_19600: loss : 0.038159601390361786
+2021-10-14 20:05:46,768 - CPSC2021 - INFO - Train step_19620: loss : 0.13264894485473633
+2021-10-14 20:05:47,111 - CPSC2021 - INFO - Train step_19640: loss : 0.08988233655691147
+2021-10-14 20:05:47,451 - CPSC2021 - INFO - Train step_19660: loss : 0.04039318114519119
+2021-10-14 20:05:47,794 - CPSC2021 - INFO - Train step_19680: loss : 0.0444403700530529
+2021-10-14 20:05:48,135 - CPSC2021 - INFO - Train step_19700: loss : 0.025622369721531868
+2021-10-14 20:05:48,470 - CPSC2021 - INFO - Train step_19720: loss : 0.03235841169953346
+2021-10-14 20:05:48,808 - CPSC2021 - INFO - Train step_19740: loss : 0.12803378701210022
+2021-10-14 20:05:49,150 - CPSC2021 - INFO - Train step_19760: loss : 0.01950436271727085
+2021-10-14 20:05:49,489 - CPSC2021 - INFO - Train step_19780: loss : 0.0633617639541626
+2021-10-14 20:05:49,830 - CPSC2021 - INFO - Train step_19800: loss : 0.2580246925354004
+2021-10-14 20:05:50,178 - CPSC2021 - INFO - Train step_19820: loss : 0.044738128781318665
+2021-10-14 20:05:50,517 - CPSC2021 - INFO - Train step_19840: loss : 0.08550426363945007
+2021-10-14 20:05:50,862 - CPSC2021 - INFO - Train step_19860: loss : 0.040195636451244354
+2021-10-14 20:05:51,200 - CPSC2021 - INFO - Train step_19880: loss : 0.05372188240289688
+2021-10-14 20:05:51,544 - CPSC2021 - INFO - Train step_19900: loss : 0.1294107884168625
+2021-10-14 20:05:51,886 - CPSC2021 - INFO - Train step_19920: loss : 0.05260069668292999
+2021-10-14 20:05:52,228 - CPSC2021 - INFO - Train step_19940: loss : 0.052495379000902176
+2021-10-14 20:05:52,572 - CPSC2021 - INFO - Train step_19960: loss : 0.0711209774017334
+2021-10-14 20:05:52,919 - CPSC2021 - INFO - Train step_19980: loss : 0.09864962100982666
+2021-10-14 20:05:53,262 - CPSC2021 - INFO - Train step_20000: loss : 0.04891262948513031
+2021-10-14 20:05:53,605 - CPSC2021 - INFO - Train step_20020: loss : 0.12718220055103302
+2021-10-14 20:05:53,949 - CPSC2021 - INFO - Train step_20040: loss : 0.008455847389996052
+2021-10-14 20:05:54,291 - CPSC2021 - INFO - Train step_20060: loss : 0.043644703924655914
+2021-10-14 20:05:54,633 - CPSC2021 - INFO - Train step_20080: loss : 0.11914718151092529
+2021-10-14 20:05:54,973 - CPSC2021 - INFO - Train step_20100: loss : 0.010742384940385818
+2021-10-14 20:05:55,317 - CPSC2021 - INFO - Train step_20120: loss : 0.052546415477991104
+2021-10-14 20:05:55,663 - CPSC2021 - INFO - Train step_20140: loss : 0.03765645623207092
+2021-10-14 20:05:56,009 - CPSC2021 - INFO - Train step_20160: loss : 0.12900374829769135
+2021-10-14 20:05:56,351 - CPSC2021 - INFO - Train step_20180: loss : 0.08049652725458145
+2021-10-14 20:05:56,691 - CPSC2021 - INFO - Train step_20200: loss : 0.056078504770994186
+2021-10-14 20:05:57,027 - CPSC2021 - INFO - Train step_20220: loss : 0.027972808107733727
+2021-10-14 20:05:57,363 - CPSC2021 - INFO - Train step_20240: loss : 0.03542807325720787
+2021-10-14 20:05:57,703 - CPSC2021 - INFO - Train step_20260: loss : 0.09195888787508011
+2021-10-14 20:05:58,055 - CPSC2021 - INFO - Train step_20280: loss : 0.024119088426232338
+2021-10-14 20:05:58,393 - CPSC2021 - INFO - Train step_20300: loss : 0.049063604325056076
+2021-10-14 20:05:58,736 - CPSC2021 - INFO - Train step_20320: loss : 0.12972593307495117
+2021-10-14 20:05:59,077 - CPSC2021 - INFO - Train step_20340: loss : 0.07703055441379547
+2021-10-14 20:05:59,418 - CPSC2021 - INFO - Train step_20360: loss : 0.034639276564121246
+2021-10-14 20:05:59,765 - CPSC2021 - INFO - Train step_20380: loss : 0.05101814866065979
+2021-10-14 20:06:00,107 - CPSC2021 - INFO - Train step_20400: loss : 0.043661296367645264
+2021-10-14 20:06:29,503 - CPSC2021 - INFO - 
+Train epoch_11:
+--------------------
+train/epoch_loss:        127.75061948923394
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:06:29,506 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:06:29,530 - CPSC2021 - INFO - Checkpoint 11 saved!
+2021-10-14 20:06:30,202 - CPSC2021 - INFO - Train step_20420: loss : 0.05117104575037956
+2021-10-14 20:06:30,552 - CPSC2021 - INFO - Train step_20440: loss : 0.036851923912763596
+2021-10-14 20:06:30,917 - CPSC2021 - INFO - Train step_20460: loss : 0.04916391521692276
+2021-10-14 20:06:31,280 - CPSC2021 - INFO - Train step_20480: loss : 0.02113177813589573
+2021-10-14 20:06:31,632 - CPSC2021 - INFO - Train step_20500: loss : 0.029237914830446243
+2021-10-14 20:06:31,983 - CPSC2021 - INFO - Train step_20520: loss : 0.03891332447528839
+2021-10-14 20:06:32,346 - CPSC2021 - INFO - Train step_20540: loss : 0.04146638885140419
+2021-10-14 20:06:32,711 - CPSC2021 - INFO - Train step_20560: loss : 0.06400322169065475
+2021-10-14 20:06:33,068 - CPSC2021 - INFO - Train step_20580: loss : 0.10258163511753082
+2021-10-14 20:06:33,430 - CPSC2021 - INFO - Train step_20600: loss : 0.07637342065572739
+2021-10-14 20:06:33,792 - CPSC2021 - INFO - Train step_20620: loss : 0.03506489470601082
+2021-10-14 20:06:34,145 - CPSC2021 - INFO - Train step_20640: loss : 0.02986721321940422
+2021-10-14 20:06:34,510 - CPSC2021 - INFO - Train step_20660: loss : 0.028069157153367996
+2021-10-14 20:06:34,873 - CPSC2021 - INFO - Train step_20680: loss : 0.015489107929170132
+2021-10-14 20:06:35,229 - CPSC2021 - INFO - Train step_20700: loss : 0.04955468699336052
+2021-10-14 20:06:35,602 - CPSC2021 - INFO - Train step_20720: loss : 0.10516579449176788
+2021-10-14 20:06:35,953 - CPSC2021 - INFO - Train step_20740: loss : 0.03426631540060043
+2021-10-14 20:06:36,305 - CPSC2021 - INFO - Train step_20760: loss : 0.02184176817536354
+2021-10-14 20:06:36,650 - CPSC2021 - INFO - Train step_20780: loss : 0.07029873877763748
+2021-10-14 20:06:36,992 - CPSC2021 - INFO - Train step_20800: loss : 0.10763486474752426
+2021-10-14 20:06:37,335 - CPSC2021 - INFO - Train step_20820: loss : 0.15307274460792542
+2021-10-14 20:06:37,678 - CPSC2021 - INFO - Train step_20840: loss : 0.04851542413234711
+2021-10-14 20:06:38,022 - CPSC2021 - INFO - Train step_20860: loss : 0.04964349418878555
+2021-10-14 20:06:38,374 - CPSC2021 - INFO - Train step_20880: loss : 0.06757918000221252
+2021-10-14 20:06:38,725 - CPSC2021 - INFO - Train step_20900: loss : 0.17799845337867737
+2021-10-14 20:06:39,088 - CPSC2021 - INFO - Train step_20920: loss : 0.08274727314710617
+2021-10-14 20:06:39,457 - CPSC2021 - INFO - Train step_20940: loss : 0.0915822982788086
+2021-10-14 20:06:39,822 - CPSC2021 - INFO - Train step_20960: loss : 0.036787401884794235
+2021-10-14 20:06:40,178 - CPSC2021 - INFO - Train step_20980: loss : 0.1724362075328827
+2021-10-14 20:06:40,535 - CPSC2021 - INFO - Train step_21000: loss : 0.1310063898563385
+2021-10-14 20:06:40,901 - CPSC2021 - INFO - Train step_21020: loss : 0.08683591336011887
+2021-10-14 20:06:41,269 - CPSC2021 - INFO - Train step_21040: loss : 0.04404011368751526
+2021-10-14 20:06:41,647 - CPSC2021 - INFO - Train step_21060: loss : 0.07801517099142075
+2021-10-14 20:06:42,005 - CPSC2021 - INFO - Train step_21080: loss : 0.02285044640302658
+2021-10-14 20:06:42,369 - CPSC2021 - INFO - Train step_21100: loss : 0.08090515434741974
+2021-10-14 20:06:42,731 - CPSC2021 - INFO - Train step_21120: loss : 0.05797690898180008
+2021-10-14 20:06:43,096 - CPSC2021 - INFO - Train step_21140: loss : 0.19198034703731537
+2021-10-14 20:06:43,464 - CPSC2021 - INFO - Train step_21160: loss : 0.10841234773397446
+2021-10-14 20:06:43,798 - CPSC2021 - INFO - Train step_21180: loss : 0.1006789579987526
+2021-10-14 20:06:44,142 - CPSC2021 - INFO - Train step_21200: loss : 0.06218259036540985
+2021-10-14 20:06:44,485 - CPSC2021 - INFO - Train step_21220: loss : 0.020793279632925987
+2021-10-14 20:06:44,838 - CPSC2021 - INFO - Train step_21240: loss : 0.013574112206697464
+2021-10-14 20:06:45,188 - CPSC2021 - INFO - Train step_21260: loss : 0.04006392881274223
+2021-10-14 20:06:45,530 - CPSC2021 - INFO - Train step_21280: loss : 0.14735671877861023
+2021-10-14 20:06:45,880 - CPSC2021 - INFO - Train step_21300: loss : 0.020568396896123886
+2021-10-14 20:06:46,240 - CPSC2021 - INFO - Train step_21320: loss : 0.042706720530986786
+2021-10-14 20:06:46,603 - CPSC2021 - INFO - Train step_21340: loss : 0.10794107615947723
+2021-10-14 20:06:46,960 - CPSC2021 - INFO - Train step_21360: loss : 0.04983589053153992
+2021-10-14 20:06:47,310 - CPSC2021 - INFO - Train step_21380: loss : 0.06087474524974823
+2021-10-14 20:06:47,667 - CPSC2021 - INFO - Train step_21400: loss : 0.03946549445390701
+2021-10-14 20:06:48,024 - CPSC2021 - INFO - Train step_21420: loss : 0.009191892109811306
+2021-10-14 20:06:48,393 - CPSC2021 - INFO - Train step_21440: loss : 0.0361470952630043
+2021-10-14 20:06:48,763 - CPSC2021 - INFO - Train step_21460: loss : 0.031163789331912994
+2021-10-14 20:06:49,134 - CPSC2021 - INFO - Train step_21480: loss : 0.037683770060539246
+2021-10-14 20:06:49,502 - CPSC2021 - INFO - Train step_21500: loss : 0.054976385086774826
+2021-10-14 20:06:49,868 - CPSC2021 - INFO - Train step_21520: loss : 0.21711373329162598
+2021-10-14 20:06:50,226 - CPSC2021 - INFO - Train step_21540: loss : 0.05619354918599129
+2021-10-14 20:06:50,592 - CPSC2021 - INFO - Train step_21560: loss : 0.08829117566347122
+2021-10-14 20:06:50,954 - CPSC2021 - INFO - Train step_21580: loss : 0.056340139359235764
+2021-10-14 20:06:51,307 - CPSC2021 - INFO - Train step_21600: loss : 0.06579456478357315
+2021-10-14 20:06:51,666 - CPSC2021 - INFO - Train step_21620: loss : 0.02481193095445633
+2021-10-14 20:06:52,014 - CPSC2021 - INFO - Train step_21640: loss : 0.0392722561955452
+2021-10-14 20:06:52,361 - CPSC2021 - INFO - Train step_21660: loss : 0.09169168770313263
+2021-10-14 20:06:52,718 - CPSC2021 - INFO - Train step_21680: loss : 0.07787434756755829
+2021-10-14 20:06:53,082 - CPSC2021 - INFO - Train step_21700: loss : 0.026633664965629578
+2021-10-14 20:06:53,458 - CPSC2021 - INFO - Train step_21720: loss : 0.0799625888466835
+2021-10-14 20:06:53,822 - CPSC2021 - INFO - Train step_21740: loss : 0.13102634251117706
+2021-10-14 20:06:54,187 - CPSC2021 - INFO - Train step_21760: loss : 0.027026720345020294
+2021-10-14 20:06:54,536 - CPSC2021 - INFO - Train step_21780: loss : 0.055752530694007874
+2021-10-14 20:06:54,896 - CPSC2021 - INFO - Train step_21800: loss : 0.09856823086738586
+2021-10-14 20:06:55,258 - CPSC2021 - INFO - Train step_21820: loss : 0.030603628605604172
+2021-10-14 20:06:55,622 - CPSC2021 - INFO - Train step_21840: loss : 0.025944700464606285
+2021-10-14 20:06:55,985 - CPSC2021 - INFO - Train step_21860: loss : 0.019968312233686447
+2021-10-14 20:06:56,328 - CPSC2021 - INFO - Train step_21880: loss : 0.020341236144304276
+2021-10-14 20:06:56,694 - CPSC2021 - INFO - Train step_21900: loss : 0.058735720813274384
+2021-10-14 20:06:57,056 - CPSC2021 - INFO - Train step_21920: loss : 0.11043787002563477
+2021-10-14 20:06:57,405 - CPSC2021 - INFO - Train step_21940: loss : 0.030825329944491386
+2021-10-14 20:06:57,751 - CPSC2021 - INFO - Train step_21960: loss : 0.03873075917363167
+2021-10-14 20:06:58,105 - CPSC2021 - INFO - Train step_21980: loss : 0.038426078855991364
+2021-10-14 20:06:58,465 - CPSC2021 - INFO - Train step_22000: loss : 0.05184102803468704
+2021-10-14 20:06:58,807 - CPSC2021 - INFO - Train step_22020: loss : 0.09606840461492538
+2021-10-14 20:06:59,133 - CPSC2021 - INFO - Train step_22040: loss : 0.10211779177188873
+2021-10-14 20:06:59,459 - CPSC2021 - INFO - Train step_22060: loss : 0.058307819068431854
+2021-10-14 20:06:59,800 - CPSC2021 - INFO - Train step_22080: loss : 0.04286094754934311
+2021-10-14 20:07:00,146 - CPSC2021 - INFO - Train step_22100: loss : 0.013471925631165504
+2021-10-14 20:07:00,481 - CPSC2021 - INFO - Train step_22120: loss : 0.024723371490836143
+2021-10-14 20:07:00,836 - CPSC2021 - INFO - Train step_22140: loss : 0.028041627258062363
+2021-10-14 20:07:01,186 - CPSC2021 - INFO - Train step_22160: loss : 0.013258262537419796
+2021-10-14 20:07:01,526 - CPSC2021 - INFO - Train step_22180: loss : 0.0801379382610321
+2021-10-14 20:07:01,870 - CPSC2021 - INFO - Train step_22200: loss : 0.035161279141902924
+2021-10-14 20:07:02,210 - CPSC2021 - INFO - Train step_22220: loss : 0.019687296822667122
+2021-10-14 20:07:02,569 - CPSC2021 - INFO - Train step_22240: loss : 0.05518846958875656
+2021-10-14 20:07:02,918 - CPSC2021 - INFO - Train step_22260: loss : 0.02258514054119587
+2021-10-14 20:07:32,427 - CPSC2021 - INFO - 
+Train epoch_12:
+--------------------
+train/epoch_loss:        119.95350181101821
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:07:32,432 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:07:32,457 - CPSC2021 - INFO - Checkpoint 12 saved!
+2021-10-14 20:07:33,245 - CPSC2021 - INFO - Train step_22280: loss : 0.10057122260332108
+2021-10-14 20:07:33,643 - CPSC2021 - INFO - Train step_22300: loss : 0.02730005793273449
+2021-10-14 20:07:34,046 - CPSC2021 - INFO - Train step_22320: loss : 0.03128914162516594
+2021-10-14 20:07:34,448 - CPSC2021 - INFO - Train step_22340: loss : 0.02475893869996071
+2021-10-14 20:07:34,836 - CPSC2021 - INFO - Train step_22360: loss : 0.05790584534406662
+2021-10-14 20:07:35,207 - CPSC2021 - INFO - Train step_22380: loss : 0.0785767063498497
+2021-10-14 20:07:35,584 - CPSC2021 - INFO - Train step_22400: loss : 0.3101957440376282
+2021-10-14 20:07:35,965 - CPSC2021 - INFO - Train step_22420: loss : 0.04837442934513092
+2021-10-14 20:07:36,354 - CPSC2021 - INFO - Train step_22440: loss : 0.11414135247468948
+2021-10-14 20:07:36,754 - CPSC2021 - INFO - Train step_22460: loss : 0.02725604921579361
+2021-10-14 20:07:37,146 - CPSC2021 - INFO - Train step_22480: loss : 0.07680701464414597
+2021-10-14 20:07:37,524 - CPSC2021 - INFO - Train step_22500: loss : 0.027731645852327347
+2021-10-14 20:07:37,904 - CPSC2021 - INFO - Train step_22520: loss : 0.010408632457256317
+2021-10-14 20:07:38,292 - CPSC2021 - INFO - Train step_22540: loss : 0.0580323152244091
+2021-10-14 20:07:38,680 - CPSC2021 - INFO - Train step_22560: loss : 0.02667594887316227
+2021-10-14 20:07:39,055 - CPSC2021 - INFO - Train step_22580: loss : 0.03211858123540878
+2021-10-14 20:07:39,447 - CPSC2021 - INFO - Train step_22600: loss : 0.02817242406308651
+2021-10-14 20:07:39,835 - CPSC2021 - INFO - Train step_22620: loss : 0.01695752888917923
+2021-10-14 20:07:40,212 - CPSC2021 - INFO - Train step_22640: loss : 0.07453092932701111
+2021-10-14 20:07:40,588 - CPSC2021 - INFO - Train step_22660: loss : 0.062209974974393845
+2021-10-14 20:07:40,972 - CPSC2021 - INFO - Train step_22680: loss : 0.08063782751560211
+2021-10-14 20:07:41,345 - CPSC2021 - INFO - Train step_22700: loss : 0.04466555267572403
+2021-10-14 20:07:41,723 - CPSC2021 - INFO - Train step_22720: loss : 0.20864319801330566
+2021-10-14 20:07:42,123 - CPSC2021 - INFO - Train step_22740: loss : 0.08510416746139526
+2021-10-14 20:07:42,509 - CPSC2021 - INFO - Train step_22760: loss : 0.06432070583105087
+2021-10-14 20:07:42,886 - CPSC2021 - INFO - Train step_22780: loss : 0.022381996735930443
+2021-10-14 20:07:43,273 - CPSC2021 - INFO - Train step_22800: loss : 0.09272798895835876
+2021-10-14 20:07:43,651 - CPSC2021 - INFO - Train step_22820: loss : 0.09456046670675278
+2021-10-14 20:07:44,045 - CPSC2021 - INFO - Train step_22840: loss : 0.04514937475323677
+2021-10-14 20:07:44,438 - CPSC2021 - INFO - Train step_22860: loss : 0.053923919796943665
+2021-10-14 20:07:44,838 - CPSC2021 - INFO - Train step_22880: loss : 0.011330422945320606
+2021-10-14 20:07:45,241 - CPSC2021 - INFO - Train step_22900: loss : 0.10408154129981995
+2021-10-14 20:07:45,641 - CPSC2021 - INFO - Train step_22920: loss : 0.13359016180038452
+2021-10-14 20:07:46,030 - CPSC2021 - INFO - Train step_22940: loss : 0.032028984278440475
+2021-10-14 20:07:46,412 - CPSC2021 - INFO - Train step_22960: loss : 0.05373314768075943
+2021-10-14 20:07:46,772 - CPSC2021 - INFO - Train step_22980: loss : 0.08784083276987076
+2021-10-14 20:07:47,134 - CPSC2021 - INFO - Train step_23000: loss : 0.027289671823382378
+2021-10-14 20:07:47,493 - CPSC2021 - INFO - Train step_23020: loss : 0.113128162920475
+2021-10-14 20:07:47,845 - CPSC2021 - INFO - Train step_23040: loss : 0.012460283935070038
+2021-10-14 20:07:48,198 - CPSC2021 - INFO - Train step_23060: loss : 0.03152037039399147
+2021-10-14 20:07:48,551 - CPSC2021 - INFO - Train step_23080: loss : 0.012286492623388767
+2021-10-14 20:07:48,916 - CPSC2021 - INFO - Train step_23100: loss : 0.013556043617427349
+2021-10-14 20:07:49,279 - CPSC2021 - INFO - Train step_23120: loss : 0.03771195188164711
+2021-10-14 20:07:49,645 - CPSC2021 - INFO - Train step_23140: loss : 0.08406105637550354
+2021-10-14 20:07:50,000 - CPSC2021 - INFO - Train step_23160: loss : 0.0719555988907814
+2021-10-14 20:07:50,354 - CPSC2021 - INFO - Train step_23180: loss : 0.04668275639414787
+2021-10-14 20:07:50,711 - CPSC2021 - INFO - Train step_23200: loss : 0.03175453841686249
+2021-10-14 20:07:51,075 - CPSC2021 - INFO - Train step_23220: loss : 0.03755256533622742
+2021-10-14 20:07:51,430 - CPSC2021 - INFO - Train step_23240: loss : 0.03626907989382744
+2021-10-14 20:07:51,780 - CPSC2021 - INFO - Train step_23260: loss : 0.05948382243514061
+2021-10-14 20:07:52,133 - CPSC2021 - INFO - Train step_23280: loss : 0.03984953835606575
+2021-10-14 20:07:52,492 - CPSC2021 - INFO - Train step_23300: loss : 0.07201678305864334
+2021-10-14 20:07:52,851 - CPSC2021 - INFO - Train step_23320: loss : 0.0641494169831276
+2021-10-14 20:07:53,210 - CPSC2021 - INFO - Train step_23340: loss : 0.15508897602558136
+2021-10-14 20:07:53,579 - CPSC2021 - INFO - Train step_23360: loss : 0.0494452528655529
+2021-10-14 20:07:53,946 - CPSC2021 - INFO - Train step_23380: loss : 0.034107618033885956
+2021-10-14 20:07:54,307 - CPSC2021 - INFO - Train step_23400: loss : 0.05608048662543297
+2021-10-14 20:07:54,666 - CPSC2021 - INFO - Train step_23420: loss : 0.027391986921429634
+2021-10-14 20:07:55,022 - CPSC2021 - INFO - Train step_23440: loss : 0.11157900840044022
+2021-10-14 20:07:55,381 - CPSC2021 - INFO - Train step_23460: loss : 0.17365825176239014
+2021-10-14 20:07:55,738 - CPSC2021 - INFO - Train step_23480: loss : 0.07937627285718918
+2021-10-14 20:07:56,098 - CPSC2021 - INFO - Train step_23500: loss : 0.04596230760216713
+2021-10-14 20:07:56,459 - CPSC2021 - INFO - Train step_23520: loss : 0.0818534642457962
+2021-10-14 20:07:56,818 - CPSC2021 - INFO - Train step_23540: loss : 0.11783582717180252
+2021-10-14 20:07:57,182 - CPSC2021 - INFO - Train step_23560: loss : 0.029824063181877136
+2021-10-14 20:07:57,543 - CPSC2021 - INFO - Train step_23580: loss : 0.019150229170918465
+2021-10-14 20:07:57,901 - CPSC2021 - INFO - Train step_23600: loss : 0.0596354678273201
+2021-10-14 20:07:58,265 - CPSC2021 - INFO - Train step_23620: loss : 0.032027892768383026
+2021-10-14 20:07:58,632 - CPSC2021 - INFO - Train step_23640: loss : 0.034835148602724075
+2021-10-14 20:07:58,989 - CPSC2021 - INFO - Train step_23660: loss : 0.012944715097546577
+2021-10-14 20:07:59,332 - CPSC2021 - INFO - Train step_23680: loss : 0.0857342854142189
+2021-10-14 20:07:59,671 - CPSC2021 - INFO - Train step_23700: loss : 0.030932769179344177
+2021-10-14 20:08:00,015 - CPSC2021 - INFO - Train step_23720: loss : 0.08566481620073318
+2021-10-14 20:08:00,367 - CPSC2021 - INFO - Train step_23740: loss : 0.06561988592147827
+2021-10-14 20:08:00,729 - CPSC2021 - INFO - Train step_23760: loss : 0.03148090839385986
+2021-10-14 20:08:01,092 - CPSC2021 - INFO - Train step_23780: loss : 0.06874166429042816
+2021-10-14 20:08:01,448 - CPSC2021 - INFO - Train step_23800: loss : 0.07663646340370178
+2021-10-14 20:08:01,807 - CPSC2021 - INFO - Train step_23820: loss : 0.08791224658489227
+2021-10-14 20:08:02,167 - CPSC2021 - INFO - Train step_23840: loss : 0.0363692082464695
+2021-10-14 20:08:02,524 - CPSC2021 - INFO - Train step_23860: loss : 0.015310127288103104
+2021-10-14 20:08:02,878 - CPSC2021 - INFO - Train step_23880: loss : 0.05450769513845444
+2021-10-14 20:08:03,233 - CPSC2021 - INFO - Train step_23900: loss : 0.06468375027179718
+2021-10-14 20:08:03,588 - CPSC2021 - INFO - Train step_23920: loss : 0.018680687993764877
+2021-10-14 20:08:03,949 - CPSC2021 - INFO - Train step_23940: loss : 0.01820395514369011
+2021-10-14 20:08:04,307 - CPSC2021 - INFO - Train step_23960: loss : 0.07106917351484299
+2021-10-14 20:08:04,665 - CPSC2021 - INFO - Train step_23980: loss : 0.04266244173049927
+2021-10-14 20:08:05,025 - CPSC2021 - INFO - Train step_24000: loss : 0.01124445628374815
+2021-10-14 20:08:05,388 - CPSC2021 - INFO - Train step_24020: loss : 0.02012464962899685
+2021-10-14 20:08:05,741 - CPSC2021 - INFO - Train step_24040: loss : 0.016959555447101593
+2021-10-14 20:08:06,094 - CPSC2021 - INFO - Train step_24060: loss : 0.04148765653371811
+2021-10-14 20:08:06,434 - CPSC2021 - INFO - Train step_24080: loss : 0.05190259963274002
+2021-10-14 20:08:06,779 - CPSC2021 - INFO - Train step_24100: loss : 0.025830287486314774
+2021-10-14 20:08:36,699 - CPSC2021 - INFO - 
+Train epoch_13:
+--------------------
+train/epoch_loss:        112.87806845735759
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:08:36,703 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:08:36,727 - CPSC2021 - INFO - Checkpoint 13 saved!
+2021-10-14 20:08:37,206 - CPSC2021 - INFO - Train step_24120: loss : 0.05273650586605072
+2021-10-14 20:08:37,563 - CPSC2021 - INFO - Train step_24140: loss : 0.1327059268951416
+2021-10-14 20:08:37,920 - CPSC2021 - INFO - Train step_24160: loss : 0.1298454850912094
+2021-10-14 20:08:38,273 - CPSC2021 - INFO - Train step_24180: loss : 0.08494952321052551
+2021-10-14 20:08:38,627 - CPSC2021 - INFO - Train step_24200: loss : 0.030340494588017464
+2021-10-14 20:08:38,990 - CPSC2021 - INFO - Train step_24220: loss : 0.04023684561252594
+2021-10-14 20:08:39,352 - CPSC2021 - INFO - Train step_24240: loss : 0.036262188106775284
+2021-10-14 20:08:39,718 - CPSC2021 - INFO - Train step_24260: loss : 0.06046206131577492
+2021-10-14 20:08:40,076 - CPSC2021 - INFO - Train step_24280: loss : 0.11728525161743164
+2021-10-14 20:08:40,408 - CPSC2021 - INFO - Train step_24300: loss : 0.04544660449028015
+2021-10-14 20:08:40,751 - CPSC2021 - INFO - Train step_24320: loss : 0.26769301295280457
+2021-10-14 20:08:41,098 - CPSC2021 - INFO - Train step_24340: loss : 0.15737617015838623
+2021-10-14 20:08:41,443 - CPSC2021 - INFO - Train step_24360: loss : 0.02943507395684719
+2021-10-14 20:08:41,789 - CPSC2021 - INFO - Train step_24380: loss : 0.039633505046367645
+2021-10-14 20:08:42,137 - CPSC2021 - INFO - Train step_24400: loss : 0.06459177285432816
+2021-10-14 20:08:42,483 - CPSC2021 - INFO - Train step_24420: loss : 0.07488223910331726
+2021-10-14 20:08:42,832 - CPSC2021 - INFO - Train step_24440: loss : 0.08725687116384506
+2021-10-14 20:08:43,176 - CPSC2021 - INFO - Train step_24460: loss : 0.07029050588607788
+2021-10-14 20:08:43,533 - CPSC2021 - INFO - Train step_24480: loss : 0.039189524948596954
+2021-10-14 20:08:43,882 - CPSC2021 - INFO - Train step_24500: loss : 0.11514468491077423
+2021-10-14 20:08:44,231 - CPSC2021 - INFO - Train step_24520: loss : 0.017241856083273888
+2021-10-14 20:08:44,583 - CPSC2021 - INFO - Train step_24540: loss : 0.06423147767782211
+2021-10-14 20:08:44,943 - CPSC2021 - INFO - Train step_24560: loss : 0.09569346904754639
+2021-10-14 20:08:45,291 - CPSC2021 - INFO - Train step_24580: loss : 0.18486307561397552
+2021-10-14 20:08:45,639 - CPSC2021 - INFO - Train step_24600: loss : 0.12753257155418396
+2021-10-14 20:08:45,985 - CPSC2021 - INFO - Train step_24620: loss : 0.10522272437810898
+2021-10-14 20:08:46,326 - CPSC2021 - INFO - Train step_24640: loss : 0.234344482421875
+2021-10-14 20:08:46,678 - CPSC2021 - INFO - Train step_24660: loss : 0.03585202246904373
+2021-10-14 20:08:47,031 - CPSC2021 - INFO - Train step_24680: loss : 0.03432806581258774
+2021-10-14 20:08:47,383 - CPSC2021 - INFO - Train step_24700: loss : 0.045300260186195374
+2021-10-14 20:08:47,734 - CPSC2021 - INFO - Train step_24720: loss : 0.0338122695684433
+2021-10-14 20:08:48,085 - CPSC2021 - INFO - Train step_24740: loss : 0.018361972644925117
+2021-10-14 20:08:48,435 - CPSC2021 - INFO - Train step_24760: loss : 0.012662841007113457
+2021-10-14 20:08:48,786 - CPSC2021 - INFO - Train step_24780: loss : 0.07465116679668427
+2021-10-14 20:08:49,143 - CPSC2021 - INFO - Train step_24800: loss : 0.005464585032314062
+2021-10-14 20:08:49,512 - CPSC2021 - INFO - Train step_24820: loss : 0.08901756256818771
+2021-10-14 20:08:49,884 - CPSC2021 - INFO - Train step_24840: loss : 0.07170790433883667
+2021-10-14 20:08:50,233 - CPSC2021 - INFO - Train step_24860: loss : 0.08420121669769287
+2021-10-14 20:08:50,590 - CPSC2021 - INFO - Train step_24880: loss : 0.015398772433400154
+2021-10-14 20:08:50,952 - CPSC2021 - INFO - Train step_24900: loss : 0.018858637660741806
+2021-10-14 20:08:51,298 - CPSC2021 - INFO - Train step_24920: loss : 0.04463525488972664
+2021-10-14 20:08:51,645 - CPSC2021 - INFO - Train step_24940: loss : 0.05147707834839821
+2021-10-14 20:08:51,949 - CPSC2021 - INFO - Train step_24960: loss : 0.01502950768917799
+2021-10-14 20:08:52,274 - CPSC2021 - INFO - Train step_24980: loss : 0.028227319940924644
+2021-10-14 20:08:52,636 - CPSC2021 - INFO - Train step_25000: loss : 0.1278129518032074
+2021-10-14 20:08:52,998 - CPSC2021 - INFO - Train step_25020: loss : 0.12041104584932327
+2021-10-14 20:08:53,349 - CPSC2021 - INFO - Train step_25040: loss : 0.020406100898981094
+2021-10-14 20:08:53,696 - CPSC2021 - INFO - Train step_25060: loss : 0.042640116065740585
+2021-10-14 20:08:54,041 - CPSC2021 - INFO - Train step_25080: loss : 0.011779488995671272
+2021-10-14 20:08:54,359 - CPSC2021 - INFO - Train step_25100: loss : 0.041111089289188385
+2021-10-14 20:08:54,714 - CPSC2021 - INFO - Train step_25120: loss : 0.0755520761013031
+2021-10-14 20:08:55,062 - CPSC2021 - INFO - Train step_25140: loss : 0.07617489993572235
+2021-10-14 20:08:55,408 - CPSC2021 - INFO - Train step_25160: loss : 0.04672173410654068
+2021-10-14 20:08:55,754 - CPSC2021 - INFO - Train step_25180: loss : 0.019301798194646835
+2021-10-14 20:08:56,125 - CPSC2021 - INFO - Train step_25200: loss : 0.01756470650434494
+2021-10-14 20:08:56,503 - CPSC2021 - INFO - Train step_25220: loss : 0.023112095892429352
+2021-10-14 20:08:56,869 - CPSC2021 - INFO - Train step_25240: loss : 0.0663711279630661
+2021-10-14 20:08:57,223 - CPSC2021 - INFO - Train step_25260: loss : 0.0705418512225151
+2021-10-14 20:08:57,537 - CPSC2021 - INFO - Train step_25280: loss : 0.013448691926896572
+2021-10-14 20:08:57,824 - CPSC2021 - INFO - Train step_25300: loss : 0.07099173963069916
+2021-10-14 20:08:58,125 - CPSC2021 - INFO - Train step_25320: loss : 0.06810871511697769
+2021-10-14 20:08:58,429 - CPSC2021 - INFO - Train step_25340: loss : 0.05504516884684563
+2021-10-14 20:08:58,766 - CPSC2021 - INFO - Train step_25360: loss : 0.030129441991448402
+2021-10-14 20:08:59,111 - CPSC2021 - INFO - Train step_25380: loss : 0.13950899243354797
+2021-10-14 20:08:59,455 - CPSC2021 - INFO - Train step_25400: loss : 0.07321503013372421
+2021-10-14 20:08:59,800 - CPSC2021 - INFO - Train step_25420: loss : 0.03990665450692177
+2021-10-14 20:09:00,157 - CPSC2021 - INFO - Train step_25440: loss : 0.04324692487716675
+2021-10-14 20:09:00,502 - CPSC2021 - INFO - Train step_25460: loss : 0.026194056496024132
+2021-10-14 20:09:00,845 - CPSC2021 - INFO - Train step_25480: loss : 0.03392051160335541
+2021-10-14 20:09:01,188 - CPSC2021 - INFO - Train step_25500: loss : 0.017254121601581573
+2021-10-14 20:09:01,539 - CPSC2021 - INFO - Train step_25520: loss : 0.060953039675951004
+2021-10-14 20:09:01,885 - CPSC2021 - INFO - Train step_25540: loss : 0.1150340810418129
+2021-10-14 20:09:02,234 - CPSC2021 - INFO - Train step_25560: loss : 0.05334756523370743
+2021-10-14 20:09:02,585 - CPSC2021 - INFO - Train step_25580: loss : 0.008955101482570171
+2021-10-14 20:09:02,935 - CPSC2021 - INFO - Train step_25600: loss : 0.13394521176815033
+2021-10-14 20:09:03,281 - CPSC2021 - INFO - Train step_25620: loss : 0.005920740310102701
+2021-10-14 20:09:03,635 - CPSC2021 - INFO - Train step_25640: loss : 0.011084861122071743
+2021-10-14 20:09:03,944 - CPSC2021 - INFO - Train step_25660: loss : 0.01611601747572422
+2021-10-14 20:09:04,239 - CPSC2021 - INFO - Train step_25680: loss : 0.04746466502547264
+2021-10-14 20:09:04,541 - CPSC2021 - INFO - Train step_25700: loss : 0.08619938045740128
+2021-10-14 20:09:04,841 - CPSC2021 - INFO - Train step_25720: loss : 0.048134464770555496
+2021-10-14 20:09:05,140 - CPSC2021 - INFO - Train step_25740: loss : 0.029382722452282906
+2021-10-14 20:09:05,441 - CPSC2021 - INFO - Train step_25760: loss : 0.04254868999123573
+2021-10-14 20:09:05,723 - CPSC2021 - INFO - Train step_25780: loss : 0.03234667703509331
+2021-10-14 20:09:06,029 - CPSC2021 - INFO - Train step_25800: loss : 0.0184316486120224
+2021-10-14 20:09:06,315 - CPSC2021 - INFO - Train step_25820: loss : 0.13534341752529144
+2021-10-14 20:09:06,625 - CPSC2021 - INFO - Train step_25840: loss : 0.08416600525379181
+2021-10-14 20:09:06,927 - CPSC2021 - INFO - Train step_25860: loss : 0.15854796767234802
+2021-10-14 20:09:07,229 - CPSC2021 - INFO - Train step_25880: loss : 0.007334927096962929
+2021-10-14 20:09:07,540 - CPSC2021 - INFO - Train step_25900: loss : 0.04434428736567497
+2021-10-14 20:09:07,834 - CPSC2021 - INFO - Train step_25920: loss : 0.12143145501613617
+2021-10-14 20:09:08,131 - CPSC2021 - INFO - Train step_25940: loss : 0.01578587293624878
+2021-10-14 20:09:08,429 - CPSC2021 - INFO - Train step_25960: loss : 0.12072686851024628
+2021-10-14 20:09:39,661 - CPSC2021 - INFO - 
+Train epoch_14:
+--------------------
+train/epoch_loss:        107.77536947419867
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:09:39,664 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:09:39,699 - CPSC2021 - INFO - Checkpoint 14 saved!
+2021-10-14 20:09:40,274 - CPSC2021 - INFO - Train step_25980: loss : 0.06014049053192139
+2021-10-14 20:09:40,621 - CPSC2021 - INFO - Train step_26000: loss : 0.2688807249069214
+2021-10-14 20:09:40,967 - CPSC2021 - INFO - Train step_26020: loss : 0.08312559872865677
+2021-10-14 20:09:41,312 - CPSC2021 - INFO - Train step_26040: loss : 0.03595505654811859
+2021-10-14 20:09:41,656 - CPSC2021 - INFO - Train step_26060: loss : 0.03297196701169014
+2021-10-14 20:09:42,000 - CPSC2021 - INFO - Train step_26080: loss : 0.0073426589369773865
+2021-10-14 20:09:42,343 - CPSC2021 - INFO - Train step_26100: loss : 0.06500326842069626
+2021-10-14 20:09:42,679 - CPSC2021 - INFO - Train step_26120: loss : 0.05385885015130043
+2021-10-14 20:09:43,010 - CPSC2021 - INFO - Train step_26140: loss : 0.16507789492607117
+2021-10-14 20:09:43,338 - CPSC2021 - INFO - Train step_26160: loss : 0.013769845478236675
+2021-10-14 20:09:43,683 - CPSC2021 - INFO - Train step_26180: loss : 0.04150184988975525
+2021-10-14 20:09:44,010 - CPSC2021 - INFO - Train step_26200: loss : 0.05238984525203705
+2021-10-14 20:09:44,332 - CPSC2021 - INFO - Train step_26220: loss : 0.008712946437299252
+2021-10-14 20:09:44,654 - CPSC2021 - INFO - Train step_26240: loss : 0.0424489863216877
+2021-10-14 20:09:44,982 - CPSC2021 - INFO - Train step_26260: loss : 0.04967429116368294
+2021-10-14 20:09:45,315 - CPSC2021 - INFO - Train step_26280: loss : 0.01674582064151764
+2021-10-14 20:09:45,639 - CPSC2021 - INFO - Train step_26300: loss : 0.06892082095146179
+2021-10-14 20:09:45,964 - CPSC2021 - INFO - Train step_26320: loss : 0.06315373629331589
+2021-10-14 20:09:46,285 - CPSC2021 - INFO - Train step_26340: loss : 0.06630437821149826
+2021-10-14 20:09:46,603 - CPSC2021 - INFO - Train step_26360: loss : 0.026045093312859535
+2021-10-14 20:09:46,937 - CPSC2021 - INFO - Train step_26380: loss : 0.017955703660845757
+2021-10-14 20:09:47,264 - CPSC2021 - INFO - Train step_26400: loss : 0.024456962943077087
+2021-10-14 20:09:47,604 - CPSC2021 - INFO - Train step_26420: loss : 0.04365863278508186
+2021-10-14 20:09:47,939 - CPSC2021 - INFO - Train step_26440: loss : 0.030787646770477295
+2021-10-14 20:09:48,172 - CPSC2021 - INFO - Train step_26460: loss : 0.044297121465206146
+2021-10-14 20:09:48,392 - CPSC2021 - INFO - Train step_26480: loss : 0.026632286608219147
+2021-10-14 20:09:48,632 - CPSC2021 - INFO - Train step_26500: loss : 0.016815995797514915
+2021-10-14 20:09:48,854 - CPSC2021 - INFO - Train step_26520: loss : 0.0444161593914032
+2021-10-14 20:09:49,074 - CPSC2021 - INFO - Train step_26540: loss : 0.10184849798679352
+2021-10-14 20:09:49,372 - CPSC2021 - INFO - Train step_26560: loss : 0.05372670665383339
+2021-10-14 20:09:49,695 - CPSC2021 - INFO - Train step_26580: loss : 0.034443847835063934
+2021-10-14 20:09:50,024 - CPSC2021 - INFO - Train step_26600: loss : 0.021230055019259453
+2021-10-14 20:09:50,356 - CPSC2021 - INFO - Train step_26620: loss : 0.03300408646464348
+2021-10-14 20:09:50,697 - CPSC2021 - INFO - Train step_26640: loss : 0.029159201309084892
+2021-10-14 20:09:51,033 - CPSC2021 - INFO - Train step_26660: loss : 0.029291152954101562
+2021-10-14 20:09:51,367 - CPSC2021 - INFO - Train step_26680: loss : 0.11071906238794327
+2021-10-14 20:09:51,696 - CPSC2021 - INFO - Train step_26700: loss : 0.08208949118852615
+2021-10-14 20:09:52,031 - CPSC2021 - INFO - Train step_26720: loss : 0.006606017705053091
+2021-10-14 20:09:52,398 - CPSC2021 - INFO - Train step_26740: loss : 0.20691382884979248
+2021-10-14 20:09:52,765 - CPSC2021 - INFO - Train step_26760: loss : 0.027929965406656265
+2021-10-14 20:09:53,117 - CPSC2021 - INFO - Train step_26780: loss : 0.0186985582113266
+2021-10-14 20:09:53,480 - CPSC2021 - INFO - Train step_26800: loss : 0.03781437501311302
+2021-10-14 20:09:53,834 - CPSC2021 - INFO - Train step_26820: loss : 0.1353006213903427
+2021-10-14 20:09:54,184 - CPSC2021 - INFO - Train step_26840: loss : 0.03850913420319557
+2021-10-14 20:09:54,538 - CPSC2021 - INFO - Train step_26860: loss : 0.07581053674221039
+2021-10-14 20:09:54,876 - CPSC2021 - INFO - Train step_26880: loss : 0.029391009360551834
+2021-10-14 20:09:55,211 - CPSC2021 - INFO - Train step_26900: loss : 0.13065645098686218
+2021-10-14 20:09:55,560 - CPSC2021 - INFO - Train step_26920: loss : 0.07147333770990372
+2021-10-14 20:09:55,933 - CPSC2021 - INFO - Train step_26940: loss : 0.035089343786239624
+2021-10-14 20:09:56,261 - CPSC2021 - INFO - Train step_26960: loss : 0.028080984950065613
+2021-10-14 20:09:56,574 - CPSC2021 - INFO - Train step_26980: loss : 0.024574464187026024
+2021-10-14 20:09:56,889 - CPSC2021 - INFO - Train step_27000: loss : 0.037033043801784515
+2021-10-14 20:09:57,220 - CPSC2021 - INFO - Train step_27020: loss : 0.04129811376333237
+2021-10-14 20:09:57,549 - CPSC2021 - INFO - Train step_27040: loss : 0.052571289241313934
+2021-10-14 20:09:57,873 - CPSC2021 - INFO - Train step_27060: loss : 0.01012270338833332
+2021-10-14 20:09:58,193 - CPSC2021 - INFO - Train step_27080: loss : 0.010367724113166332
+2021-10-14 20:09:58,520 - CPSC2021 - INFO - Train step_27100: loss : 0.11556655913591385
+2021-10-14 20:09:58,842 - CPSC2021 - INFO - Train step_27120: loss : 0.04682615026831627
+2021-10-14 20:09:59,164 - CPSC2021 - INFO - Train step_27140: loss : 0.06110388785600662
+2021-10-14 20:09:59,493 - CPSC2021 - INFO - Train step_27160: loss : 0.023379331454634666
+2021-10-14 20:09:59,819 - CPSC2021 - INFO - Train step_27180: loss : 0.016837142407894135
+2021-10-14 20:10:00,152 - CPSC2021 - INFO - Train step_27200: loss : 0.018545346334576607
+2021-10-14 20:10:00,501 - CPSC2021 - INFO - Train step_27220: loss : 0.017401989549398422
+2021-10-14 20:10:00,837 - CPSC2021 - INFO - Train step_27240: loss : 0.03124149516224861
+2021-10-14 20:10:01,184 - CPSC2021 - INFO - Train step_27260: loss : 0.1459776759147644
+2021-10-14 20:10:01,522 - CPSC2021 - INFO - Train step_27280: loss : 0.03366701677441597
+2021-10-14 20:10:01,876 - CPSC2021 - INFO - Train step_27300: loss : 0.08483009785413742
+2021-10-14 20:10:02,232 - CPSC2021 - INFO - Train step_27320: loss : 0.1439332515001297
+2021-10-14 20:10:02,581 - CPSC2021 - INFO - Train step_27340: loss : 0.06949611753225327
+2021-10-14 20:10:02,915 - CPSC2021 - INFO - Train step_27360: loss : 0.1108238697052002
+2021-10-14 20:10:03,255 - CPSC2021 - INFO - Train step_27380: loss : 0.05290261656045914
+2021-10-14 20:10:03,586 - CPSC2021 - INFO - Train step_27400: loss : 0.05240536481142044
+2021-10-14 20:10:03,921 - CPSC2021 - INFO - Train step_27420: loss : 0.028963841497898102
+2021-10-14 20:10:04,264 - CPSC2021 - INFO - Train step_27440: loss : 0.03003845550119877
+2021-10-14 20:10:04,593 - CPSC2021 - INFO - Train step_27460: loss : 0.030452419072389603
+2021-10-14 20:10:04,933 - CPSC2021 - INFO - Train step_27480: loss : 0.09964291006326675
+2021-10-14 20:10:05,284 - CPSC2021 - INFO - Train step_27500: loss : 0.08379252254962921
+2021-10-14 20:10:05,630 - CPSC2021 - INFO - Train step_27520: loss : 0.06894604116678238
+2021-10-14 20:10:05,967 - CPSC2021 - INFO - Train step_27540: loss : 0.09763224422931671
+2021-10-14 20:10:06,303 - CPSC2021 - INFO - Train step_27560: loss : 0.007190624717622995
+2021-10-14 20:10:06,647 - CPSC2021 - INFO - Train step_27580: loss : 0.10738398879766464
+2021-10-14 20:10:06,982 - CPSC2021 - INFO - Train step_27600: loss : 0.06194034591317177
+2021-10-14 20:10:07,320 - CPSC2021 - INFO - Train step_27620: loss : 0.018642613664269447
+2021-10-14 20:10:07,645 - CPSC2021 - INFO - Train step_27640: loss : 0.01641056314110756
+2021-10-14 20:10:07,981 - CPSC2021 - INFO - Train step_27660: loss : 0.10000859946012497
+2021-10-14 20:10:08,312 - CPSC2021 - INFO - Train step_27680: loss : 0.08548026531934738
+2021-10-14 20:10:08,641 - CPSC2021 - INFO - Train step_27700: loss : 0.018214602023363113
+2021-10-14 20:10:08,970 - CPSC2021 - INFO - Train step_27720: loss : 0.06345530599355698
+2021-10-14 20:10:09,307 - CPSC2021 - INFO - Train step_27740: loss : 0.05521491542458534
+2021-10-14 20:10:09,654 - CPSC2021 - INFO - Train step_27760: loss : 0.06564473360776901
+2021-10-14 20:10:09,988 - CPSC2021 - INFO - Train step_27780: loss : 0.021412648260593414
+2021-10-14 20:10:10,314 - CPSC2021 - INFO - Train step_27800: loss : 0.16039733588695526
+2021-10-14 20:10:10,615 - CPSC2021 - INFO - Train step_27820: loss : 0.04325760155916214
+2021-10-14 20:10:40,465 - CPSC2021 - INFO - 
+Train epoch_15:
+--------------------
+train/epoch_loss:        102.63733661244623
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:10:40,469 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:10:40,492 - CPSC2021 - INFO - Checkpoint 15 saved!
+2021-10-14 20:10:41,169 - CPSC2021 - INFO - Train step_27840: loss : 0.01384346280246973
+2021-10-14 20:10:41,529 - CPSC2021 - INFO - Train step_27860: loss : 0.032212283462285995
+2021-10-14 20:10:41,881 - CPSC2021 - INFO - Train step_27880: loss : 0.14082738757133484
+2021-10-14 20:10:42,234 - CPSC2021 - INFO - Train step_27900: loss : 0.03904924914240837
+2021-10-14 20:10:42,585 - CPSC2021 - INFO - Train step_27920: loss : 0.01376253366470337
+2021-10-14 20:10:42,934 - CPSC2021 - INFO - Train step_27940: loss : 0.04085894301533699
+2021-10-14 20:10:43,283 - CPSC2021 - INFO - Train step_27960: loss : 0.04104556515812874
+2021-10-14 20:10:43,647 - CPSC2021 - INFO - Train step_27980: loss : 0.02049397863447666
+2021-10-14 20:10:44,004 - CPSC2021 - INFO - Train step_28000: loss : 0.04897868633270264
+2021-10-14 20:10:44,364 - CPSC2021 - INFO - Train step_28020: loss : 0.15411986410617828
+2021-10-14 20:10:44,734 - CPSC2021 - INFO - Train step_28040: loss : 0.04968146234750748
+2021-10-14 20:10:45,086 - CPSC2021 - INFO - Train step_28060: loss : 0.03103753924369812
+2021-10-14 20:10:45,437 - CPSC2021 - INFO - Train step_28080: loss : 0.019174309447407722
+2021-10-14 20:10:45,802 - CPSC2021 - INFO - Train step_28100: loss : 0.023817861452698708
+2021-10-14 20:10:46,158 - CPSC2021 - INFO - Train step_28120: loss : 0.006588514894247055
+2021-10-14 20:10:46,522 - CPSC2021 - INFO - Train step_28140: loss : 0.00849282369017601
+2021-10-14 20:10:46,873 - CPSC2021 - INFO - Train step_28160: loss : 0.009750371798872948
+2021-10-14 20:10:47,215 - CPSC2021 - INFO - Train step_28180: loss : 0.24598358571529388
+2021-10-14 20:10:47,564 - CPSC2021 - INFO - Train step_28200: loss : 0.052221283316612244
+2021-10-14 20:10:47,932 - CPSC2021 - INFO - Train step_28220: loss : 0.09655292332172394
+2021-10-14 20:10:48,293 - CPSC2021 - INFO - Train step_28240: loss : 0.25470396876335144
+2021-10-14 20:10:48,649 - CPSC2021 - INFO - Train step_28260: loss : 0.0597178190946579
+2021-10-14 20:10:49,022 - CPSC2021 - INFO - Train step_28280: loss : 0.05085492879152298
+2021-10-14 20:10:49,386 - CPSC2021 - INFO - Train step_28300: loss : 0.023645855486392975
+2021-10-14 20:10:49,738 - CPSC2021 - INFO - Train step_28320: loss : 0.08323054015636444
+2021-10-14 20:10:50,077 - CPSC2021 - INFO - Train step_28340: loss : 0.09880797564983368
+2021-10-14 20:10:50,414 - CPSC2021 - INFO - Train step_28360: loss : 0.04549943283200264
+2021-10-14 20:10:50,761 - CPSC2021 - INFO - Train step_28380: loss : 0.013038177974522114
+2021-10-14 20:10:51,127 - CPSC2021 - INFO - Train step_28400: loss : 0.04314012825489044
+2021-10-14 20:10:51,491 - CPSC2021 - INFO - Train step_28420: loss : 0.04684260115027428
+2021-10-14 20:10:51,845 - CPSC2021 - INFO - Train step_28440: loss : 0.024688638746738434
+2021-10-14 20:10:52,194 - CPSC2021 - INFO - Train step_28460: loss : 0.022383075207471848
+2021-10-14 20:10:52,533 - CPSC2021 - INFO - Train step_28480: loss : 0.08834399282932281
+2021-10-14 20:10:52,908 - CPSC2021 - INFO - Train step_28500: loss : 0.12559325993061066
+2021-10-14 20:10:53,271 - CPSC2021 - INFO - Train step_28520: loss : 0.04651254042983055
+2021-10-14 20:10:53,630 - CPSC2021 - INFO - Train step_28540: loss : 0.014722640626132488
+2021-10-14 20:10:53,988 - CPSC2021 - INFO - Train step_28560: loss : 0.014633974991738796
+2021-10-14 20:10:54,343 - CPSC2021 - INFO - Train step_28580: loss : 0.04160945117473602
+2021-10-14 20:10:54,699 - CPSC2021 - INFO - Train step_28600: loss : 0.03492560610175133
+2021-10-14 20:10:55,059 - CPSC2021 - INFO - Train step_28620: loss : 0.06630181521177292
+2021-10-14 20:10:55,401 - CPSC2021 - INFO - Train step_28640: loss : 0.009931018576025963
+2021-10-14 20:10:55,752 - CPSC2021 - INFO - Train step_28660: loss : 0.02509574592113495
+2021-10-14 20:10:56,116 - CPSC2021 - INFO - Train step_28680: loss : 0.03101537935435772
+2021-10-14 20:10:56,468 - CPSC2021 - INFO - Train step_28700: loss : 0.012362416833639145
+2021-10-14 20:10:56,826 - CPSC2021 - INFO - Train step_28720: loss : 0.06060262769460678
+2021-10-14 20:10:57,175 - CPSC2021 - INFO - Train step_28740: loss : 0.002827563090249896
+2021-10-14 20:10:57,512 - CPSC2021 - INFO - Train step_28760: loss : 0.005734533537179232
+2021-10-14 20:10:57,861 - CPSC2021 - INFO - Train step_28780: loss : 0.024285538122057915
+2021-10-14 20:10:58,210 - CPSC2021 - INFO - Train step_28800: loss : 0.060896240174770355
+2021-10-14 20:10:58,564 - CPSC2021 - INFO - Train step_28820: loss : 0.08776756376028061
+2021-10-14 20:10:58,917 - CPSC2021 - INFO - Train step_28840: loss : 0.07289780676364899
+2021-10-14 20:10:59,264 - CPSC2021 - INFO - Train step_28860: loss : 0.027832800522446632
+2021-10-14 20:10:59,619 - CPSC2021 - INFO - Train step_28880: loss : 0.06139828637242317
+2021-10-14 20:10:59,979 - CPSC2021 - INFO - Train step_28900: loss : 0.055752091109752655
+2021-10-14 20:11:00,329 - CPSC2021 - INFO - Train step_28920: loss : 0.034127507358789444
+2021-10-14 20:11:00,684 - CPSC2021 - INFO - Train step_28940: loss : 0.013307943940162659
+2021-10-14 20:11:01,045 - CPSC2021 - INFO - Train step_28960: loss : 0.13914355635643005
+2021-10-14 20:11:01,395 - CPSC2021 - INFO - Train step_28980: loss : 0.12741513550281525
+2021-10-14 20:11:01,744 - CPSC2021 - INFO - Train step_29000: loss : 0.01686694845557213
+2021-10-14 20:11:02,089 - CPSC2021 - INFO - Train step_29020: loss : 0.017600465565919876
+2021-10-14 20:11:02,437 - CPSC2021 - INFO - Train step_29040: loss : 0.06259249895811081
+2021-10-14 20:11:02,771 - CPSC2021 - INFO - Train step_29060: loss : 0.027936875820159912
+2021-10-14 20:11:03,113 - CPSC2021 - INFO - Train step_29080: loss : 0.05029086396098137
+2021-10-14 20:11:03,466 - CPSC2021 - INFO - Train step_29100: loss : 0.03438210487365723
+2021-10-14 20:11:03,823 - CPSC2021 - INFO - Train step_29120: loss : 0.054219700396060944
+2021-10-14 20:11:04,177 - CPSC2021 - INFO - Train step_29140: loss : 0.13926395773887634
+2021-10-14 20:11:04,535 - CPSC2021 - INFO - Train step_29160: loss : 0.009007767774164677
+2021-10-14 20:11:04,891 - CPSC2021 - INFO - Train step_29180: loss : 0.045599013566970825
+2021-10-14 20:11:05,242 - CPSC2021 - INFO - Train step_29200: loss : 0.07699200510978699
+2021-10-14 20:11:05,593 - CPSC2021 - INFO - Train step_29220: loss : 0.010971574112772942
+2021-10-14 20:11:05,961 - CPSC2021 - INFO - Train step_29240: loss : 0.04902036488056183
+2021-10-14 20:11:06,318 - CPSC2021 - INFO - Train step_29260: loss : 0.030102381482720375
+2021-10-14 20:11:06,682 - CPSC2021 - INFO - Train step_29280: loss : 0.030092015862464905
+2021-10-14 20:11:07,049 - CPSC2021 - INFO - Train step_29300: loss : 0.012693768367171288
+2021-10-14 20:11:07,412 - CPSC2021 - INFO - Train step_29320: loss : 0.06021515280008316
+2021-10-14 20:11:07,758 - CPSC2021 - INFO - Train step_29340: loss : 0.017100630328059196
+2021-10-14 20:11:08,120 - CPSC2021 - INFO - Train step_29360: loss : 0.041823338717222214
+2021-10-14 20:11:08,476 - CPSC2021 - INFO - Train step_29380: loss : 0.05912560969591141
+2021-10-14 20:11:08,845 - CPSC2021 - INFO - Train step_29400: loss : 0.09969251602888107
+2021-10-14 20:11:09,187 - CPSC2021 - INFO - Train step_29420: loss : 0.09235050529241562
+2021-10-14 20:11:09,520 - CPSC2021 - INFO - Train step_29440: loss : 0.01904282718896866
+2021-10-14 20:11:09,830 - CPSC2021 - INFO - Train step_29460: loss : 0.0336921401321888
+2021-10-14 20:11:10,171 - CPSC2021 - INFO - Train step_29480: loss : 0.1940663754940033
+2021-10-14 20:11:10,470 - CPSC2021 - INFO - Train step_29500: loss : 0.07646702229976654
+2021-10-14 20:11:10,819 - CPSC2021 - INFO - Train step_29520: loss : 0.03671322762966156
+2021-10-14 20:11:11,159 - CPSC2021 - INFO - Train step_29540: loss : 0.054034870117902756
+2021-10-14 20:11:11,468 - CPSC2021 - INFO - Train step_29560: loss : 0.10638505220413208
+2021-10-14 20:11:11,803 - CPSC2021 - INFO - Train step_29580: loss : 0.13328494131565094
+2021-10-14 20:11:12,125 - CPSC2021 - INFO - Train step_29600: loss : 0.08253220468759537
+2021-10-14 20:11:12,474 - CPSC2021 - INFO - Train step_29620: loss : 0.03655385226011276
+2021-10-14 20:11:12,823 - CPSC2021 - INFO - Train step_29640: loss : 0.0433487743139267
+2021-10-14 20:11:13,175 - CPSC2021 - INFO - Train step_29660: loss : 0.014530959539115429
+2021-10-14 20:11:13,516 - CPSC2021 - INFO - Train step_29680: loss : 0.01910359226167202
+2021-10-14 20:11:43,263 - CPSC2021 - INFO - 
+Train epoch_16:
+--------------------
+train/epoch_loss:        99.49659276730381
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:11:43,266 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:11:43,289 - CPSC2021 - INFO - Checkpoint 16 saved!
+2021-10-14 20:11:44,031 - CPSC2021 - INFO - Train step_29700: loss : 0.09788032621145248
+2021-10-14 20:11:44,370 - CPSC2021 - INFO - Train step_29720: loss : 0.058473020792007446
+2021-10-14 20:11:44,702 - CPSC2021 - INFO - Train step_29740: loss : 0.05709032341837883
+2021-10-14 20:11:45,037 - CPSC2021 - INFO - Train step_29760: loss : 0.04328938573598862
+2021-10-14 20:11:45,375 - CPSC2021 - INFO - Train step_29780: loss : 0.014758334495127201
+2021-10-14 20:11:45,717 - CPSC2021 - INFO - Train step_29800: loss : 0.0402204804122448
+2021-10-14 20:11:46,048 - CPSC2021 - INFO - Train step_29820: loss : 0.024335790425539017
+2021-10-14 20:11:46,372 - CPSC2021 - INFO - Train step_29840: loss : 0.024817584082484245
+2021-10-14 20:11:46,700 - CPSC2021 - INFO - Train step_29860: loss : 0.022219548001885414
+2021-10-14 20:11:47,020 - CPSC2021 - INFO - Train step_29880: loss : 0.061114780604839325
+2021-10-14 20:11:47,334 - CPSC2021 - INFO - Train step_29900: loss : 0.028104428201913834
+2021-10-14 20:11:47,663 - CPSC2021 - INFO - Train step_29920: loss : 0.08111514151096344
+2021-10-14 20:11:47,998 - CPSC2021 - INFO - Train step_29940: loss : 0.022931400686502457
+2021-10-14 20:11:48,332 - CPSC2021 - INFO - Train step_29960: loss : 0.028890417888760567
+2021-10-14 20:11:48,654 - CPSC2021 - INFO - Train step_29980: loss : 0.017256034538149834
+2021-10-14 20:11:48,975 - CPSC2021 - INFO - Train step_30000: loss : 0.0046201604418456554
+2021-10-14 20:11:49,308 - CPSC2021 - INFO - Train step_30020: loss : 0.06984855234622955
+2021-10-14 20:11:49,679 - CPSC2021 - INFO - Train step_30040: loss : 0.019956514239311218
+2021-10-14 20:11:50,051 - CPSC2021 - INFO - Train step_30060: loss : 0.008956964127719402
+2021-10-14 20:11:50,422 - CPSC2021 - INFO - Train step_30080: loss : 0.0405777208507061
+2021-10-14 20:11:50,768 - CPSC2021 - INFO - Train step_30100: loss : 0.16624963283538818
+2021-10-14 20:11:51,106 - CPSC2021 - INFO - Train step_30120: loss : 0.10108338296413422
+2021-10-14 20:11:51,439 - CPSC2021 - INFO - Train step_30140: loss : 0.014070932753384113
+2021-10-14 20:11:51,782 - CPSC2021 - INFO - Train step_30160: loss : 0.01987936533987522
+2021-10-14 20:11:52,124 - CPSC2021 - INFO - Train step_30180: loss : 0.01970864273607731
+2021-10-14 20:11:52,463 - CPSC2021 - INFO - Train step_30200: loss : 0.023154957219958305
+2021-10-14 20:11:52,814 - CPSC2021 - INFO - Train step_30220: loss : 0.02318536676466465
+2021-10-14 20:11:53,148 - CPSC2021 - INFO - Train step_30240: loss : 0.0756518691778183
+2021-10-14 20:11:53,487 - CPSC2021 - INFO - Train step_30260: loss : 0.04904444143176079
+2021-10-14 20:11:53,819 - CPSC2021 - INFO - Train step_30280: loss : 0.028799843043088913
+2021-10-14 20:11:54,151 - CPSC2021 - INFO - Train step_30300: loss : 0.08517632633447647
+2021-10-14 20:11:54,490 - CPSC2021 - INFO - Train step_30320: loss : 0.010876031592488289
+2021-10-14 20:11:54,824 - CPSC2021 - INFO - Train step_30340: loss : 0.11224361509084702
+2021-10-14 20:11:55,164 - CPSC2021 - INFO - Train step_30360: loss : 0.004607826005667448
+2021-10-14 20:11:55,499 - CPSC2021 - INFO - Train step_30380: loss : 0.01567845232784748
+2021-10-14 20:11:55,838 - CPSC2021 - INFO - Train step_30400: loss : 0.07973580807447433
+2021-10-14 20:11:56,176 - CPSC2021 - INFO - Train step_30420: loss : 0.06851183623075485
+2021-10-14 20:11:56,521 - CPSC2021 - INFO - Train step_30440: loss : 0.018241938203573227
+2021-10-14 20:11:56,867 - CPSC2021 - INFO - Train step_30460: loss : 0.0710761696100235
+2021-10-14 20:11:57,209 - CPSC2021 - INFO - Train step_30480: loss : 0.03803713992238045
+2021-10-14 20:11:57,544 - CPSC2021 - INFO - Train step_30500: loss : 0.03364234417676926
+2021-10-14 20:11:57,882 - CPSC2021 - INFO - Train step_30520: loss : 0.03298727795481682
+2021-10-14 20:11:58,228 - CPSC2021 - INFO - Train step_30540: loss : 0.07741370797157288
+2021-10-14 20:11:58,562 - CPSC2021 - INFO - Train step_30560: loss : 0.030061963945627213
+2021-10-14 20:11:58,901 - CPSC2021 - INFO - Train step_30580: loss : 0.05004223808646202
+2021-10-14 20:11:59,247 - CPSC2021 - INFO - Train step_30600: loss : 0.05721765011548996
+2021-10-14 20:11:59,588 - CPSC2021 - INFO - Train step_30620: loss : 0.013008138164877892
+2021-10-14 20:11:59,925 - CPSC2021 - INFO - Train step_30640: loss : 0.006445679347962141
+2021-10-14 20:12:00,267 - CPSC2021 - INFO - Train step_30660: loss : 0.07126303017139435
+2021-10-14 20:12:00,608 - CPSC2021 - INFO - Train step_30680: loss : 0.00764216436073184
+2021-10-14 20:12:00,946 - CPSC2021 - INFO - Train step_30700: loss : 0.03379875421524048
+2021-10-14 20:12:01,290 - CPSC2021 - INFO - Train step_30720: loss : 0.054865576326847076
+2021-10-14 20:12:01,631 - CPSC2021 - INFO - Train step_30740: loss : 0.054159119725227356
+2021-10-14 20:12:01,972 - CPSC2021 - INFO - Train step_30760: loss : 0.009943600744009018
+2021-10-14 20:12:02,316 - CPSC2021 - INFO - Train step_30780: loss : 0.08015058189630508
+2021-10-14 20:12:02,656 - CPSC2021 - INFO - Train step_30800: loss : 0.08074291050434113
+2021-10-14 20:12:02,993 - CPSC2021 - INFO - Train step_30820: loss : 0.038496993482112885
+2021-10-14 20:12:03,337 - CPSC2021 - INFO - Train step_30840: loss : 0.053717274218797684
+2021-10-14 20:12:03,678 - CPSC2021 - INFO - Train step_30860: loss : 0.04724215343594551
+2021-10-14 20:12:04,021 - CPSC2021 - INFO - Train step_30880: loss : 0.040802255272865295
+2021-10-14 20:12:04,360 - CPSC2021 - INFO - Train step_30900: loss : 0.10288096219301224
+2021-10-14 20:12:04,692 - CPSC2021 - INFO - Train step_30920: loss : 0.023808540776371956
+2021-10-14 20:12:05,060 - CPSC2021 - INFO - Train step_30940: loss : 0.057309459894895554
+2021-10-14 20:12:05,429 - CPSC2021 - INFO - Train step_30960: loss : 0.07404417544603348
+2021-10-14 20:12:05,802 - CPSC2021 - INFO - Train step_30980: loss : 0.06593978404998779
+2021-10-14 20:12:06,171 - CPSC2021 - INFO - Train step_31000: loss : 0.08174232393503189
+2021-10-14 20:12:06,536 - CPSC2021 - INFO - Train step_31020: loss : 0.0060753412544727325
+2021-10-14 20:12:06,895 - CPSC2021 - INFO - Train step_31040: loss : 0.03391994535923004
+2021-10-14 20:12:07,266 - CPSC2021 - INFO - Train step_31060: loss : 0.027287891134619713
+2021-10-14 20:12:07,577 - CPSC2021 - INFO - Train step_31080: loss : 0.0687660276889801
+2021-10-14 20:12:07,890 - CPSC2021 - INFO - Train step_31100: loss : 0.06962183117866516
+2021-10-14 20:12:08,209 - CPSC2021 - INFO - Train step_31120: loss : 0.11647190153598785
+2021-10-14 20:12:08,537 - CPSC2021 - INFO - Train step_31140: loss : 0.05718155577778816
+2021-10-14 20:12:08,865 - CPSC2021 - INFO - Train step_31160: loss : 0.097902312874794
+2021-10-14 20:12:09,180 - CPSC2021 - INFO - Train step_31180: loss : 0.05001741647720337
+2021-10-14 20:12:09,518 - CPSC2021 - INFO - Train step_31200: loss : 0.015913784503936768
+2021-10-14 20:12:09,815 - CPSC2021 - INFO - Train step_31220: loss : 0.022317998111248016
+2021-10-14 20:12:10,106 - CPSC2021 - INFO - Train step_31240: loss : 0.026548296213150024
+2021-10-14 20:12:10,393 - CPSC2021 - INFO - Train step_31260: loss : 0.01728803664445877
+2021-10-14 20:12:10,679 - CPSC2021 - INFO - Train step_31280: loss : 0.05844589322805405
+2021-10-14 20:12:11,023 - CPSC2021 - INFO - Train step_31300: loss : 0.02515123412013054
+2021-10-14 20:12:11,391 - CPSC2021 - INFO - Train step_31320: loss : 0.052330177277326584
+2021-10-14 20:12:11,738 - CPSC2021 - INFO - Train step_31340: loss : 0.10052641481161118
+2021-10-14 20:12:12,077 - CPSC2021 - INFO - Train step_31360: loss : 0.17649927735328674
+2021-10-14 20:12:12,417 - CPSC2021 - INFO - Train step_31380: loss : 0.03418740630149841
+2021-10-14 20:12:12,757 - CPSC2021 - INFO - Train step_31400: loss : 0.06580431759357452
+2021-10-14 20:12:13,095 - CPSC2021 - INFO - Train step_31420: loss : 0.03948645666241646
+2021-10-14 20:12:13,441 - CPSC2021 - INFO - Train step_31440: loss : 0.0050338502041995525
+2021-10-14 20:12:13,784 - CPSC2021 - INFO - Train step_31460: loss : 0.04739252105355263
+2021-10-14 20:12:14,123 - CPSC2021 - INFO - Train step_31480: loss : 0.08589345961809158
+2021-10-14 20:12:14,457 - CPSC2021 - INFO - Train step_31500: loss : 0.07563846558332443
+2021-10-14 20:12:14,796 - CPSC2021 - INFO - Train step_31520: loss : 0.04793853312730789
+2021-10-14 20:12:45,408 - CPSC2021 - INFO - 
+Train epoch_17:
+--------------------
+train/epoch_loss:        97.01085703750141
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:12:45,412 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:12:45,436 - CPSC2021 - INFO - Checkpoint 17 saved!
+2021-10-14 20:12:45,914 - CPSC2021 - INFO - Train step_31540: loss : 0.03922971710562706
+2021-10-14 20:12:46,270 - CPSC2021 - INFO - Train step_31560: loss : 0.029593998566269875
+2021-10-14 20:12:46,621 - CPSC2021 - INFO - Train step_31580: loss : 0.06923739612102509
+2021-10-14 20:12:46,973 - CPSC2021 - INFO - Train step_31600: loss : 0.027581049129366875
+2021-10-14 20:12:47,332 - CPSC2021 - INFO - Train step_31620: loss : 0.05394944176077843
+2021-10-14 20:12:47,683 - CPSC2021 - INFO - Train step_31640: loss : 0.037937309592962265
+2021-10-14 20:12:48,003 - CPSC2021 - INFO - Train step_31660: loss : 0.09564009308815002
+2021-10-14 20:12:48,296 - CPSC2021 - INFO - Train step_31680: loss : 0.04529878869652748
+2021-10-14 20:12:48,568 - CPSC2021 - INFO - Train step_31700: loss : 0.021370606496930122
+2021-10-14 20:12:48,847 - CPSC2021 - INFO - Train step_31720: loss : 0.02392256073653698
+2021-10-14 20:12:49,130 - CPSC2021 - INFO - Train step_31740: loss : 0.002096673473715782
+2021-10-14 20:12:49,419 - CPSC2021 - INFO - Train step_31760: loss : 0.009159913286566734
+2021-10-14 20:12:49,703 - CPSC2021 - INFO - Train step_31780: loss : 0.1574457883834839
+2021-10-14 20:12:50,024 - CPSC2021 - INFO - Train step_31800: loss : 0.0592326745390892
+2021-10-14 20:12:50,347 - CPSC2021 - INFO - Train step_31820: loss : 0.048769596964120865
+2021-10-14 20:12:50,685 - CPSC2021 - INFO - Train step_31840: loss : 0.022927643731236458
+2021-10-14 20:12:51,022 - CPSC2021 - INFO - Train step_31860: loss : 0.02924780547618866
+2021-10-14 20:12:51,354 - CPSC2021 - INFO - Train step_31880: loss : 0.06254835426807404
+2021-10-14 20:12:51,695 - CPSC2021 - INFO - Train step_31900: loss : 0.002295054029673338
+2021-10-14 20:12:52,023 - CPSC2021 - INFO - Train step_31920: loss : 0.038751620799303055
+2021-10-14 20:12:52,365 - CPSC2021 - INFO - Train step_31940: loss : 0.020255427807569504
+2021-10-14 20:12:52,692 - CPSC2021 - INFO - Train step_31960: loss : 0.05832859128713608
+2021-10-14 20:12:53,027 - CPSC2021 - INFO - Train step_31980: loss : 0.05405891314148903
+2021-10-14 20:12:53,359 - CPSC2021 - INFO - Train step_32000: loss : 0.030247673392295837
+2021-10-14 20:12:53,686 - CPSC2021 - INFO - Train step_32020: loss : 0.08614664524793625
+2021-10-14 20:12:54,013 - CPSC2021 - INFO - Train step_32040: loss : 0.019477790221571922
+2021-10-14 20:12:54,343 - CPSC2021 - INFO - Train step_32060: loss : 0.026845857501029968
+2021-10-14 20:12:54,672 - CPSC2021 - INFO - Train step_32080: loss : 0.04717210307717323
+2021-10-14 20:12:55,005 - CPSC2021 - INFO - Train step_32100: loss : 0.05789974704384804
+2021-10-14 20:12:55,340 - CPSC2021 - INFO - Train step_32120: loss : 0.004716090392321348
+2021-10-14 20:12:55,678 - CPSC2021 - INFO - Train step_32140: loss : 0.027644135057926178
+2021-10-14 20:12:56,028 - CPSC2021 - INFO - Train step_32160: loss : 0.027610663324594498
+2021-10-14 20:12:56,366 - CPSC2021 - INFO - Train step_32180: loss : 0.08233052492141724
+2021-10-14 20:12:56,708 - CPSC2021 - INFO - Train step_32200: loss : 0.011163515038788319
+2021-10-14 20:12:57,047 - CPSC2021 - INFO - Train step_32220: loss : 0.010369432158768177
+2021-10-14 20:12:57,386 - CPSC2021 - INFO - Train step_32240: loss : 0.049024853855371475
+2021-10-14 20:12:57,725 - CPSC2021 - INFO - Train step_32260: loss : 0.2101244181394577
+2021-10-14 20:12:58,069 - CPSC2021 - INFO - Train step_32280: loss : 0.05572088062763214
+2021-10-14 20:12:58,396 - CPSC2021 - INFO - Train step_32300: loss : 0.088547483086586
+2021-10-14 20:12:58,709 - CPSC2021 - INFO - Train step_32320: loss : 0.10600679367780685
+2021-10-14 20:12:58,996 - CPSC2021 - INFO - Train step_32340: loss : 0.029621658846735954
+2021-10-14 20:12:59,278 - CPSC2021 - INFO - Train step_32360: loss : 0.031221725046634674
+2021-10-14 20:12:59,591 - CPSC2021 - INFO - Train step_32380: loss : 0.013483921065926552
+2021-10-14 20:12:59,928 - CPSC2021 - INFO - Train step_32400: loss : 0.02958899922668934
+2021-10-14 20:13:00,266 - CPSC2021 - INFO - Train step_32420: loss : 0.1112503781914711
+2021-10-14 20:13:00,612 - CPSC2021 - INFO - Train step_32440: loss : 0.03439556062221527
+2021-10-14 20:13:00,956 - CPSC2021 - INFO - Train step_32460: loss : 0.0351741760969162
+2021-10-14 20:13:01,308 - CPSC2021 - INFO - Train step_32480: loss : 0.07945094257593155
+2021-10-14 20:13:01,660 - CPSC2021 - INFO - Train step_32500: loss : 0.047330278903245926
+2021-10-14 20:13:01,939 - CPSC2021 - INFO - Train step_32520: loss : 0.05019272118806839
+2021-10-14 20:13:02,235 - CPSC2021 - INFO - Train step_32540: loss : 0.03661604970693588
+2021-10-14 20:13:02,566 - CPSC2021 - INFO - Train step_32560: loss : 0.09214344620704651
+2021-10-14 20:13:02,903 - CPSC2021 - INFO - Train step_32580: loss : 0.022557813674211502
+2021-10-14 20:13:03,249 - CPSC2021 - INFO - Train step_32600: loss : 0.017444120720028877
+2021-10-14 20:13:03,588 - CPSC2021 - INFO - Train step_32620: loss : 0.05770023539662361
+2021-10-14 20:13:03,937 - CPSC2021 - INFO - Train step_32640: loss : 0.04602927714586258
+2021-10-14 20:13:04,283 - CPSC2021 - INFO - Train step_32660: loss : 0.04456820711493492
+2021-10-14 20:13:04,621 - CPSC2021 - INFO - Train step_32680: loss : 0.01323569193482399
+2021-10-14 20:13:04,948 - CPSC2021 - INFO - Train step_32700: loss : 0.08080390840768814
+2021-10-14 20:13:05,277 - CPSC2021 - INFO - Train step_32720: loss : 0.04784829169511795
+2021-10-14 20:13:05,611 - CPSC2021 - INFO - Train step_32740: loss : 0.060813650488853455
+2021-10-14 20:13:05,950 - CPSC2021 - INFO - Train step_32760: loss : 0.04969112202525139
+2021-10-14 20:13:06,282 - CPSC2021 - INFO - Train step_32780: loss : 0.05750161409378052
+2021-10-14 20:13:06,612 - CPSC2021 - INFO - Train step_32800: loss : 0.030215537175536156
+2021-10-14 20:13:06,948 - CPSC2021 - INFO - Train step_32820: loss : 0.03157104179263115
+2021-10-14 20:13:07,281 - CPSC2021 - INFO - Train step_32840: loss : 0.06614164263010025
+2021-10-14 20:13:07,612 - CPSC2021 - INFO - Train step_32860: loss : 0.02727595344185829
+2021-10-14 20:13:07,852 - CPSC2021 - INFO - Train step_32880: loss : 0.06346619874238968
+2021-10-14 20:13:08,142 - CPSC2021 - INFO - Train step_32900: loss : 0.012513224966824055
+2021-10-14 20:13:08,477 - CPSC2021 - INFO - Train step_32920: loss : 0.0414486825466156
+2021-10-14 20:13:08,815 - CPSC2021 - INFO - Train step_32940: loss : 0.021004697307944298
+2021-10-14 20:13:09,147 - CPSC2021 - INFO - Train step_32960: loss : 0.11551473289728165
+2021-10-14 20:13:09,485 - CPSC2021 - INFO - Train step_32980: loss : 0.018035514280200005
+2021-10-14 20:13:09,829 - CPSC2021 - INFO - Train step_33000: loss : 0.005483065731823444
+2021-10-14 20:13:10,171 - CPSC2021 - INFO - Train step_33020: loss : 0.12824638187885284
+2021-10-14 20:13:10,532 - CPSC2021 - INFO - Train step_33040: loss : 0.015156869776546955
+2021-10-14 20:13:10,886 - CPSC2021 - INFO - Train step_33060: loss : 0.07129409164190292
+2021-10-14 20:13:11,231 - CPSC2021 - INFO - Train step_33080: loss : 0.008737036027014256
+2021-10-14 20:13:11,582 - CPSC2021 - INFO - Train step_33100: loss : 0.02490980736911297
+2021-10-14 20:13:11,933 - CPSC2021 - INFO - Train step_33120: loss : 0.02638969197869301
+2021-10-14 20:13:12,286 - CPSC2021 - INFO - Train step_33140: loss : 0.12175191938877106
+2021-10-14 20:13:12,636 - CPSC2021 - INFO - Train step_33160: loss : 0.08497481048107147
+2021-10-14 20:13:12,989 - CPSC2021 - INFO - Train step_33180: loss : 0.04329864680767059
+2021-10-14 20:13:13,340 - CPSC2021 - INFO - Train step_33200: loss : 0.08777110278606415
+2021-10-14 20:13:13,694 - CPSC2021 - INFO - Train step_33220: loss : 0.03619025647640228
+2021-10-14 20:13:14,040 - CPSC2021 - INFO - Train step_33240: loss : 0.018952714279294014
+2021-10-14 20:13:14,387 - CPSC2021 - INFO - Train step_33260: loss : 0.05945577099919319
+2021-10-14 20:13:14,730 - CPSC2021 - INFO - Train step_33280: loss : 0.07251765578985214
+2021-10-14 20:13:15,068 - CPSC2021 - INFO - Train step_33300: loss : 0.11768029630184174
+2021-10-14 20:13:15,402 - CPSC2021 - INFO - Train step_33320: loss : 0.01736696995794773
+2021-10-14 20:13:15,740 - CPSC2021 - INFO - Train step_33340: loss : 0.0189609844237566
+2021-10-14 20:13:16,079 - CPSC2021 - INFO - Train step_33360: loss : 0.029053378850221634
+2021-10-14 20:13:16,416 - CPSC2021 - INFO - Train step_33380: loss : 0.03627890720963478
+2021-10-14 20:13:46,767 - CPSC2021 - INFO - 
+Train epoch_18:
+--------------------
+train/epoch_loss:        87.72927435231395
+train/task_metric_rr_score:       73129
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:13:46,771 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:13:46,794 - CPSC2021 - INFO - Checkpoint 18 saved!
+2021-10-14 20:13:47,370 - CPSC2021 - INFO - Train step_33400: loss : 0.050738781690597534
+2021-10-14 20:13:47,724 - CPSC2021 - INFO - Train step_33420: loss : 0.044991038739681244
+2021-10-14 20:13:48,075 - CPSC2021 - INFO - Train step_33440: loss : 0.030388398095965385
+2021-10-14 20:13:48,426 - CPSC2021 - INFO - Train step_33460: loss : 0.035483330488204956
+2021-10-14 20:13:48,777 - CPSC2021 - INFO - Train step_33480: loss : 0.01757163181900978
+2021-10-14 20:13:49,129 - CPSC2021 - INFO - Train step_33500: loss : 0.11905369907617569
+2021-10-14 20:13:49,480 - CPSC2021 - INFO - Train step_33520: loss : 0.0690729171037674
+2021-10-14 20:13:49,830 - CPSC2021 - INFO - Train step_33540: loss : 0.02670382522046566
+2021-10-14 20:13:50,184 - CPSC2021 - INFO - Train step_33560: loss : 0.028202589601278305
+2021-10-14 20:13:50,533 - CPSC2021 - INFO - Train step_33580: loss : 0.04417610913515091
+2021-10-14 20:13:50,886 - CPSC2021 - INFO - Train step_33600: loss : 0.04552633687853813
+2021-10-14 20:13:51,237 - CPSC2021 - INFO - Train step_33620: loss : 0.08994266390800476
+2021-10-14 20:13:51,588 - CPSC2021 - INFO - Train step_33640: loss : 0.024271707981824875
+2021-10-14 20:13:51,938 - CPSC2021 - INFO - Train step_33660: loss : 0.023203054443001747
+2021-10-14 20:13:52,291 - CPSC2021 - INFO - Train step_33680: loss : 0.053207073360681534
+2021-10-14 20:13:52,643 - CPSC2021 - INFO - Train step_33700: loss : 0.025323590263724327
+2021-10-14 20:13:52,993 - CPSC2021 - INFO - Train step_33720: loss : 0.257503479719162
+2021-10-14 20:13:53,355 - CPSC2021 - INFO - Train step_33740: loss : 0.08762643486261368
+2021-10-14 20:13:53,706 - CPSC2021 - INFO - Train step_33760: loss : 0.14229096472263336
+2021-10-14 20:13:54,060 - CPSC2021 - INFO - Train step_33780: loss : 0.04222184419631958
+2021-10-14 20:13:54,408 - CPSC2021 - INFO - Train step_33800: loss : 0.03936136141419411
+2021-10-14 20:13:54,760 - CPSC2021 - INFO - Train step_33820: loss : 0.033777832984924316
+2021-10-14 20:13:55,109 - CPSC2021 - INFO - Train step_33840: loss : 0.12196633964776993
+2021-10-14 20:13:55,460 - CPSC2021 - INFO - Train step_33860: loss : 0.01630435511469841
+2021-10-14 20:13:55,814 - CPSC2021 - INFO - Train step_33880: loss : 0.04302483797073364
+2021-10-14 20:13:56,166 - CPSC2021 - INFO - Train step_33900: loss : 0.052127253264188766
+2021-10-14 20:13:56,522 - CPSC2021 - INFO - Train step_33920: loss : 0.2764984965324402
+2021-10-14 20:13:56,880 - CPSC2021 - INFO - Train step_33940: loss : 0.01899515464901924
+2021-10-14 20:13:57,231 - CPSC2021 - INFO - Train step_33960: loss : 0.0395519845187664
+2021-10-14 20:13:57,583 - CPSC2021 - INFO - Train step_33980: loss : 0.10439077019691467
+2021-10-14 20:13:57,933 - CPSC2021 - INFO - Train step_34000: loss : 0.014279766008257866
+2021-10-14 20:13:58,283 - CPSC2021 - INFO - Train step_34020: loss : 0.06739340722560883
+2021-10-14 20:13:58,636 - CPSC2021 - INFO - Train step_34040: loss : 0.09858289361000061
+2021-10-14 20:13:58,986 - CPSC2021 - INFO - Train step_34060: loss : 0.04342234879732132
+2021-10-14 20:13:59,330 - CPSC2021 - INFO - Train step_34080: loss : 0.041546933352947235
+2021-10-14 20:13:59,681 - CPSC2021 - INFO - Train step_34100: loss : 0.11182653903961182
+2021-10-14 20:14:00,025 - CPSC2021 - INFO - Train step_34120: loss : 0.02426634542644024
+2021-10-14 20:14:00,364 - CPSC2021 - INFO - Train step_34140: loss : 0.031048264354467392
+2021-10-14 20:14:00,711 - CPSC2021 - INFO - Train step_34160: loss : 0.026749728247523308
+2021-10-14 20:14:01,059 - CPSC2021 - INFO - Train step_34180: loss : 0.027033278718590736
+2021-10-14 20:14:01,405 - CPSC2021 - INFO - Train step_34200: loss : 0.05651160329580307
+2021-10-14 20:14:01,755 - CPSC2021 - INFO - Train step_34220: loss : 0.014005228877067566
+2021-10-14 20:14:02,099 - CPSC2021 - INFO - Train step_34240: loss : 0.007212891709059477
+2021-10-14 20:14:02,451 - CPSC2021 - INFO - Train step_34260: loss : 0.02182583697140217
+2021-10-14 20:14:02,795 - CPSC2021 - INFO - Train step_34280: loss : 0.024094481021165848
+2021-10-14 20:14:03,143 - CPSC2021 - INFO - Train step_34300: loss : 0.03858217969536781
+2021-10-14 20:14:03,492 - CPSC2021 - INFO - Train step_34320: loss : 0.02171260491013527
+2021-10-14 20:14:03,840 - CPSC2021 - INFO - Train step_34340: loss : 0.0781153216958046
+2021-10-14 20:14:04,187 - CPSC2021 - INFO - Train step_34360: loss : 0.1319700926542282
+2021-10-14 20:14:04,538 - CPSC2021 - INFO - Train step_34380: loss : 0.04350520297884941
+2021-10-14 20:14:04,884 - CPSC2021 - INFO - Train step_34400: loss : 0.07177985459566116
+2021-10-14 20:14:05,232 - CPSC2021 - INFO - Train step_34420: loss : 0.07943181693553925
+2021-10-14 20:14:05,583 - CPSC2021 - INFO - Train step_34440: loss : 0.07460322976112366
+2021-10-14 20:14:05,917 - CPSC2021 - INFO - Train step_34460: loss : 0.06758227944374084
+2021-10-14 20:14:06,245 - CPSC2021 - INFO - Train step_34480: loss : 0.21271640062332153
+2021-10-14 20:14:06,575 - CPSC2021 - INFO - Train step_34500: loss : 0.05531593784689903
+2021-10-14 20:14:06,904 - CPSC2021 - INFO - Train step_34520: loss : 0.032316096127033234
+2021-10-14 20:14:07,235 - CPSC2021 - INFO - Train step_34540: loss : 0.13012844324111938
+2021-10-14 20:14:07,563 - CPSC2021 - INFO - Train step_34560: loss : 0.033046185970306396
+2021-10-14 20:14:07,893 - CPSC2021 - INFO - Train step_34580: loss : 0.04162563756108284
+2021-10-14 20:14:08,224 - CPSC2021 - INFO - Train step_34600: loss : 0.06399249285459518
+2021-10-14 20:14:08,561 - CPSC2021 - INFO - Train step_34620: loss : 0.016435185447335243
+2021-10-14 20:14:08,892 - CPSC2021 - INFO - Train step_34640: loss : 0.0517580546438694
+2021-10-14 20:14:09,223 - CPSC2021 - INFO - Train step_34660: loss : 0.05200294405221939
+2021-10-14 20:14:09,565 - CPSC2021 - INFO - Train step_34680: loss : 0.02388213761150837
+2021-10-14 20:14:09,902 - CPSC2021 - INFO - Train step_34700: loss : 0.021087689325213432
+2021-10-14 20:14:10,234 - CPSC2021 - INFO - Train step_34720: loss : 0.04086475074291229
+2021-10-14 20:14:10,563 - CPSC2021 - INFO - Train step_34740: loss : 0.09973764419555664
+2021-10-14 20:14:10,891 - CPSC2021 - INFO - Train step_34760: loss : 0.04829799011349678
+2021-10-14 20:14:11,219 - CPSC2021 - INFO - Train step_34780: loss : 0.03132474049925804
+2021-10-14 20:14:11,549 - CPSC2021 - INFO - Train step_34800: loss : 0.051659416407346725
+2021-10-14 20:14:11,881 - CPSC2021 - INFO - Train step_34820: loss : 0.06575582921504974
+2021-10-14 20:14:12,216 - CPSC2021 - INFO - Train step_34840: loss : 0.005811742041260004
+2021-10-14 20:14:12,542 - CPSC2021 - INFO - Train step_34860: loss : 0.09963058680295944
+2021-10-14 20:14:12,869 - CPSC2021 - INFO - Train step_34880: loss : 0.01338297687470913
+2021-10-14 20:14:13,203 - CPSC2021 - INFO - Train step_34900: loss : 0.09071087092161179
+2021-10-14 20:14:13,531 - CPSC2021 - INFO - Train step_34920: loss : 0.026097580790519714
+2021-10-14 20:14:13,870 - CPSC2021 - INFO - Train step_34940: loss : 0.06463661789894104
+2021-10-14 20:14:14,206 - CPSC2021 - INFO - Train step_34960: loss : 0.0235812459141016
+2021-10-14 20:14:14,532 - CPSC2021 - INFO - Train step_34980: loss : 0.03632053732872009
+2021-10-14 20:14:14,877 - CPSC2021 - INFO - Train step_35000: loss : 0.023752698674798012
+2021-10-14 20:14:15,230 - CPSC2021 - INFO - Train step_35020: loss : 0.10448630899190903
+2021-10-14 20:14:15,581 - CPSC2021 - INFO - Train step_35040: loss : 0.08921617269515991
+2021-10-14 20:14:15,923 - CPSC2021 - INFO - Train step_35060: loss : 0.006156246177852154
+2021-10-14 20:14:16,250 - CPSC2021 - INFO - Train step_35080: loss : 0.022119300439953804
+2021-10-14 20:14:16,583 - CPSC2021 - INFO - Train step_35100: loss : 0.013881552964448929
+2021-10-14 20:14:16,917 - CPSC2021 - INFO - Train step_35120: loss : 0.026383396238088608
+2021-10-14 20:14:17,271 - CPSC2021 - INFO - Train step_35140: loss : 0.008080211468040943
+2021-10-14 20:14:17,615 - CPSC2021 - INFO - Train step_35160: loss : 0.0438295416533947
+2021-10-14 20:14:17,977 - CPSC2021 - INFO - Train step_35180: loss : 0.02660934254527092
+2021-10-14 20:14:18,328 - CPSC2021 - INFO - Train step_35200: loss : 0.01985725574195385
+2021-10-14 20:14:18,676 - CPSC2021 - INFO - Train step_35220: loss : 0.0706559345126152
+2021-10-14 20:14:19,032 - CPSC2021 - INFO - Train step_35240: loss : 0.0026138152461498976
+2021-10-14 20:14:48,997 - CPSC2021 - INFO - 
+Train epoch_19:
+--------------------
+train/epoch_loss:        85.22543814918026
+train/task_metric_rr_score:       73131.0
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:14:49,000 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:14:49,024 - CPSC2021 - INFO - Checkpoint 19 saved!
+2021-10-14 20:14:49,679 - CPSC2021 - INFO - Train step_35260: loss : 0.020098993554711342
+2021-10-14 20:14:50,031 - CPSC2021 - INFO - Train step_35280: loss : 0.1628396064043045
+2021-10-14 20:14:50,387 - CPSC2021 - INFO - Train step_35300: loss : 0.012081747874617577
+2021-10-14 20:14:50,744 - CPSC2021 - INFO - Train step_35320: loss : 0.07488621771335602
+2021-10-14 20:14:51,096 - CPSC2021 - INFO - Train step_35340: loss : 0.019647790119051933
+2021-10-14 20:14:51,449 - CPSC2021 - INFO - Train step_35360: loss : 0.05198676139116287
+2021-10-14 20:14:51,806 - CPSC2021 - INFO - Train step_35380: loss : 0.027567153796553612
+2021-10-14 20:14:52,160 - CPSC2021 - INFO - Train step_35400: loss : 0.017276087775826454
+2021-10-14 20:14:52,517 - CPSC2021 - INFO - Train step_35420: loss : 0.010488385334610939
+2021-10-14 20:14:52,878 - CPSC2021 - INFO - Train step_35440: loss : 0.05887177214026451
+2021-10-14 20:14:53,239 - CPSC2021 - INFO - Train step_35460: loss : 0.043078552931547165
+2021-10-14 20:14:53,601 - CPSC2021 - INFO - Train step_35480: loss : 0.03333042189478874
+2021-10-14 20:14:53,953 - CPSC2021 - INFO - Train step_35500: loss : 0.0525907464325428
+2021-10-14 20:14:54,306 - CPSC2021 - INFO - Train step_35520: loss : 0.06249420717358589
+2021-10-14 20:14:54,667 - CPSC2021 - INFO - Train step_35540: loss : 0.05385800078511238
+2021-10-14 20:14:54,992 - CPSC2021 - INFO - Train step_35560: loss : 0.027898099273443222
+2021-10-14 20:14:55,329 - CPSC2021 - INFO - Train step_35580: loss : 0.14036183059215546
+2021-10-14 20:14:55,668 - CPSC2021 - INFO - Train step_35600: loss : 0.06130132079124451
+2021-10-14 20:14:55,998 - CPSC2021 - INFO - Train step_35620: loss : 0.012975514866411686
+2021-10-14 20:14:56,325 - CPSC2021 - INFO - Train step_35640: loss : 0.12036541849374771
+2021-10-14 20:14:56,660 - CPSC2021 - INFO - Train step_35660: loss : 0.013913346454501152
+2021-10-14 20:14:56,985 - CPSC2021 - INFO - Train step_35680: loss : 0.014884833246469498
+2021-10-14 20:14:57,318 - CPSC2021 - INFO - Train step_35700: loss : 0.050054289400577545
+2021-10-14 20:14:57,641 - CPSC2021 - INFO - Train step_35720: loss : 0.03001280128955841
+2021-10-14 20:14:57,958 - CPSC2021 - INFO - Train step_35740: loss : 0.0873614028096199
+2021-10-14 20:14:58,282 - CPSC2021 - INFO - Train step_35760: loss : 0.012479143217206001
+2021-10-14 20:14:58,605 - CPSC2021 - INFO - Train step_35780: loss : 0.044926244765520096
+2021-10-14 20:14:58,935 - CPSC2021 - INFO - Train step_35800: loss : 0.029948964715003967
+2021-10-14 20:14:59,256 - CPSC2021 - INFO - Train step_35820: loss : 0.03183777257800102
+2021-10-14 20:14:59,585 - CPSC2021 - INFO - Train step_35840: loss : 0.02635762467980385
+2021-10-14 20:14:59,930 - CPSC2021 - INFO - Train step_35860: loss : 0.009337878786027431
+2021-10-14 20:15:00,282 - CPSC2021 - INFO - Train step_35880: loss : 0.11360208690166473
+2021-10-14 20:15:00,623 - CPSC2021 - INFO - Train step_35900: loss : 0.034177932888269424
+2021-10-14 20:15:00,945 - CPSC2021 - INFO - Train step_35920: loss : 0.00899132713675499
+2021-10-14 20:15:01,278 - CPSC2021 - INFO - Train step_35940: loss : 0.007908398285508156
+2021-10-14 20:15:01,601 - CPSC2021 - INFO - Train step_35960: loss : 0.08985714614391327
+2021-10-14 20:15:01,934 - CPSC2021 - INFO - Train step_35980: loss : 0.01765109784901142
+2021-10-14 20:15:02,266 - CPSC2021 - INFO - Train step_36000: loss : 0.054895173758268356
+2021-10-14 20:15:02,599 - CPSC2021 - INFO - Train step_36020: loss : 0.043176621198654175
+2021-10-14 20:15:02,928 - CPSC2021 - INFO - Train step_36040: loss : 0.018829653039574623
+2021-10-14 20:15:03,261 - CPSC2021 - INFO - Train step_36060: loss : 0.143885999917984
+2021-10-14 20:15:03,591 - CPSC2021 - INFO - Train step_36080: loss : 0.02505374513566494
+2021-10-14 20:15:03,928 - CPSC2021 - INFO - Train step_36100: loss : 0.050645433366298676
+2021-10-14 20:15:04,267 - CPSC2021 - INFO - Train step_36120: loss : 0.03846946731209755
+2021-10-14 20:15:04,602 - CPSC2021 - INFO - Train step_36140: loss : 0.026591364294290543
+2021-10-14 20:15:04,937 - CPSC2021 - INFO - Train step_36160: loss : 0.07692857086658478
+2021-10-14 20:15:05,264 - CPSC2021 - INFO - Train step_36180: loss : 0.008015372790396214
+2021-10-14 20:15:05,591 - CPSC2021 - INFO - Train step_36200: loss : 0.03457847237586975
+2021-10-14 20:15:05,925 - CPSC2021 - INFO - Train step_36220: loss : 0.008792820386588573
+2021-10-14 20:15:06,259 - CPSC2021 - INFO - Train step_36240: loss : 0.053434859961271286
+2021-10-14 20:15:06,585 - CPSC2021 - INFO - Train step_36260: loss : 0.05723180994391441
+2021-10-14 20:15:06,918 - CPSC2021 - INFO - Train step_36280: loss : 0.20522281527519226
+2021-10-14 20:15:07,248 - CPSC2021 - INFO - Train step_36300: loss : 0.03518008440732956
+2021-10-14 20:15:07,580 - CPSC2021 - INFO - Train step_36320: loss : 0.02620777115225792
+2021-10-14 20:15:07,911 - CPSC2021 - INFO - Train step_36340: loss : 0.006265551317483187
+2021-10-14 20:15:08,245 - CPSC2021 - INFO - Train step_36360: loss : 0.008266156539320946
+2021-10-14 20:15:08,575 - CPSC2021 - INFO - Train step_36380: loss : 0.02764851599931717
+2021-10-14 20:15:08,917 - CPSC2021 - INFO - Train step_36400: loss : 0.07752808928489685
+2021-10-14 20:15:09,252 - CPSC2021 - INFO - Train step_36420: loss : 0.03571219742298126
+2021-10-14 20:15:09,596 - CPSC2021 - INFO - Train step_36440: loss : 0.03855304419994354
+2021-10-14 20:15:09,945 - CPSC2021 - INFO - Train step_36460: loss : 0.03523187339305878
+2021-10-14 20:15:10,293 - CPSC2021 - INFO - Train step_36480: loss : 0.024882540106773376
+2021-10-14 20:15:10,619 - CPSC2021 - INFO - Train step_36500: loss : 0.012169990688562393
+2021-10-14 20:15:10,952 - CPSC2021 - INFO - Train step_36520: loss : 0.011226881295442581
+2021-10-14 20:15:11,282 - CPSC2021 - INFO - Train step_36540: loss : 0.08609513193368912
+2021-10-14 20:15:11,614 - CPSC2021 - INFO - Train step_36560: loss : 0.07473035156726837
+2021-10-14 20:15:11,949 - CPSC2021 - INFO - Train step_36580: loss : 0.013664526864886284
+2021-10-14 20:15:12,285 - CPSC2021 - INFO - Train step_36600: loss : 0.030323907732963562
+2021-10-14 20:15:12,612 - CPSC2021 - INFO - Train step_36620: loss : 0.032681725919246674
+2021-10-14 20:15:12,941 - CPSC2021 - INFO - Train step_36640: loss : 0.03328529745340347
+2021-10-14 20:15:13,269 - CPSC2021 - INFO - Train step_36660: loss : 0.0057188645005226135
+2021-10-14 20:15:13,602 - CPSC2021 - INFO - Train step_36680: loss : 0.04483401030302048
+2021-10-14 20:15:13,932 - CPSC2021 - INFO - Train step_36700: loss : 0.03554880619049072
+2021-10-14 20:15:14,267 - CPSC2021 - INFO - Train step_36720: loss : 0.03370361775159836
+2021-10-14 20:15:14,598 - CPSC2021 - INFO - Train step_36740: loss : 0.027341725304722786
+2021-10-14 20:15:14,944 - CPSC2021 - INFO - Train step_36760: loss : 0.013017524033784866
+2021-10-14 20:15:15,298 - CPSC2021 - INFO - Train step_36780: loss : 0.03798266500234604
+2021-10-14 20:15:15,656 - CPSC2021 - INFO - Train step_36800: loss : 0.024625606834888458
+2021-10-14 20:15:15,990 - CPSC2021 - INFO - Train step_36820: loss : 0.1359642595052719
+2021-10-14 20:15:16,322 - CPSC2021 - INFO - Train step_36840: loss : 0.030927354469895363
+2021-10-14 20:15:16,658 - CPSC2021 - INFO - Train step_36860: loss : 0.0628436729311943
+2021-10-14 20:15:17,009 - CPSC2021 - INFO - Train step_36880: loss : 0.012866358272731304
+2021-10-14 20:15:17,362 - CPSC2021 - INFO - Train step_36900: loss : 0.045843444764614105
+2021-10-14 20:15:17,707 - CPSC2021 - INFO - Train step_36920: loss : 0.007589931599795818
+2021-10-14 20:15:18,064 - CPSC2021 - INFO - Train step_36940: loss : 0.13289935886859894
+2021-10-14 20:15:18,408 - CPSC2021 - INFO - Train step_36960: loss : 0.01915084756910801
+2021-10-14 20:15:18,748 - CPSC2021 - INFO - Train step_36980: loss : 0.04635130986571312
+2021-10-14 20:15:19,105 - CPSC2021 - INFO - Train step_37000: loss : 0.021802740171551704
+2021-10-14 20:15:19,461 - CPSC2021 - INFO - Train step_37020: loss : 0.030216220766305923
+2021-10-14 20:15:19,793 - CPSC2021 - INFO - Train step_37040: loss : 0.012270927429199219
+2021-10-14 20:15:20,144 - CPSC2021 - INFO - Train step_37060: loss : 0.009718856774270535
+2021-10-14 20:15:20,482 - CPSC2021 - INFO - Train step_37080: loss : 0.0641588643193245
+2021-10-14 20:15:20,824 - CPSC2021 - INFO - Train step_37100: loss : 0.00264372443780303
+2021-10-14 20:15:50,801 - CPSC2021 - INFO - 
+Train epoch_20:
+--------------------
+train/epoch_loss:        80.95371686550789
+train/task_metric_rr_score:       73145.0
+
+test/task_metric_rr_score:    16243
+---------------------------------
+
+2021-10-14 20:15:50,806 - CPSC2021 - INFO - 
+best metric = 16243,
+obtained at epoch 1
+
+2021-10-14 20:15:50,830 - CPSC2021 - INFO - Checkpoint 20 saved!
+2021-10-14 20:15:50,839 - CPSC2021 - INFO - Best model saved to /home/wenhao/Jupyter/wenhao/workspace/cpsc2021/saved_models/BestModel_rr_lstm_RR_LSTM_CPSC2021_epoch_10-14_20-15_metric_16243.00.pth.tar!
