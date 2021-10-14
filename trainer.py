@@ -528,8 +528,8 @@ def evaluate(model:nn.Module,
         eval_res = compute_rr_metric(all_labels, all_preds)
         eval_res = {"rr_score": eval_res}  # to dict
     elif config.task == "main":
-        all_preds = np.array([]).reshape((0, config[config.task].input_len))
-        all_labels = np.array([]).reshape((0, config[config.task].input_len))
+        all_preds = np.array([]).reshape((0, config.main.input_len//config.main.reduction))
+        all_labels = np.array([]).reshape((0, config.main.input_len//config.main.reduction))
         for signals, labels, weight_masks in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
             labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
