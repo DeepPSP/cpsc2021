@@ -11,6 +11,7 @@ from typing import Union, Optional, Sequence
 from numbers import Real
 
 import numpy as np
+import torch
 
 from .misc import mask_to_intervals
 
@@ -220,3 +221,34 @@ def compute_main_task_metric(mask_truths:Sequence[Union[np.ndarray,Sequence[int]
     ])
     score += sum([0==len(t)==len(p) for t, p in zip(af_episode_truths, af_episode_preds)])
     return score
+
+
+
+# class WeightedBoundaryLoss(nn.Module):
+#     """
+#     """
+#     __name__ = "WeightedBoundaryLoss"
+
+#     def __init__(self, weight_map:Dict[int,Real], sigma:Real, w:Real) -> NoReturn:
+#         """
+#         """
+#         self.weight_map = weight_map
+#         self.sigma = sigma
+#         self.w = w
+
+#     def forward(self, input:Tensor, target:Tensor) -> Tensor:
+#         """
+#         """
+#         _device = input.device
+#         _dtype = input.dtype
+#         weight_mask = torch.zeros_like(input, dtype=_dtype, device=_device)
+#         if target.shape[-1] == 1:
+#             w = torch.full_like(input, self.weight_map[0], dtype=_dtype, device=_device)
+#             weight_mask.add_((target < 0.5)*w)
+#             w = torch.full_like(input, self.weight_map[1], dtype=_dtype, device=_device)
+#             weight_mask.add_((target > 0.5)*w)
+#         else:
+#             for i in range(input.shape[-1]):
+#                 w = torch.full(input.shape[:-1], self.weight_map[i], dtype=_dtype, device=_device)
+#                 weight_mask[...,i].add_((target[...,i] > 0.5)*w)
+        
