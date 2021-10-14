@@ -25,6 +25,7 @@ from torch_ecg.torch_ecg.models.rr_lstm import RR_LSTM
 from cfg import ModelCfg
 from signal_processing.ecg_preproc import merge_rpeaks
 from utils.misc import mask_to_intervals
+from utils.utils_interval import intervals_union
 
 
 __all__ = [
@@ -65,8 +66,8 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
     def inference(self,
                   input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
-                  **kwargs:Any) -> Any:
-        """ NOT finished, NOT checked,
+                  **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
+        """ finished, NOT checked,
 
         Parameters
         ----------
@@ -85,7 +86,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
     def inference_CPSC2021(self,
                            input:Union[Sequence[float],np.ndarray,Tensor],
                            bin_pred_thr:float=0.5,
-                           **kwargs:Any) -> Any:
+                           **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
         """
         alias for `self.inference`
         """
@@ -98,7 +99,6 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
                                  duration_thr:int=4*16,
                                  dist_thr:Union[int,Sequence[int]]=200,) -> Tuple[np.ndarray, List[np.ndarray]]:
         """ finished, checked,
-        auxiliary function to `forward`, for CPSC2021,
 
         NOTE: each segment of input be better filtered using `_remove_spikes_naive`,
         and normalized to a suitable mean and std
@@ -131,7 +131,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         _input = torch.as_tensor(input, dtype=_dtype, device=_device)
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
-        batch_size, channels, seq_len = _input.shape
+        # batch_size, channels, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -145,14 +145,34 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
             duration_thr=duration_thr,
             dist_thr=dist_thr
         )
-
         return pred, rpeaks
 
     @torch.no_grad()
     def _inference_main_task(self,
                              input:Union[Sequence[float],np.ndarray,Tensor],
-                             bin_pred_thr:float=0.5) -> Any:
-        """ NOT finished, NOT checked,
+                             bin_pred_thr:float=0.5,
+                             rpeaks:Optional[Union[Sequence[int],Sequence[Sequence[int]]]]=None,
+                             episode_len_thr:int=5,) -> Tuple[np.ndarray, List[List[List[int]]]]:
+        """ finished, NOT checked,
+
+        Parameters
+        ----------
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
+        bin_pred_thr: float, default 0.5,
+            the threshold for making binary predictions from scalar predictions
+        rpeaks: sequence of sequence of int, optional,
+            sequences of r peak indices
+        episode_len_thr: int, default 5,
+            minimal length of (both af and normal) episodes,
+            with units in number of beats (rpeaks)
+
+        Returns
+        -------
+        pred: ndarray,
+            the array of scalar predictions
+        af_episodes: list of list of intervals,
+            af episodes, in the form of intervals of [start, end]
         """
         self.eval()
         _device = next(self.parameters()).device
@@ -160,7 +180,19 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         _input = torch.as_tensor(input, dtype=_dtype, device=_device)
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
-        raise NotImplementedError
+        pred = self.forward(_input)
+        pred = self.sigmoid(pred)
+        pred = pred.cpu().detach().numpy().squeeze(-1)
+        
+        af_episodes = _main_task_post_process(
+            pred=pred,
+            fs=self.config.fs,
+            reduction=self.config.reduction,
+            bin_pred_thr=bin_pred_thr,
+            rpeaks=rpeaks,
+            episode_len_thr=episode_len_thr,
+        )
+        return pred, af_episodes
 
     @staticmethod
     def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
@@ -195,7 +227,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
     __name__ = "ECG_UNET_CPSC2021"
     
     def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
-        """ NOT finished, NOT checked,
+        """ finished, NOT checked,
 
         Parameters
         ----------
@@ -218,8 +250,8 @@ class ECG_UNET_CPSC2021(ECG_UNET):
     def inference(self,
                   input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
-                  **kwargs:Any) -> Any:
-        """ NOT finished, NOT checked,
+                  **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
+        """ finished, NOT checked,
 
         Parameters
         ----------
@@ -238,7 +270,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
     def inference_CPSC2021(self,
                            input:Union[Sequence[float],np.ndarray,Tensor],
                            bin_pred_thr:float=0.5,
-                           **kwargs:Any) -> Any:
+                           **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
         """
         alias for `self.inference`
         """
@@ -251,7 +283,6 @@ class ECG_UNET_CPSC2021(ECG_UNET):
                                  duration_thr:int=4*16,
                                  dist_thr:Union[int,Sequence[int]]=200,) -> Tuple[np.ndarray, List[np.ndarray]]:
         """ finished, checked,
-        auxiliary function to `forward`, for CPSC2021,
 
         NOTE: each segment of input be better filtered using `_remove_spikes_naive`,
         and normalized to a suitable mean and std
@@ -284,7 +315,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
         _input = torch.as_tensor(input, dtype=_dtype, device=_device)
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
-        batch_size, channels, seq_len = _input.shape
+        # batch_size, channels, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -298,16 +329,54 @@ class ECG_UNET_CPSC2021(ECG_UNET):
             duration_thr=duration_thr,
             dist_thr=dist_thr
         )
-
         return pred, rpeaks
 
     @torch.no_grad()
     def _inference_main_task(self,
                              input:Union[Sequence[float],np.ndarray,Tensor],
-                             bin_pred_thr:float=0.5,) -> Any:
+                             bin_pred_thr:float=0.5,
+                             rpeaks:Optional[Union[Sequence[int],Sequence[Sequence[int]]]]=None,
+                             episode_len_thr:int=5,) -> Tuple[np.ndarray, List[List[List[int]]]]:
+        """ finished, NOT checked,
+
+        Parameters
+        ----------
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
+        bin_pred_thr: float, default 0.5,
+            the threshold for making binary predictions from scalar predictions
+        rpeaks: sequence of sequence of int, optional,
+            sequences of r peak indices
+        episode_len_thr: int, default 5,
+            minimal length of (both af and normal) episodes,
+            with units in number of beats (rpeaks)
+
+        Returns
+        -------
+        pred: ndarray,
+            the array of scalar predictions
+        af_episodes: list of list of intervals,
+            af episodes, in the form of intervals of [start, end]
         """
-        """
-        raise NotImplementedError
+        self.eval()
+        _device = next(self.parameters()).device
+        _dtype = next(self.parameters()).dtype
+        _input = torch.as_tensor(input, dtype=_dtype, device=_device)
+        if _input.ndim == 2:
+            _input = _input.unsqueeze(0)  # add a batch dimension
+        pred = self.forward(_input)
+        pred = self.sigmoid(pred)
+        pred = pred.cpu().detach().numpy().squeeze(-1)
+        
+        af_episodes = _main_task_post_process(
+            pred=pred,
+            fs=self.config.fs,
+            reduction=self.config.reduction,
+            bin_pred_thr=bin_pred_thr,
+            rpeaks=rpeaks,
+            episode_len_thr=episode_len_thr,
+        )
+        return pred, af_episodes
 
     @staticmethod
     def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
@@ -342,7 +411,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
     __name__ = "ECG_SUBTRACT_UNET_CPSC2021"
 
     def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
-        """ NOT finished, NOT checked,
+        """ finished, NOT checked,
 
         Parameters
         ----------
@@ -365,8 +434,8 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
     def inference(self,
                   input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
-                  **kwargs:Any) -> Any:
-        """ NOT finished, NOT checked,
+                  **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
+        """ finished, NOT checked,
 
         Parameters
         ----------
@@ -385,7 +454,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
     def inference_CPSC2021(self,
                            input:Union[Sequence[float],np.ndarray,Tensor],
                            bin_pred_thr:float=0.5,
-                           **kwargs:Any,) -> Any:
+                           **kwargs:Any,) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
         """
         alias for `self.inference`
         """
@@ -398,7 +467,6 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
                                  duration_thr:int=4*16,
                                  dist_thr:Union[int,Sequence[int]]=200,) -> Tuple[np.ndarray, List[np.ndarray]]:
         """ finished, checked,
-        auxiliary function to `forward`, for CPSC2021,
 
         NOTE: each segment of input be better filtered using `_remove_spikes_naive`,
         and normalized to a suitable mean and std
@@ -431,7 +499,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
         _input = torch.as_tensor(input, dtype=_dtype, device=_device)
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
-        batch_size, channels, seq_len = _input.shape
+        # batch_size, channels, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -445,16 +513,54 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
             duration_thr=duration_thr,
             dist_thr=dist_thr
         )
-
         return pred, rpeaks
 
     @torch.no_grad()
     def _inference_main_task(self,
                              input:Union[Sequence[float],np.ndarray,Tensor],
-                             bin_pred_thr:float=0.5,) -> Any:
+                             bin_pred_thr:float=0.5,
+                             rpeaks:Optional[Union[Sequence[int],Sequence[Sequence[int]]]]=None,
+                             episode_len_thr:int=5,) -> Tuple[np.ndarray, List[List[List[int]]]]:
+        """ finished, NOT checked,
+
+        Parameters
+        ----------
+        input: array_like,
+            input tensor, of shape (..., channels, seq_len)
+        bin_pred_thr: float, default 0.5,
+            the threshold for making binary predictions from scalar predictions
+        rpeaks: sequence of sequence of int, optional,
+            sequences of r peak indices
+        episode_len_thr: int, default 5,
+            minimal length of (both af and normal) episodes,
+            with units in number of beats (rpeaks)
+
+        Returns
+        -------
+        pred: ndarray,
+            the array of scalar predictions
+        af_episodes: list of list of intervals,
+            af episodes, in the form of intervals of [start, end]
         """
-        """
-        raise NotImplementedError
+        self.eval()
+        _device = next(self.parameters()).device
+        _dtype = next(self.parameters()).dtype
+        _input = torch.as_tensor(input, dtype=_dtype, device=_device)
+        if _input.ndim == 2:
+            _input = _input.unsqueeze(0)  # add a batch dimension
+        pred = self.forward(_input)
+        pred = self.sigmoid(pred)
+        pred = pred.cpu().detach().numpy().squeeze(-1)
+        
+        af_episodes = _main_task_post_process(
+            pred=pred,
+            fs=self.config.fs,
+            reduction=self.config.reduction,
+            bin_pred_thr=bin_pred_thr,
+            rpeaks=rpeaks,
+            episode_len_thr=episode_len_thr,
+        )
+        return pred, af_episodes
 
     @staticmethod
     def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
@@ -489,7 +595,7 @@ class RR_LSTM_CPSC2021(RR_LSTM):
     __name__ = "RR_LSTM_CPSC2021"
 
     def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
-        """ NOT finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -510,8 +616,10 @@ class RR_LSTM_CPSC2021(RR_LSTM):
     @torch.no_grad()
     def inference(self,
                   input:Union[Sequence[float],np.ndarray,Tensor],
-                  bin_pred_thr:float=0.5,) -> np.ndarray:
-        """ NOT finished, NOT checked,
+                  bin_pred_thr:float=0.5,
+                  rpeaks:Optional[Union[Sequence[int],Sequence[Sequence[int]]]]=None,
+                  episode_len_thr:int=5,) -> Tuple[np.ndarray, List[List[List[int]]]]:
+        """ finished, checked,
 
         Parameters
         ----------
@@ -519,6 +627,14 @@ class RR_LSTM_CPSC2021(RR_LSTM):
             input tensor, of shape (..., seq_len, ...)
         bin_pred_thr: float, default 0.5,
             the threshold for making binary predictions from scalar predictions
+        rpeaks: sequence of sequence of int, optional,
+            sequences of r peak indices
+        episode_len_thr: int, default 5,
+            minimal length of (both af and normal) episodes,
+            with units in number of beats (rpeaks)
+
+        Returns
+        -------
         """
         self.eval()
         _device = next(self.parameters()).device
@@ -534,7 +650,18 @@ class RR_LSTM_CPSC2021(RR_LSTM):
         if self.config.clf.name != "crf":
             pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
-        return pred
+
+        af_episodes = _main_task_post_process(
+            pred=pred,
+            fs=1/0.8,
+            reduction=1,
+            bin_pred_thr=bin_pred_thr,
+            rpeaks=None,
+            episode_len_thr=episode_len_thr,
+        )
+        if rpeaks is not None:
+            af_episodes = [[[r[itv[0]], r[itv[1]]] for itv in a] for a,r in zip(af_episodes, rpeaks)]
+        return pred, af_episodes
 
     @torch.no_grad()
     def inference_CPSC2021(self,
@@ -547,7 +674,7 @@ class RR_LSTM_CPSC2021(RR_LSTM):
 
     @staticmethod
     def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
-        """
+        """ finished, checked,
 
         Parameters
         ----------
@@ -618,7 +745,7 @@ def _qrs_detection_post_process(pred:np.ndarray,
     rpeaks = []
     for b_idx in range(batch_size):
         b_prob = pred[b_idx,...]
-        b_mask = (b_prob > bin_pred_thr).astype(int)
+        b_mask = (b_prob >= bin_pred_thr).astype(int)
         b_qrs_intervals = mask_to_intervals(b_mask, 1)
         # print(b_qrs_intervals)
         b_rpeaks = np.array([itv[0]+itv[1] for itv in b_qrs_intervals if itv[1]-itv[0] >= _duration_thr])
@@ -678,3 +805,82 @@ def _qrs_detection_post_process(pred:np.ndarray,
         b_rpeaks = b_rpeaks[np.where((b_rpeaks>=_skip_dist) & (b_rpeaks<input_len-_skip_dist))[0]]
         rpeaks.append(b_rpeaks)
     return rpeaks
+
+
+def _main_task_post_process(pred:np.ndarray,
+                            fs:Real,
+                            reduction:int,
+                            bin_pred_thr:float=0.5,
+                            rpeaks:Sequence[Sequence[int]]=None,
+                            episode_len_thr:int=5,) -> List[List[List[int]]]:
+    """ finished, checked,
+
+    post processing of the main task,
+    converting mask into list of af episodes,
+    and doing filtration, eliminating (both af and normal) episodes that are too short
+
+    Parameters
+    ----------
+    pred: ndarray,
+        predicted af mask, of shape (batch_size, seq_len)
+    fs: real number,
+        sampling frequency of the signal
+    reduction: int,
+        reduction ratio of the predicted af mask w.r.t. the signal
+    bin_pred_thr: float, default 0.5,
+        the threshold for making binary predictions from scalar predictions
+    rpeaks: sequence of sequence of int, optional,
+        sequences of r peak indices
+    episode_len_thr: int, default 5,
+        minimal length of (both af and normal) episodes,
+        with units in number of beats (rpeaks)
+
+    Returns
+    -------
+    af_episodes: list of list of intervals,
+        af episodes, in the form of intervals of [start, end]
+    """
+    batch_size, prob_arr_len = pred.shape
+    model_spacing = 1000 / fs  # units in ms
+    input_len = reduction * prob_arr_len
+    default_rr = int(fs * 0.8)
+
+    af_mask = (pred >= bin_pred_thr).astype(int)
+
+    af_episodes = []
+    for b_idx in range(batch_size):
+        b_mask = af_mask[b_idx]
+        intervals = mask_to_intervals(b_mask, [0,1])
+        b_af_episodes = [
+            [itv[0]*reduction, itv[1]*reduction] for itv in intervals[1]
+        ]
+        b_n_episodes = [
+            [itv[0]*reduction, itv[1]*reduction] for itv in intervals[0]
+        ]
+        if rpeaks is not None:
+            b_rpeaks = rpeaks[b_idx]
+            # merge non-af episodes shorter than `episode_len_thr`
+            b_af_episodes.extend([
+                itv for itv in b_n_episodes \
+                    if len([r for r in b_rpeaks if itv[0] <= r < itv[1]]) < episode_len_thr
+            ])
+            b_af_episodes = intervals_union(b_af_episodes)
+            # eliminate af episodes shorter than `episode_len_thr`
+            b_af_episodes = [
+                itv for itv in b_af_episodes \
+                    if len([r for r in b_rpeaks if itv[0] <= r < itv[1]]) >= episode_len_thr
+            ]
+        else:
+            # merge non-af episodes shorter than `episode_len_thr`
+            b_af_episodes.extend([
+                itv for itv in b_n_episodes \
+                    if itv[1] - itv[0] < default_rr * episode_len_thr
+            ])
+            b_af_episodes = intervals_union(b_af_episodes)
+            # eliminate af episodes shorter than `episode_len_thr`
+            b_af_episodes = [
+                itv for itv in b_af_episodes \
+                    if itv[1] - itv[0] >= default_rr * episode_len_thr
+            ]
+        af_episodes.append(b_af_episodes)
+    return af_episodes
