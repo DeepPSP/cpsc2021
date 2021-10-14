@@ -29,7 +29,10 @@ from torch.nn.parallel import DistributedDataParallel as DDP, DataParallel as DP
 from tensorboardX import SummaryWriter
 from easydict import EasyDict as ED
 
-# from torch_ecg.torch_ecg.models._nets import BCEWithLogitsWithClassWeightLoss
+from torch_ecg.torch_ecg.models._nets import (
+    BCEWithLogitsWithClassWeightLoss,
+    MaskedBCEWithLogitsLoss,
+)
 from torch_ecg.torch_ecg.utils.utils_nn import default_collate_fn as collate_fn
 from torch_ecg.torch_ecg.utils.misc import (
     init_logger, get_date_str, dict_to_str, str2bool,
@@ -68,7 +71,7 @@ def train(model:nn.Module,
           config:dict,
           logger:Optional[logging.Logger]=None,
           debug:bool=False) -> OrderedDict:
-    """ NOT finished, NOT checked,
+    """ finished, NOT checked,
 
     Parameters
     ----------
@@ -230,6 +233,8 @@ def train(model:nn.Module,
         )
     elif config.loss == "BCELoss":
         criterion = nn.BCELoss()
+    elif config.loss == "MaskedBCEWithLogitsLoss":
+        criterion = MaskedBCEWithLogitsLoss()
     else:
         raise NotImplementedError(f"loss `{config.loss}` not implemented!")
     # scheduler = ReduceLROnPlateau(optimizer, mode="max", verbose=True, patience=6, min_lr=1e-7)
@@ -259,16 +264,27 @@ def train(model:nn.Module,
         epoch_loss = 0
 
         with tqdm(total=n_train, desc=f"Epoch {epoch + 1}/{n_epochs}", ncols=100) as pbar:
-            for epoch_step, (signals, labels) in enumerate(train_loader):
+            for epoch_step, data in enumerate(train_loader):
                 global_step += 1
                 if config.task == "rr_lstm":
+                    signals, labels, weight_masks = data
                     # (batch_size, seq_len, n_channel) -> (seq_len, batch_size, n_channel)
                     signals = signals.permute(1,0,2)
+                    weight_masks = weight_masks.to(device=device, dtype=_DTYPE)
+                elif config.task == "qrs_detection":
+                    signals, labels = data
+                else:  # main task
+                    signals, labels, weight_masks = data
+                    weight_masks = weight_masks.to(device=device, dtype=_DTYPE)
                 signals = signals.to(device=device, dtype=_DTYPE)
                 labels = labels.to(device=device, dtype=_DTYPE)
+                    
 
                 preds = model(signals)
-                loss = criterion(preds, labels).to(_DTYPE)
+                if config.loss == "MaskedBCEWithLogitsLoss":
+                    loss = criterion(preds, labels, weight_masks).to(_DTYPE)
+                else:
+                    loss = criterion(preds, labels).to(_DTYPE)
                 if config.flooding_level > 0:
                     flood = (loss - config.flooding_level).abs() + config.flooding_level
                     epoch_loss += loss.item()
@@ -404,7 +420,7 @@ def train(model:nn.Module,
             save_filename = config.final_model_name
         else:
             save_suffix = f"metric_{best_eval_res[config.monitor]:.2f}"
-            save_filename = f"BestModel_{save_prefix}_{get_date_str()}_{save_suffix}.pth.tar"
+            save_filename = f"BestModel_{save_prefix}{best_epoch}_{get_date_str()}_{save_suffix}.pth.tar"
         save_path = os.path.join(config.model_dir, save_filename)
         torch.save({
             "model_state_dict": best_state_dict,
@@ -499,18 +515,38 @@ def evaluate(model:nn.Module,
     elif config.task == "rr_lstm":
         all_preds = np.array([]).reshape((0, config[config.task].input_len))
         all_labels = np.array([]).reshape((0, config[config.task].input_len))
-        for signals, labels in data_loader:
+        for signals, labels, weight_masks in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
             labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
             all_labels = np.concatenate((all_labels, labels))
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
-            preds = _model.inference(signals)
+            preds, _ = _model.inference(signals)
             all_preds = np.concatenate((all_preds, preds))
-            eval_res = compute_rr_metric(all_labels, all_preds)
-            eval_res = {"rr_score": eval_res}  # to dict
+        if debug:
+            pass  # TODO: add log
+        eval_res = compute_rr_metric(all_labels, all_preds)
+        eval_res = {"rr_score": eval_res}  # to dict
     elif config.task == "main":
-        raise NotImplementedError
+        all_preds = np.array([]).reshape((0, config[config.task].input_len))
+        all_labels = np.array([]).reshape((0, config[config.task].input_len))
+        for signals, labels, weight_masks in data_loader:
+            signals = signals.to(device=device, dtype=_DTYPE)
+            labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            all_labels = np.concatenate((all_labels, labels))
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            preds, _ = _model.inference(signals)
+            all_preds = np.concatenate((all_preds, preds))
+        if debug:
+            pass  # TODO: add log
+        eval_res = compute_main_task_metric(
+            mask_truths=all_labels,
+            mask_preds=all_preds,
+            fs=config.fs,
+            reduction=config.main.reduction,
+        )
+        eval_res = {"main_score": eval_res}  # to dict
 
     model.train()
     if prev_aug_status:
@@ -520,7 +556,7 @@ def evaluate(model:nn.Module,
 
 
 def get_args(**kwargs:Any):
-    """
+    """ NOT checked,
     """
     cfg = deepcopy(kwargs)
     parser = argparse.ArgumentParser(
@@ -586,6 +622,8 @@ def _set_task(task:str, config:ED) -> NoReturn:
 
 
 if __name__ == "__main__":
+    # WARNING: most training were done in notebook,
+    # NOT in cli
     config = get_args(**TrainCfg)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger = init_logger(log_dir=config.log_dir, verbose=2)

@@ -213,7 +213,7 @@ TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1
 TrainCfg.rr_lstm.overlap_len = 15  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.classes = ["af",]
-TrainCfg.rr_lstm.monitor = "neg_masked_loss"  # monitor for determining the best model
+TrainCfg.rr_lstm.monitor = "rr_score"  # "neg_masked_loss"  # monitor for determining the best model
 TrainCfg.rr_lstm.loss = "MaskedBCEWithLogitsLoss"
 
 TrainCfg.main.final_model_name = None
@@ -226,7 +226,7 @@ TrainCfg.main.input_len = int(30*TrainCfg.fs)
 TrainCfg.main.overlap_len = int(15*TrainCfg.fs)
 TrainCfg.main.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.main.classes = ["af",]
-TrainCfg.main.monitor = "neg_masked_loss"  # monitor for determining the best model
+TrainCfg.main.monitor = "main_score"  # "neg_masked_loss"  # monitor for determining the best model
 TrainCfg.main.loss = "MaskedBCEWithLogitsLoss"
 
 
@@ -318,7 +318,7 @@ ModelCfg.main.seq_lab.rnn.name = ModelCfg.main.rnn_name
 ModelCfg.main.seq_lab.attn.name = ModelCfg.main.attn_name
 
 ModelCfg.main.seq_lab.cnn.multi_scopic.filter_lengths = [
-    [2, 2, 2], [5, 5, 3], [7, 5, 3],
+    [3, 3, 3], [5, 5, 3], [9, 7, 5],
 ]
 
 ModelCfg.main.unet = deepcopy(ECG_UNET_VANILLA_CONFIG)
