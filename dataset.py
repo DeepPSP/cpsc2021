@@ -277,10 +277,24 @@ class CPSC2021(Dataset):
                 if self.config.label_smoothing > 0:
                     seg_label = (1 - self.config.label_smoothing) * seg_label \
                         + self.config.label_smoothing / (1 + self.n_classes)
+            if self.task == "main":
+                weight_mask = _generate_weight_mask(
+                    target_mask=seg_label.squeeze(-1),
+                    fg_weight=2,
+                    fs=self.config.fs,
+                    reduction=self.config[self.task].reduction,
+                    radius=0.8,
+                    boundary_weight=5,
+                )[..., np.newaxis]
+                return seg_data, seg_label, weight_mask
             return seg_data, seg_label
         elif self.task in ["rr_lstm",]:
             rr_seq = self._load_rr_seq(self.rr_seq[index])
-            return rr_seq["rr"], rr_seq["label"]
+            weight_mask = _generate_weight_mask(
+                target_mask=rr_seq["label"].squeeze(-1), 
+                fg_weight=2, fs=1/0.8, reduction=1, radius=2, boundary_weight=5
+            )[..., np.newaxis]
+            return rr_seq["rr"], rr_seq["label"], weight_mask
         else:
             raise NotImplementedError(f"data generator for task \042{self.task}\042 not implemented")
 
