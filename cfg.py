@@ -174,9 +174,9 @@ TrainCfg.early_stopping.min_delta = 0.001  # should be non-negative
 TrainCfg.early_stopping.patience = 5
 
 # configs of loss function
+# "MaskedBCEWithLogitsLoss", "BCEWithLogitsWithClassWeightLoss"  # "BCELoss"
 TrainCfg.loss = "BCEWithLogitsLoss"
-# TrainCfg.loss = "BCEWithLogitsWithClassWeightLoss"  # "BCELoss"
-TrainCfg.flooding_level = 0.0  # flooding performed if positive, typically 0.45-0.55 for cinc2021?
+TrainCfg.flooding_level = 0.0  # flooding performed if positive
 
 TrainCfg.log_step = 20
 TrainCfg.eval_every = 20
@@ -213,8 +213,8 @@ TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1
 TrainCfg.rr_lstm.overlap_len = 15  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.classes = ["af",]
-TrainCfg.rr_lstm.monitor = "rr_score"  # monitor for determining the best model
-TrainCfg.rr_lstm.loss = TrainCfg.loss
+TrainCfg.rr_lstm.monitor = "neg_masked_loss"  # monitor for determining the best model
+TrainCfg.rr_lstm.loss = "MaskedBCEWithLogitsLoss"
 
 TrainCfg.main.final_model_name = None
 TrainCfg.main.model_name = "seq_lab"  # "unet"
@@ -226,12 +226,12 @@ TrainCfg.main.input_len = int(30*TrainCfg.fs)
 TrainCfg.main.overlap_len = int(15*TrainCfg.fs)
 TrainCfg.main.critical_overlap_len = int(25*TrainCfg.fs)
 TrainCfg.main.classes = ["af",]
-# TrainCfg.main.monitor = ""  # monitor for determining the best model
-TrainCfg.qrs_detection.loss = TrainCfg.loss
+TrainCfg.main.monitor = "neg_masked_loss"  # monitor for determining the best model
+TrainCfg.main.loss = "MaskedBCEWithLogitsLoss"
 
 
 
-# TODO (Plan):
+# Plan:
 # R-peak detection using UNets, sequence labelling,
 # main task via RR-LSTM using sequence of R peaks as input
 # main task via UNets, sequence labelling using raw ECGs

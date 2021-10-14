@@ -132,7 +132,7 @@ def train(model:nn.Module,
     if debug:
         val_train_loader = DataLoader(
             dataset=val_train_dataset,
-            batch_size=batch_size,
+            batch_size=batch_size*4,
             shuffle=True,
             num_workers=num_workers,
             pin_memory=True,
@@ -141,7 +141,7 @@ def train(model:nn.Module,
         )
     val_loader = DataLoader(
         dataset=val_dataset,
-        batch_size=batch_size,
+        batch_size=batch_size*4,
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
@@ -162,6 +162,7 @@ def train(model:nn.Module,
     msg = textwrap.dedent(f"""
         Starting training:
         ------------------
+        Task:            {config.task}
         Epochs:          {n_epochs}
         Batch size:      {batch_size}
         Learning rate:   {lr}
@@ -250,6 +251,8 @@ def train(model:nn.Module,
     model.train()
     global_step = 0
 
+    batch_dim = 1 if config.task in ["rr_lstm"] else 0
+
     for epoch in range(n_epochs):
         # train one epoch
         model.train()
@@ -299,7 +302,7 @@ def train(model:nn.Module,
                         logger.info(msg)
                     else:
                         print(msg)
-                pbar.update(signals.shape[0])
+                pbar.update(signals.shape[batch_dim])
 
             writer.add_scalar("train/epoch_loss", epoch_loss, global_step)
 

@@ -635,6 +635,10 @@ class RR_LSTM_CPSC2021(RR_LSTM):
 
         Returns
         -------
+        pred: ndarray,
+            the array of scalar predictions
+        af_episodes: list of list of intervals,
+            af episodes, in the form of intervals of [start, end]
         """
         self.eval()
         _device = next(self.parameters()).device
@@ -734,10 +738,9 @@ def _qrs_detection_post_process(pred:np.ndarray,
     batch_size, prob_arr_len = pred.shape
     # print(batch_size, prob_arr_len)
     model_spacing = 1000 / fs  # units in ms
-    model_granularity = reduction
-    input_len = model_granularity * prob_arr_len
+    input_len = reduction * prob_arr_len
     _skip_dist = skip_dist / model_spacing  # number of samples
-    _duration_thr = duration_thr / model_spacing / model_granularity
+    _duration_thr = duration_thr / model_spacing / reduction
     _dist_thr = [dist_thr] if isinstance(dist_thr, int) else dist_thr
     assert len(_dist_thr) <= 2
 
@@ -749,7 +752,7 @@ def _qrs_detection_post_process(pred:np.ndarray,
         b_qrs_intervals = mask_to_intervals(b_mask, 1)
         # print(b_qrs_intervals)
         b_rpeaks = np.array([itv[0]+itv[1] for itv in b_qrs_intervals if itv[1]-itv[0] >= _duration_thr])
-        b_rpeaks = (model_granularity * b_rpeaks / 2).astype(int)
+        b_rpeaks = (reduction * b_rpeaks / 2).astype(int)
         # print(f"before post-process, b_qrs_intervals = {b_qrs_intervals}")
         # print(f"before post-process, b_rpeaks = {b_rpeaks}")
 
@@ -760,8 +763,8 @@ def _qrs_detection_post_process(pred:np.ndarray,
             b_rpeaks_diff = np.diff(b_rpeaks)
             for r in range(len(b_rpeaks_diff)):
                 if b_rpeaks_diff[r] < dist_thr_inds:  # 200 ms
-                    prev_r_ind = int(b_rpeaks[r]/model_granularity)  # ind in _prob
-                    next_r_ind = int(b_rpeaks[r+1]/model_granularity)  # ind in _prob
+                    prev_r_ind = int(b_rpeaks[r]/reduction)  # ind in _prob
+                    next_r_ind = int(b_rpeaks[r+1]/reduction)  # ind in _prob
                     if b_prob[prev_r_ind] > b_prob[next_r_ind]:
                         del_ind = r+1
                     else:
@@ -783,8 +786,8 @@ def _qrs_detection_post_process(pred:np.ndarray,
             b_rpeaks_diff = np.diff(b_rpeaks)
             for r in range(len(b_rpeaks_diff)):
                 if b_rpeaks_diff[r] >= dist_thr_inds:  # 1200 ms
-                    prev_r_ind = int(b_rpeaks[r]/model_granularity)  # ind in _prob
-                    next_r_ind = int(b_rpeaks[r+1]/model_granularity)  # ind in _prob
+                    prev_r_ind = int(b_rpeaks[r]/reduction)  # ind in _prob
+                    next_r_ind = int(b_rpeaks[r+1]/reduction)  # ind in _prob
                     prev_qrs = [itv for itv in b_qrs_intervals if itv[0]<=prev_r_ind<=itv[1]][0]
                     next_qrs = [itv for itv in b_qrs_intervals if itv[0]<=next_r_ind<=itv[1]][0]
                     check_itv = [prev_qrs[1], next_qrs[0]]
