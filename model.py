@@ -67,7 +67,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
                   input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -153,7 +153,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
                              bin_pred_thr:float=0.5,
                              rpeaks:Optional[Union[Sequence[int],Sequence[Sequence[int]]]]=None,
                              episode_len_thr:int=5,) -> Tuple[np.ndarray, List[List[List[int]]]]:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -195,7 +195,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         return pred, af_episodes
 
     @staticmethod
-    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> Tuple[torch.nn.Module, dict]:
         """ finished, checked,
 
         Parameters
@@ -210,6 +210,8 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         -------
         model: Module,
             the model loaded from a checkpoint
+        aux_config: dict,
+            auxiliary configs that are needed for data preprocessing, etc.
         """
         _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
         ckpt = torch.load(path, map_location=_device)
@@ -217,7 +219,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
         model = ECG_SEQ_LAB_NET_CPSC2021(config=ckpt["model_config"])
         model.load_state_dict(ckpt["model_state_dict"])
-        return model
+        return model, aux_config
 
 
 class ECG_UNET_CPSC2021(ECG_UNET):
@@ -227,7 +229,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
     __name__ = "ECG_UNET_CPSC2021"
     
     def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -251,7 +253,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
                   input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -337,7 +339,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
                              bin_pred_thr:float=0.5,
                              rpeaks:Optional[Union[Sequence[int],Sequence[Sequence[int]]]]=None,
                              episode_len_thr:int=5,) -> Tuple[np.ndarray, List[List[List[int]]]]:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -379,8 +381,8 @@ class ECG_UNET_CPSC2021(ECG_UNET):
         return pred, af_episodes
 
     @staticmethod
-    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
-        """ finished, NOT checked,
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> Tuple[torch.nn.Module, dict]:
+        """ finished, checked,
 
         Parameters
         ----------
@@ -394,6 +396,8 @@ class ECG_UNET_CPSC2021(ECG_UNET):
         -------
         model: Module,
             the model loaded from a checkpoint
+        aux_config: dict,
+            auxiliary configs that are needed for data preprocessing, etc.
         """
         _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
         ckpt = torch.load(path, map_location=_device)
@@ -401,7 +405,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
         assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
         model = ECG_UNET_CPSC2021(config=ckpt["model_config"])
         model.load_state_dict(ckpt["model_state_dict"])
-        return model
+        return model, aux_config
 
 
 class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
@@ -411,7 +415,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
     __name__ = "ECG_SUBTRACT_UNET_CPSC2021"
 
     def __init__(self, config:ED, **kwargs:Any) -> NoReturn:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -435,7 +439,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
                   input:Union[Sequence[float],np.ndarray,Tensor],
                   bin_pred_thr:float=0.5,
                   **kwargs:Any) -> Union[Tuple[np.ndarray, List[List[List[int]]]], Tuple[np.ndarray, List[np.ndarray]]]:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -521,7 +525,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
                              bin_pred_thr:float=0.5,
                              rpeaks:Optional[Union[Sequence[int],Sequence[Sequence[int]]]]=None,
                              episode_len_thr:int=5,) -> Tuple[np.ndarray, List[List[List[int]]]]:
-        """ finished, NOT checked,
+        """ finished, checked,
 
         Parameters
         ----------
@@ -563,8 +567,8 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
         return pred, af_episodes
 
     @staticmethod
-    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
-        """ finished, NOT checked,
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> Tuple[torch.nn.Module, dict]:
+        """ finished, checked,
 
         Parameters
         ----------
@@ -578,6 +582,8 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
         -------
         model: Module,
             the model loaded from a checkpoint
+        aux_config: dict,
+            auxiliary configs that are needed for data preprocessing, etc.
         """
         _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
         ckpt = torch.load(path, map_location=_device)
@@ -585,7 +591,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
         assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
         model = ECG_SUBTRACT_UNET_CPSC2021(config=ckpt["model_config"])
         model.load_state_dict(ckpt["model_state_dict"])
-        return model
+        return model, aux_config
 
 
 class RR_LSTM_CPSC2021(RR_LSTM):
@@ -688,7 +694,7 @@ class RR_LSTM_CPSC2021(RR_LSTM):
         return self.inference(input, class_names, bin_pred_thr)
 
     @staticmethod
-    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> torch.nn.Module:
+    def from_checkpoint(path:str, device:Optional[torch.device]=None) -> Tuple[torch.nn.Module, dict]:
         """ finished, checked,
 
         Parameters
@@ -703,6 +709,8 @@ class RR_LSTM_CPSC2021(RR_LSTM):
         -------
         model: Module,
             the model loaded from a checkpoint
+        aux_config: dict,
+            auxiliary configs that are needed for data preprocessing, etc.
         """
         _device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
         ckpt = torch.load(path, map_location=_device)
@@ -710,7 +718,7 @@ class RR_LSTM_CPSC2021(RR_LSTM):
         assert aux_config is not None, "input checkpoint has no sufficient data to recover a model"
         model = RR_LSTM_CPSC2021(config=ckpt["model_config"])
         model.load_state_dict(ckpt["model_state_dict"])
-        return model
+        return model, aux_config
 
 
 def _qrs_detection_post_process(pred:np.ndarray,
