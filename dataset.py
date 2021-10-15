@@ -41,6 +41,7 @@ import re
 import time
 import multiprocessing as mp
 import random
+from itertools import repeat
 from copy import deepcopy
 from typing import Union, Optional, List, Tuple, Dict, Sequence, Set, NoReturn
 
@@ -277,6 +278,14 @@ class CPSC2021(Dataset):
                 if self.config.label_smoothing > 0:
                     seg_label = (1 - self.config.label_smoothing) * seg_label \
                         + self.config.label_smoothing / (1 + self.n_classes)
+            else:  # no augmentation
+                if self.config.random_normalize:  # to keep consistency of data distribution
+                    seg_data = normalize(
+                        sig=seg_data,
+                        mean=list(repeat(np.mean(self.config.random_normalize_mean), self.config.n_leads)),
+                        std=list(repeat(np.mean(self.config.random_normalize_std), self.config.n_leads)),
+                        per_channel=True,
+                    )
             if self.task == "main":
                 weight_mask = _generate_weight_mask(
                     target_mask=seg_label.squeeze(-1),
