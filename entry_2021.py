@@ -9,6 +9,7 @@ import wfdb
 import numpy as np
 import torch
 import scipy.signal as SS
+from easydict import EasyDict as ED
 
 from utils.misc import save_dict
 from model import (
@@ -52,13 +53,16 @@ def challenge_entry(sample_path):
         os.path.join(_PROJECT_DIR, "saved_models", "BestModel_qrs_detection.pth.tar"),
         device=_CPU,
     )
+    rpeak_cfg = ED(rpeak_cfg)
     rr_lstm_model, rr_cfg = RR_LSTM_CPSC2021.from_checkpoint(
         os.path.join(_PROJECT_DIR, "saved_models", "BestModel_rr_lstm.pth.tar"),
         device=_CPU,
     )
+    rr_cfg = ED(rr_cfg)
     main_task_model, main_task_cfg = ECG_SEQ_LAB_NET_CPSC2021.from_checkpoint(
         os.path.join(_PROJECT_DIR, "saved_models", "BestModel_main_seq_lab.pth.tar")
     )  # TODO: consider unets
+    main_task_cfg = ED(main_task_cfg)
 
     _sample_path = os.path.splitext(sample_path)[0]
     try:
@@ -86,14 +90,14 @@ def challenge_entry(sample_path):
     )["filtered_ecg"]
 
     # slice data into segments for rpeak detection and main task
-    # not finished, not checked,
+    # finished, not checked,
     seglen = main_task_cfg.input_len
-    overlap_len = main_task_cfg.overlap_len
+    overlap_len = 4 * main_task_cfg.fs
     forward_len = seglen - overlap_len
     dl_input = np.array([]).reshape((main_task_cfg.n_leads, 0))
 
-    for idx in range((siglen-self.seglen)//forward_len + 1):
-        seg_data = sig[seglen*idx:seglen*(idx+1)]
+    for idx in range((sig.shape[1]-seglen)//forward_len + 1):
+        seg_data = sig[forward_len*idx: forward_len*idx+seglen]
         if main_task_cfg.random_normalize:  # to keep consistency of data distribution
             seg_data = normalize(
                 sig=seg_data,
@@ -101,27 +105,54 @@ def challenge_entry(sample_path):
                 std=list(repeat(np.mean(main_task_cfg.random_normalize_std), main_task_cfg.n_leads)),
                 per_channel=True,
             )
-        # TODO: add tail
+        dl_input = np.concatenate((dl_input, seg_data))
+    # add tail
+    if sig.shape[1] > seglen:
+        seg_data = sig[max(0,sig.shape[1]-seglen):sig.shape[1]]
+        if main_task_cfg.random_normalize:  # to keep consistency of data distribution
+            seg_data = normalize(
+                sig=seg_data,
+                mean=list(repeat(np.mean(main_task_cfg.random_normalize_mean), main_task_cfg.n_leads)),
+                std=list(repeat(np.mean(main_task_cfg.random_normalize_std), main_task_cfg.n_leads)),
+                per_channel=True,
+            )
+        dl_input = np.concatenate((dl_input, seg_data))
+
     # detect rpeaks
-    # not finished, not checked,
-    raw_rpeaks = _detect_rpeaks(
+    # finished, not checked,
+    rpeaks = _detect_rpeaks(
         model=rpeak_model,
         sig=dl_input,
+        siglen=sig.shape[1],
+        overlap_len=overlap_len,
         config=rpeak_cfg,
     )
 
     # rr_lstm
     # not finished, not checked,
+    rr_pred = _rr_lstm(
+        model=rr,
+        rpeaks=rpeaks,
+        config=rr_cfg,
+    )
 
     # main_task
     # not finished, not checked,
+    main_pred = _main_task(
+        model=main_task_model,
+        sig=dl_input,
+        siglen=sig.shape[1],
+        overlap_len=overlap_len,
+        config=main_task_cfg,
+    )
 
     # merge results from rr_lstm and main_task
     # not finished, not checked,
 
 
-def _detect_rpeaks(model, sig, config):
-    """ not finished, not checked,
+def _detect_rpeaks(model, sig, siglen, overlap_len, config):
+    """ finished, not checked,
+
     NOTE: sig are sliced data with overlap,
     hence DO NOT directly use model's inference method
     """
@@ -138,17 +169,47 @@ def _detect_rpeaks(model, sig, config):
     pred = self.forward(sig)
     pred = self.sigmoid(sig)
     pred = pred.cpu().detach().numpy().squeeze(-1)
-    # TODO: finish this function
-    raise NotImplementedError
+
+    # merge the prob array
+    seglen = config.input_len
+    qua_overlap_len = overlap_len // 4
+    forward_len = seglen - overlap_len
+    merged_pred = np.zeros((siglen,))
+    if pred.shape[0] > 1:
+        merged_pred[:seglen-qua_overlap_len] = pred[0,:seglen-qua_overlap_len]
+        merged_pred[siglen-(seglen-qua_overlap_len):] = pred[-1,qua_overlap_len:]
+        for idx in range(1,pred.shape[0]-1):
+            to_compare = np.zeros((siglen,))
+            start_idx = forward_len*idx-qua_overlap_len
+            end_idx = forward_len*idx+seglen-qua_overlap_len
+            to_compare[start_idx: end_idx] = pred[idx,qua_overlap_len:seglen-qua_overlap_len]
+            merged_pred = np.maximum(merged_pred, to_compare,)
+        # tail
+        to_compare = np.zeros((siglen,))
+        start_idx = forward_len*(pred.shape[0]-2) + seglen - qua_overlap_len
+        to_compare[start_idx:] = pred[-1, siglen-start_idx:]
+        merged_pred = np.maximum(merged_pred, to_compare,)
+    else:
+        merged_pred = pred[0,...]
+    
+    rpeaks = _qrs_detection_post_process(
+        pred=merged_pred,
+        fs=config.fs, 
+        reduction=config.reduction,
+        bin_pred_thr=0.5
+    )
+
+    return rpeaks
 
 
-def _rr_lstm(model, rr, config):
+def _rr_lstm(model, rpeaks, config):
     """ finished, not checked,
     """
     try:
         model = model.to(_CUDA)
     except:
         pass
+    rr = np.diff(rpeaks) / config.fs
     # just use the model's inference method
     pred, af_episodes = model.inference(
         input=rr,
@@ -159,7 +220,7 @@ def _rr_lstm(model, rr, config):
     return af_episodes
 
 
-def _main_task(model, sig, config):
+def _main_task(model, sig, siglen, overlap_len, config):
     """ not finished, not checked,
     """
     try:
