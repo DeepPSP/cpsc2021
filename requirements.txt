@@ -12,7 +12,7 @@ opencv-python
 # keras==2.3.1
 packaging
 easydict
-# torch==1.8.0  # see Dockerfile
+torch==1.8.0  # see Dockerfile
 torchsummary
 tensorboardX
 tqdm
