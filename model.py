@@ -7,6 +7,8 @@ Possible Solutions
 3. per-beat (R peak detection first) classification (CNN, etc. + RR LSTM) -> postprocess (merge too-close intervals, etc) -> onsets & offsets
 4. object detection (? onsets and offsets)
 """
+
+from itertools import repeat
 from copy import deepcopy
 from numbers import Real
 from typing import Union, Optional, Sequence, Tuple, List, NoReturn, Any
@@ -180,6 +182,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
         _input = torch.as_tensor(input, dtype=_dtype, device=_device)
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
+        batch_size, n_leads, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -190,6 +193,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
             reduction=self.config.reduction,
             bin_pred_thr=bin_pred_thr,
             rpeaks=rpeaks,
+            siglens=list(repeat(seq_len, batch_size)),
             episode_len_thr=episode_len_thr,
         )
         return pred, af_episodes
@@ -366,6 +370,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
         _input = torch.as_tensor(input, dtype=_dtype, device=_device)
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
+        batch_size, n_leads, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -376,6 +381,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
             reduction=self.config.reduction,
             bin_pred_thr=bin_pred_thr,
             rpeaks=rpeaks,
+            siglens=list(repeat(seq_len, batch_size)),
             episode_len_thr=episode_len_thr,
         )
         return pred, af_episodes
@@ -552,6 +558,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
         _input = torch.as_tensor(input, dtype=_dtype, device=_device)
         if _input.ndim == 2:
             _input = _input.unsqueeze(0)  # add a batch dimension
+        batch_size, n_leads, seq_len = _input.shape
         pred = self.forward(_input)
         pred = self.sigmoid(pred)
         pred = pred.cpu().detach().numpy().squeeze(-1)
@@ -562,6 +569,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
             reduction=self.config.reduction,
             bin_pred_thr=bin_pred_thr,
             rpeaks=rpeaks,
+            siglens=list(repeat(seq_len, batch_size)),
             episode_len_thr=episode_len_thr,
         )
         return pred, af_episodes
@@ -673,6 +681,7 @@ class RR_LSTM_CPSC2021(RR_LSTM):
             reduction=1,
             bin_pred_thr=bin_pred_thr,
             rpeaks=None,
+            siglens=None,
             episode_len_thr=episode_len_thr,
         )
         if rpeaks is not None:
@@ -835,6 +844,7 @@ def _main_task_post_process(pred:np.ndarray,
                             reduction:int,
                             bin_pred_thr:float=0.5,
                             rpeaks:Sequence[Sequence[int]]=None,
+                            siglens:Optional[Sequence[int]]=None,
                             episode_len_thr:int=5,) -> List[List[List[int]]]:
     """ finished, checked,
 
@@ -854,6 +864,9 @@ def _main_task_post_process(pred:np.ndarray,
         the threshold for making binary predictions from scalar predictions
     rpeaks: sequence of sequence of int, optional,
         sequences of r peak indices
+    siglens: sequence of int, optional,
+        original signal lengths,
+        used to do padding for af intervals
     episode_len_thr: int, default 5,
         minimal length of (both af and normal) episodes,
         with units in number of beats (rpeaks)
@@ -880,6 +893,8 @@ def _main_task_post_process(pred:np.ndarray,
         b_n_episodes = [
             [itv[0]*reduction, itv[1]*reduction] for itv in intervals[0]
         ]
+        if siglens is not None and siglens[b_idx] % reduction > 0:
+            b_n_episodes.append([siglens[b_idx] // reduction * reduction, siglens[b_idx]])
         if rpeaks is not None:
             b_rpeaks = rpeaks[b_idx]
             # merge non-af episodes shorter than `episode_len_thr`
