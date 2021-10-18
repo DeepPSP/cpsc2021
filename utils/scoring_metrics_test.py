@@ -1,6 +1,7 @@
 """
 """
 import os
+import glob
 import textwrap
 import argparse
 from typing import Union, Optional, List, NoReturn
@@ -34,9 +35,15 @@ from .scoring_metrics import (
     compute_challenge_metric, gen_endpoint_score_mask,
 )
 from cfg import BaseCfg
+from sample_data import extract_sample_data_if_needed
 
 
-_l_test_records = list(set([os.path.splitext(item)[0] for item in os.listdir(BaseCfg.test_data_dir)]))
+extract_sample_data_if_needed()
+# _l_test_records = list(set([os.path.splitext(item)[0] for item in os.listdir(BaseCfg.test_data_dir)]))
+_l_test_records = [
+    os.path.splitext(os.path.basename(item))[0] \
+        for item in glob.glob(os.path.join(BaseCfg.test_data_dir, "*.dat"))
+]
 
 
 def get_parser() -> dict:
