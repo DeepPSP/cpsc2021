@@ -35,6 +35,7 @@ def remove_spikes_naive(sig:np.ndarray) -> np.ndarray:
     remove `spikes` from `sig` using a naive method proposed in entry 0416 of CPSC2019
 
     `spikes` here refers to abrupt large bumps with (abs) value larger than 20 mV,
+    or nan values (read by `wfdb`),
     do NOT confuse with `spikes` in paced rhythm
 
     Parameters
@@ -47,7 +48,10 @@ def remove_spikes_naive(sig:np.ndarray) -> np.ndarray:
     filtered_sig: ndarray,
         ECG signal with `spikes` removed
     """
-    b = list(filter(lambda k: k > 0, np.argwhere(np.abs(sig)>20).squeeze(-1)))
+    b = list(filter(
+        lambda k: k > 0,
+        np.argwhere(np.logical_or(np.abs(sig)>20, np.isnan(sig))).squeeze(-1)
+    ))
     filtered_sig = sig.copy()
     for k in b:
         filtered_sig[k] = filtered_sig[k-1]
