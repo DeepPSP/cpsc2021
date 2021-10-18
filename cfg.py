@@ -323,6 +323,16 @@ ModelCfg.main.seq_lab.cnn.multi_scopic.filter_lengths = [
 
 ModelCfg.main.unet = deepcopy(ECG_UNET_VANILLA_CONFIG)
 ModelCfg.main.unet.fs = BaseCfg.fs
+ModelCfg.main.unet.reduction = 1
+ModelCfg.main.unet.init_num_filters = 16  # keep the same with n_classes
+ModelCfg.main.unet.down_num_filters = [
+    ModelCfg.main.unet.init_num_filters * (2**idx) \
+        for idx in range(1, ModelCfg.main.unet.down_up_block_num+1)
+]
+ModelCfg.main.unet.up_num_filters = [
+    ModelCfg.main.unet.init_num_filters * (2**idx) \
+        for idx in range(ModelCfg.main.unet.down_up_block_num-1,-1,-1)
+]
 
 
 # configurations for visualization
