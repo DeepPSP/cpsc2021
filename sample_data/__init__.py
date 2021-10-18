@@ -4,7 +4,7 @@
 import os, zipfile, glob
 
 
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _WORK_DIR = os.path.join(_BASE_DIR, "working_dir")
 _SAMPLE_DATA_DIR = os.path.join(_WORK_DIR, "sample_data")
 
