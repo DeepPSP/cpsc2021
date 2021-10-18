@@ -5,6 +5,7 @@ import os, zipfile, glob
 
 from entry_2021 import challenge_entry
 from utils.misc import save_dict
+from sample_data import extract_sample_data_if_needed
 
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -19,8 +20,7 @@ os.makedirs(_SAMPLE_RESULTS_DIR, exist_ok=True)
 def run_test():
     """
     """
-    zf = zipfile.ZipFile(os.path.join(_BASE_DIR, "sample_data", "sample_data.zip"))
-    zf.extractall(_WORK_DIR)
+    extract_sample_data_if_needed()
     sample_set = [
         os.path.splitext(os.path.basename(item))[0] \
             for item in glob.glob(os.path.join(_SAMPLE_DATA_DIR, "*.dat"))

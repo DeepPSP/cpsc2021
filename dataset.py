@@ -584,6 +584,8 @@ class CPSC2021(Dataset):
             bl_win = None
         if "bandpass" in preproc:
             band_fs = self.config.filter_band
+        else:
+            band_fs = None
         pps = preprocess_multi_lead_signal(
             self.reader.load_data(rec),
             fs=self.reader.fs,
