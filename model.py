@@ -681,7 +681,8 @@ class RR_LSTM_CPSC2021(RR_LSTM):
             else:
                 _rpeaks = rpeaks
             # WARNING: need further processing to move start and end for the case of AFf
-            af_episodes = [[[r[itv[0]], r[itv[1]]] for itv in a] for a,r in zip(af_episodes, _rpeaks)]
+            # NOTE that the next rpeak to the interval (of rr sequences) ends are added
+            af_episodes = [[[r[itv[0]], r[itv[1]+1]] for itv in a] for a,r in zip(af_episodes, _rpeaks)]
         return pred, af_episodes
 
     @torch.no_grad()
