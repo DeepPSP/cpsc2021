@@ -79,7 +79,7 @@ def challenge_entry(sample_path):
     # main_task_model, main_task_cfg = ECG_SEQ_LAB_NET_CPSC2021.from_checkpoint(
     #     os.path.join(_BASE_DIR, "saved_models", "BestModel_main_seq_lab.pth.tar"),
     #     device=_CPU,
-    # )  # TODO: consider unets
+    # )
     main_task_model, main_task_cfg = ECG_UNET_CPSC2021.from_checkpoint(
         os.path.join(_BASE_DIR, "saved_models", "BestModel_main_unet.pth.tar"),
         device=_CPU,
@@ -219,7 +219,7 @@ def challenge_entry(sample_path):
     # TODO: more sophisticated merge methods?
     final_pred = generalized_intervals_union(
         [rr_pred, main_pred,]
-    )
+    )  # TODO: need further filtering to filter out normal episodes shorter than 5 beats?
     # numpy dtypes to native python dtypes
     # to make json serilizable
     for idx in range(len(final_pred)):
