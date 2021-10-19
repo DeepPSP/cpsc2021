@@ -511,29 +511,35 @@ def evaluate(model:nn.Module,
             fs=config.fs,
             thr=config.qrs_mask_bias/config.fs,
         )
-        eval_res = {"qrs_score": eval_res}  # to dict
+        # eval_res = {"qrs_score": eval_res}  # to dict
     elif config.task == "rr_lstm":
         all_preds = np.array([]).reshape((0, config[config.task].input_len))
         all_labels = np.array([]).reshape((0, config[config.task].input_len))
+        all_weight_masks = np.array([]).reshape((0, config[config.task].input_len))
         for signals, labels, weight_masks in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
             labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            weight_masks = weight_masks.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
             all_labels = np.concatenate((all_labels, labels))
+            all_weight_masks = np.concatenate((all_weight_masks, weight_masks))
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             preds, _ = _model.inference(signals)
             all_preds = np.concatenate((all_preds, preds))
         if debug:
             pass  # TODO: add log
-        eval_res = compute_rr_metric(all_labels, all_preds)
-        eval_res = {"rr_score": eval_res}  # to dict
+        eval_res = compute_rr_metric(all_labels, all_preds, all_weight_masks)
+        # eval_res = {"rr_score": eval_res}  # to dict
     elif config.task == "main":
         all_preds = np.array([]).reshape((0, config.main.input_len//config.main.reduction))
         all_labels = np.array([]).reshape((0, config.main.input_len//config.main.reduction))
+        all_weight_masks = np.array([]).reshape((0, config.main.input_len//config.main.reduction))
         for signals, labels, weight_masks in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
             labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            weight_masks = weight_masks.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
             all_labels = np.concatenate((all_labels, labels))
+            all_weight_masks = np.concatenate((all_weight_masks, weight_masks))
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             preds, _ = _model.inference(signals)
@@ -545,8 +551,9 @@ def evaluate(model:nn.Module,
             mask_preds=all_preds,
             fs=config.fs,
             reduction=config.main.reduction,
+            weight_masks=all_weight_masks,
         )
-        eval_res = {"main_score": eval_res}  # to dict
+        # eval_res = {"main_score": eval_res}  # to dict
 
     model.train()
     if prev_aug_status:
