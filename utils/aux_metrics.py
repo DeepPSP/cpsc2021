@@ -7,11 +7,13 @@ References
 """
 import math
 import multiprocessing as mp
-from typing import Union, Optional, Sequence
+from typing import Union, Optional, Sequence, Dict
 from numbers import Real
 
 import numpy as np
 import torch
+
+from torch_ecg.torch_ecg.models._nets import MaskedBCEWithLogitsLoss
 
 from .misc import mask_to_intervals
 
@@ -23,11 +25,14 @@ __all__ = [
 ]
 
 
+_MBCE = MaskedBCEWithLogitsLoss()
+
+
 def compute_rpeak_metric(rpeaks_truths:Sequence[Union[np.ndarray,Sequence[int]]],
                          rpeaks_preds:Sequence[Union[np.ndarray,Sequence[int]]],
                          fs:Real,
                          thr:float=0.075,
-                         verbose:int=0) -> float:
+                         verbose:int=0) -> Dict[str, float]:
     """ finished, checked,
 
     Parameters
@@ -97,12 +102,15 @@ def compute_rpeak_metric(rpeaks_truths:Sequence[Union[np.ndarray,Sequence[int]]]
         print(f'QRS_acc: {rec_acc}')
         print('Scoring complete.')
 
-    return rec_acc
+    metrics = {"qrs_score": rec_acc}
+
+    return metrics
 
 
 def compute_rr_metric(rr_truths:Sequence[Union[np.ndarray,Sequence[int]]],
                       rr_preds:Sequence[Union[np.ndarray,Sequence[int]]],
-                      verbose:int=0) -> float:
+                      weight_masks:Optional[Sequence[Union[np.ndarray,Sequence[int]]]]=None,
+                      verbose:int=0) -> Dict[str, float]:
     """ finished, checked,
 
     this metric for evaluating the RR_LSTM model,
@@ -117,8 +125,11 @@ def compute_rr_metric(rr_truths:Sequence[Union[np.ndarray,Sequence[int]]],
 
     Returns
     -------
-    score: float,
-        the score, similar to CPSC2021 challenge metric
+    rr_score: float,
+        the score computed from predicts from rr sequences,
+        similar to CPSC2021 challenge metric
+    neg_masked_bce: float,
+        negative masked BCE loss
     """
     with mp.Pool(processes=max(1,mp.cpu_count())) as pool:
         af_episode_truths = pool.starmap(
@@ -138,20 +149,30 @@ def compute_rr_metric(rr_truths:Sequence[Union[np.ndarray,Sequence[int]]],
             scoring_mask[idx][max(0,itv[1]-2):min(seq_len,itv[1]+3)] = 0.5
             scoring_mask[idx][max(0,itv[0]-1):min(seq_len,itv[0]+2)] = 1
             scoring_mask[idx][max(0,itv[1]-1):min(seq_len,itv[1]+2)] = 1
-    score = sum([
+    rr_score = sum([
         scoring_mask[idx][itv].sum() / max(1, len(af_episode_truths[idx])) \
             for idx in range(n_samples) for itv in af_episode_preds[idx]
     ])
-    score += sum([0==len(t)==len(p) for t, p in zip(af_episode_truths, af_episode_preds)])
-    return score
+    rr_score += sum([0==len(t)==len(p) for t, p in zip(af_episode_truths, af_episode_preds)])
+    neg_masked_bce = -_MBCE(
+        torch.as_tensor(rr_preds, dtype=torch.float32, device=torch.device("cpu")),
+        torch.as_tensor(rr_truths, dtype=torch.float32, device=torch.device("cpu")),
+        torch.as_tensor(weight_masks, dtype=torch.float32, device=torch.device("cpu")),
+    ).item()
+    metrics = {
+        "rr_score": rr_score,
+        "neg_masked_bce": neg_masked_bce,
+    }
+    return metrics
 
 
 def compute_main_task_metric(mask_truths:Sequence[Union[np.ndarray,Sequence[int]]],
                              mask_preds:Sequence[Union[np.ndarray,Sequence[int]]],
                              fs:Real,
                              reduction:int,
+                             weight_masks:Optional[Sequence[Union[np.ndarray,Sequence[int]]]]=None,
                              rpeaks:Optional[Sequence[Sequence[int]]]=None,
-                             verbose:int=0) -> float:
+                             verbose:int=0) -> Dict[str, float]:
     """ finished, checked,
 
     this metric for evaluating the main task model (seq_lab or unet),
@@ -174,8 +195,11 @@ def compute_main_task_metric(mask_truths:Sequence[Union[np.ndarray,Sequence[int]
 
     Returns
     -------
-    score: float,
-        the score, similar to CPSC2021 challenge metric
+    main_score: float,
+        the score computed from predicts from the main task model,
+        similar to CPSC2021 challenge metric
+    neg_masked_bce: float,
+        negative masked BCE loss
     """
     default_rr = int(fs * 0.8 / reduction)
     if rpeaks is not None:
@@ -215,12 +239,21 @@ def compute_main_task_metric(mask_truths:Sequence[Union[np.ndarray,Sequence[int]
                 scoring_mask[idx][max(0,itv[1]-2*default_rr):min(seq_len,itv[1]+2*default_rr+1)] = 0.5
                 scoring_mask[idx][max(0,itv[0]-1*default_rr):min(seq_len,itv[0]+1*default_rr+1)] = 1
                 scoring_mask[idx][max(0,itv[1]-1*default_rr):min(seq_len,itv[1]+1*default_rr+1)] = 1
-    score = sum([
+    main_score = sum([
         scoring_mask[idx][itv].sum() / max(1, len(af_episode_truths[idx])) \
             for idx in range(n_samples) for itv in af_episode_preds[idx]
     ])
-    score += sum([0==len(t)==len(p) for t, p in zip(af_episode_truths, af_episode_preds)])
-    return score
+    main_score += sum([0==len(t)==len(p) for t, p in zip(af_episode_truths, af_episode_preds)])
+    neg_masked_bce = -_MBCE(
+        torch.as_tensor(mask_preds, dtype=torch.float32, device=torch.device("cpu")),
+        torch.as_tensor(mask_truths, dtype=torch.float32, device=torch.device("cpu")),
+        torch.as_tensor(weight_masks, dtype=torch.float32, device=torch.device("cpu")),
+    ).item()
+    metrics = {
+        "main_score": main_score,
+        "neg_masked_bce": neg_masked_bce,
+    }
+    return metrics
 
 
 
