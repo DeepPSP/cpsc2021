@@ -210,6 +210,7 @@ def challenge_entry(sample_path):
         rpeaks=rpeaks,
         config=main_task_cfg,
     )
+    main_pred = []  # turn off main_task_model, for inspecting the lstm model
     if _VERBOSE >= 1:
         print(f"\nprediction of main_task_model = {main_pred}")
     # return main_pred
@@ -220,6 +221,8 @@ def challenge_entry(sample_path):
     final_pred = generalized_intervals_union(
         [rr_pred, main_pred,]
     )  # TODO: need further filtering to filter out normal episodes shorter than 5 beats?
+    if _VERBOSE >= 1:
+        print(f"\nfinal prediction = {final_pred}")
     # numpy dtypes to native python dtypes
     # to make json serilizable
     for idx in range(len(final_pred)):
