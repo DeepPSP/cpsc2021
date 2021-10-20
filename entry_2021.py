@@ -196,6 +196,7 @@ def challenge_entry(sample_path):
         siglen=original_siglen,
         config=rr_cfg,
     )
+    rr_pred = []  # turn off rr_lstm_model, for inspecting the main_task_model
     if _VERBOSE >= 1:
         print(f"\nprediction of rr_lstm_model = {rr_pred}")
     # return rr_pred
@@ -210,7 +211,7 @@ def challenge_entry(sample_path):
         rpeaks=rpeaks,
         config=main_task_cfg,
     )
-    main_pred = []  # turn off main_task_model, for inspecting the lstm model
+    # main_pred = []  # turn off main_task_model, for inspecting the lstm model
     if _VERBOSE >= 1:
         print(f"\nprediction of main_task_model = {main_pred}")
     # return main_pred
@@ -245,6 +246,11 @@ def challenge_entry(sample_path):
     del rpeak_model
     del rr_lstm_model
     del main_task_model
+
+    print("\n" + "*"*100)
+    msg = "   CPSC2021 challenge entry ends   ".center(100, "#")
+    print(msg)
+    print("*"*100 + "\n\n")
 
     return pred_dict
 
