@@ -49,16 +49,29 @@ _BATCH_SIZE = 32
 _VERBOSE = 1
 
 
+_ENTRY_CONFIG = ED()
+_ENTRY_CONFIG.use_rr_lstm_model = False
+_ENTRY_CONFIG.use_main_seq_lab_model = True
+_ENTRY_CONFIG.use_main_unet_model = False
+_ENTRY_CONFIG.merge_rule = "union"
+
+
 @torch.no_grad()
 def challenge_entry(sample_path):
     """
     This is a baseline method.
     """
+    assert any([
+        _ENTRY_CONFIG.use_rr_lstm_model,
+        _ENTRY_CONFIG.use_main_seq_lab_model,
+        _ENTRY_CONFIG.use_main_unet_model
+    ]), "NO model is used, please check `_ENTRY_CONFIG`"
+
     print("\n" + "*"*100)
     msg = "   CPSC2021 challenge entry starts   ".center(100, "#")
     print(msg)
     print("*"*100 + "\n")
-    print(f"processing {sample_path}")
+    print(f"processing {sample_path} under config\n{_ENTRY_CONFIG}")
     start_time = time.time()
     timer = time.time()
 
@@ -70,22 +83,32 @@ def challenge_entry(sample_path):
     )
     rpeak_model.eval()
     rpeak_cfg = ED(rpeak_cfg)
+    if _VERBOSE >= 1:
+        print("QRS detection model is loaded")
     rr_lstm_model, rr_cfg = RR_LSTM_CPSC2021.from_checkpoint(
         os.path.join(_BASE_DIR, "saved_models", "BestModel_rr_lstm.pth.tar"),
         device=_CPU,
     )
     rr_lstm_model.eval()
     rr_cfg = ED(rr_cfg)
-    # SeqLab (SeqTag) model for the main task
-    main_task_model, main_task_cfg = ECG_SEQ_LAB_NET_CPSC2021.from_checkpoint(
-        os.path.join(_BASE_DIR, "saved_models", "BestModel_main_seq_lab.pth.tar"),
-        device=_CPU,
-    )
-    # UNet model for the main task
-    # main_task_model, main_task_cfg = ECG_UNET_CPSC2021.from_checkpoint(
-    #     os.path.join(_BASE_DIR, "saved_models", "BestModel_main_unet.pth.tar"),
-    #     device=_CPU,
-    # )
+    if _VERBOSE >= 1:
+        print("RR LSTM model is loaded")
+    if _ENTRY_CONFIG.use_main_seq_lab_model:
+        # SeqLab (SeqTag) model for the main task
+        main_task_model, main_task_cfg = ECG_SEQ_LAB_NET_CPSC2021.from_checkpoint(
+            os.path.join(_BASE_DIR, "saved_models", "BestModel_main_seq_lab.pth.tar"),
+            device=_CPU,
+        )
+        if _VERBOSE >= 1:
+            print("Main task SeqLab model is loaded")
+    else:
+        # UNet model for the main task
+        main_task_model, main_task_cfg = ECG_UNET_CPSC2021.from_checkpoint(
+            os.path.join(_BASE_DIR, "saved_models", "BestModel_main_unet.pth.tar"),
+            device=_CPU,
+        )
+        if _VERBOSE >= 1:
+            print("Main task UNet model is loaded")
     main_task_model.eval()
     main_task_cfg = ED(main_task_cfg)
 
@@ -192,28 +215,32 @@ def challenge_entry(sample_path):
 
     # rr_lstm
     # finished, checked,
-    rr_pred = _rr_lstm(
-        model=rr_lstm_model,
-        rpeaks=rpeaks,
-        siglen=original_siglen,
-        config=rr_cfg,
-    )
-    rr_pred = []  # turn off rr_lstm_model, for inspecting the main_task_model
+    if _ENTRY_CONFIG.use_rr_lstm_model:
+        rr_pred = _rr_lstm(
+            model=rr_lstm_model,
+            rpeaks=rpeaks,
+            siglen=original_siglen,
+            config=rr_cfg,
+        )
+    else:
+        rr_pred = []  # turn off rr_lstm_model, for inspecting the main_task_model
     if _VERBOSE >= 1:
         print(f"\nprediction of rr_lstm_model = {rr_pred}")
     # return rr_pred
 
     # main_task
     # finished, checked,
-    main_pred = _main_task(
-        model=main_task_model,
-        sig=dl_input,
-        siglen=original_siglen,
-        overlap_len=overlap_len,
-        rpeaks=rpeaks,
-        config=main_task_cfg,
-    )
-    # main_pred = []  # turn off main_task_model, for inspecting the lstm model
+    if any([_ENTRY_CONFIG.use_main_seq_lab_model, _ENTRY_CONFIG.use_main_seq_lab_model]):
+        main_pred = _main_task(
+            model=main_task_model,
+            sig=dl_input,
+            siglen=original_siglen,
+            overlap_len=overlap_len,
+            rpeaks=rpeaks,
+            config=main_task_cfg,
+        )
+    else:
+        main_pred = []  # turn off main_task_model, for inspecting the lstm model
     if _VERBOSE >= 1:
         print(f"\nprediction of main_task_model = {main_pred}")
     # return main_pred
@@ -221,11 +248,20 @@ def challenge_entry(sample_path):
     # merge results from rr_lstm and main_task
     # finished, checked,
     # TODO: more sophisticated merge methods?
-    final_pred = generalized_intervals_union(
-        [rr_pred, main_pred,]
-    )  # TODO: need further filtering to filter out normal episodes shorter than 5 beats?
+    if _ENTRY_CONFIG.merge_rule == "union":
+        final_pred = generalized_intervals_union(
+            [rr_pred, main_pred,]
+        )
+    else:  # intersection
+        final_pred = generalized_intervals_intersection(
+            rr_pred, main_pred,
+        )
+
+    # TODO: need further filtering to filter out normal episodes shorter than 5 beats?
+
     if _VERBOSE >= 1:
         print(f"\nfinal prediction = {final_pred}")
+
     # numpy dtypes to native python dtypes
     # to make json serilizable
     for idx in range(len(final_pred)):
