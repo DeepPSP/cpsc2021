@@ -53,7 +53,7 @@ _ENTRY_CONFIG = ED()
 _ENTRY_CONFIG.use_rr_lstm_model = True
 _ENTRY_CONFIG.use_main_seq_lab_model = True
 _ENTRY_CONFIG.use_main_unet_model = False
-_ENTRY_CONFIG.merge_rule = "intersection"
+_ENTRY_CONFIG.merge_rule = "union"
 
 
 @torch.no_grad()
