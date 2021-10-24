@@ -333,6 +333,7 @@ ModelCfg.main.unet.up_num_filters = [
     ModelCfg.main.unet.init_num_filters * (2**idx) \
         for idx in range(ModelCfg.main.unet.down_up_block_num-1,-1,-1)
 ]
+ModelCfg.main.unet.up_mode = "deconv"
 
 
 # configurations for visualization
