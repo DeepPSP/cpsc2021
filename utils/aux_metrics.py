@@ -13,7 +13,7 @@ from numbers import Real
 import numpy as np
 import torch
 
-from torch_ecg.torch_ecg.models._nets import MaskedBCEWithLogitsLoss
+from torch_ecg.torch_ecg.models.loss import MaskedBCEWithLogitsLoss
 
 from .misc import mask_to_intervals
 
