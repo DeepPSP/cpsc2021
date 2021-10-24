@@ -29,7 +29,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP, DataParallel as DP
 from tensorboardX import SummaryWriter
 from easydict import EasyDict as ED
 
-from torch_ecg.torch_ecg.models._nets import (
+from torch_ecg.torch_ecg.models.loss import (
     BCEWithLogitsWithClassWeightLoss,
     MaskedBCEWithLogitsLoss,
 )
