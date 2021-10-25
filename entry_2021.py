@@ -55,6 +55,14 @@ _ENTRY_CONFIG.use_main_seq_lab_model = True
 _ENTRY_CONFIG.use_main_unet_model = False
 _ENTRY_CONFIG.merge_rule = "union"
 
+_MODEL_FILENAME = ED(
+    qrs_detection="BestModel_qrs_detection.pth.tar",
+    rr_lstm="BestModel_rr_lstm.pth.tar",
+    main_seq_lab="BestModel_main_seq_lab.pth.tar",
+    main_unet="BestModel_main_unet.pth.tar",  # BestModel_main_unet_deconv.pth.tar
+    # it seems that the unet_deconv model is completely useless
+)
+
 
 @torch.no_grad()
 def challenge_entry(sample_path):
@@ -78,7 +86,7 @@ def challenge_entry(sample_path):
     # all models are loaded into cpu
     # when using, move to gpu
     rpeak_model, rpeak_cfg = ECG_SEQ_LAB_NET_CPSC2021.from_checkpoint(
-        os.path.join(_BASE_DIR, "saved_models", "BestModel_qrs_detection.pth.tar"),
+        os.path.join(_BASE_DIR, "saved_models", _MODEL_FILENAME.qrs_detection),
         device=_CPU,
     )
     rpeak_model.eval()
@@ -86,7 +94,7 @@ def challenge_entry(sample_path):
     if _VERBOSE >= 1:
         print("QRS detection model is loaded")
     rr_lstm_model, rr_cfg = RR_LSTM_CPSC2021.from_checkpoint(
-        os.path.join(_BASE_DIR, "saved_models", "BestModel_rr_lstm.pth.tar"),
+        os.path.join(_BASE_DIR, "saved_models", _MODEL_FILENAME.rr_lstm),
         device=_CPU,
     )
     rr_lstm_model.eval()
@@ -96,7 +104,7 @@ def challenge_entry(sample_path):
     if _ENTRY_CONFIG.use_main_seq_lab_model:
         # SeqLab (SeqTag) model for the main task
         main_task_model, main_task_cfg = ECG_SEQ_LAB_NET_CPSC2021.from_checkpoint(
-            os.path.join(_BASE_DIR, "saved_models", "BestModel_main_seq_lab.pth.tar"),
+            os.path.join(_BASE_DIR, "saved_models", _MODEL_FILENAME.main_seq_lab),
             device=_CPU,
         )
         if _VERBOSE >= 1:
@@ -104,7 +112,7 @@ def challenge_entry(sample_path):
     else:
         # UNet model for the main task
         main_task_model, main_task_cfg = ECG_UNET_CPSC2021.from_checkpoint(
-            os.path.join(_BASE_DIR, "saved_models", "BestModel_main_unet.pth.tar"),
+            os.path.join(_BASE_DIR, "saved_models", _MODEL_FILENAME.main_unet),
             device=_CPU,
         )
         if _VERBOSE >= 1:
