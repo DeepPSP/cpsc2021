@@ -71,7 +71,7 @@ def train(model:nn.Module,
           config:dict,
           logger:Optional[logging.Logger]=None,
           debug:bool=False) -> OrderedDict:
-    """ finished, NOT checked,
+    """ finished, checked,
 
     Parameters
     ----------
@@ -450,7 +450,7 @@ def evaluate(model:nn.Module,
              device:torch.device,
              debug:bool=True,
              logger:Optional[logging.Logger]=None) -> Dict[str,float]:
-    """ NOT finished, NOT checked,
+    """ finished, checked,
 
     Parameters
     ----------
