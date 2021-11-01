@@ -146,6 +146,7 @@ log
 # to add ingored notebooks
 !inspect_data.ipynb
 !train_models.ipynb
+!aggregate_val_res.ipynb
 
 # dl models
 *.h5
