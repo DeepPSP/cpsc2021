@@ -170,7 +170,7 @@ def challenge_entry(sample_path):
     if sig.shape[1] > seglen:
         sig = sig[..., :sig.shape[1] // main_task_cfg[main_task_cfg.task].reduction * main_task_cfg[main_task_cfg.task].reduction]
 
-    if _VERBOSE >= 1:
+    if _VERBOSE >= 2:
         print(f"seglen = {seglen}, overlap_len = {overlap_len}, forward_len = {forward_len}")
 
     for idx in range((sig.shape[1]-seglen) // forward_len + 1):
@@ -180,6 +180,7 @@ def challenge_entry(sample_path):
                 sig=seg_data,
                 mean=list(repeat(np.mean(main_task_cfg.random_normalize_mean), main_task_cfg.n_leads)),
                 std=list(repeat(np.mean(main_task_cfg.random_normalize_std), main_task_cfg.n_leads)),
+                # std=list(repeat(1*main_task_cfg.random_normalize_std[0], main_task_cfg.n_leads)),
                 per_channel=True,
             )
         dl_input = np.concatenate((dl_input, seg_data[np.newaxis, ...]))
@@ -337,7 +338,7 @@ def _detect_rpeaks(model, sig, siglen, overlap_len, config):
     forward_len = seglen - overlap_len // config[config.task].reduction
     _siglen = siglen // config[config.task].reduction
 
-    if _VERBOSE >= 1:
+    if _VERBOSE >= 2:
         print("\nin function _detect_rpeaks...")
         print(f"pred.shape = {pred.shape}")
         print(f"seglen = {seglen}, qua_overlap_len = {qua_overlap_len}, forward_len = {forward_len}")
@@ -388,8 +389,8 @@ def _rr_lstm(model, rpeaks, siglen, config):
     af_episodes = af_episodes[0]
     # move to the first and (or) the last sample point of the record if necessary
     if len(af_episodes) > 0:
-        print(af_episodes)
-        print(rpeaks[0], rpeaks[-1])
+        # print(af_episodes)
+        # print(rpeaks[0], rpeaks[-1])
         if af_episodes[0][0] == rpeaks[0]:
             af_episodes[0][0] = 0
         if af_episodes[-1][-1] == rpeaks[-1]:
@@ -430,7 +431,7 @@ def _main_task(model, sig, siglen, overlap_len, rpeaks, config):
     forward_len = seglen - overlap_len // config[config.task].reduction
     _siglen = siglen // config[config.task].reduction
 
-    if _VERBOSE >= 1:
+    if _VERBOSE >= 2:
         print("\nin function _main_task...")
         print(f"pred.shape = {pred.shape}")
         print(f"seglen = {seglen}, qua_overlap_len = {qua_overlap_len}, forward_len = {forward_len}")
