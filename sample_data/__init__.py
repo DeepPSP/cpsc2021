@@ -20,3 +20,4 @@ def extract_sample_data_if_needed():
     os.makedirs(_SAMPLE_DATA_DIR, exist_ok=True)
     zf = zipfile.ZipFile(os.path.join(_SAMPLE_DATA_DIR, "sample_data.zip"))
     zf.extractall(_WORK_DIR)
+    zf.close()
