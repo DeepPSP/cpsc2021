@@ -50,7 +50,7 @@ _VERBOSE = 1
 
 
 _ENTRY_CONFIG = ED()
-_ENTRY_CONFIG.use_rr_lstm_model = False
+_ENTRY_CONFIG.use_rr_lstm_model = True
 _ENTRY_CONFIG.use_main_seq_lab_model = True
 _ENTRY_CONFIG.use_main_unet_model = False
 _ENTRY_CONFIG.merge_rule = "union"
@@ -231,8 +231,15 @@ def challenge_entry(sample_path):
             siglen=original_siglen,
             config=rr_cfg,
         )
+        if len(rr_pred) == 0:
+            rr_pred_cls = "N"
+        elif len(rr_pred) == 1 and np.diff(rr_pred[0])[0] == original_siglen-1:
+            rr_pred_cls = "AFf"
+        else:
+            rr_pred_cls = "AFp"
     else:
         rr_pred = []  # turn off rr_lstm_model, for inspecting the main_task_model
+        rr_pred_cls = None
     if _VERBOSE >= 1:
         print(f"\nprediction of rr_lstm_model = {rr_pred}")
     # return rr_pred
@@ -248,8 +255,15 @@ def challenge_entry(sample_path):
             rpeaks=rpeaks,
             config=main_task_cfg,
         )
+        if len(main_pred) == 0:
+            main_pred_cls = "N"
+        elif len(main_pred) == 1 and np.diff(main_pred[0])[0] == original_siglen-1:
+            main_pred_cls = "AFf"
+        else:
+            main_pred_cls = "AFp"
     else:
         main_pred = []  # turn off main_task_model, for inspecting the lstm model
+        main_pred_cls = None
     if _VERBOSE >= 1:
         print(f"\nprediction of main_task_model = {main_pred}")
     # return main_pred
@@ -258,9 +272,10 @@ def challenge_entry(sample_path):
     # finished, checked,
     # TODO: more sophisticated merge methods?
     if _ENTRY_CONFIG.merge_rule == "union":
-        final_pred = generalized_intervals_union(
-            [rr_pred, main_pred,]
-        )
+        # final_pred = generalized_intervals_union(
+        #     [rr_pred, main_pred,]
+        # )
+        final_pred = _merge_rule_union(rr_pred, rr_pred_cls, main_pred, main_pred_cls)
     else:  # intersection
         final_pred = generalized_intervals_intersection(
             rr_pred, main_pred,
@@ -464,6 +479,26 @@ def _main_task(model, sig, siglen, overlap_len, rpeaks, config):
     )[0]
 
     return af_episodes
+
+
+def _merge_rule_union(rr_pred, rr_pred_cls, main_pred, main_pred_cls):
+    """
+    By studying the results (the confusion matrices) on the validation set,
+    RR_LSTM model and SeqLab model both seldom have false positives on the classes "N" and "AFf".
+    Anlyzing the false positives on the class "AFp", we find that
+    the RR_LSTM tends to mistake "N" for "AFp",
+    while the SeqLab model tends to mistake "AFf" for "AFp". 
+    """
+    if rr_pred_cls is None:
+        return main_pred
+    if main_pred_cls is None:
+        return rr_pred
+    if (rr_pred_cls == "N" and main_pred_cls != "AFf") or (main_pred_cls == "N" and rr_pred_cls != "AFf"):
+        return []
+    final_pred = generalized_intervals_union(
+            [rr_pred, main_pred,]
+        )
+    return final_pred
 
 
 if __name__ == '__main__':
