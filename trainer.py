@@ -245,10 +245,10 @@ def train(model:nn.Module,
     os.makedirs(config.checkpoints, exist_ok=True)
     os.makedirs(config.model_dir, exist_ok=True)
 
-     # monitor for training: challenge metric
+    # monitor for training: challenge metric
     best_state_dict = OrderedDict()
     best_metric = -np.inf
-    best_eval_res = tuple()
+    best_eval_res = dict()
     best_epoch = -1
     pseudo_best_epoch = -1
 
