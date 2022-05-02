@@ -2,43 +2,55 @@
 to cope with DNS spoofing, automatically retry a git command until success
 """
 
-import os, argparse, warnings, time
+import os
+import argparse
+import warnings
+import time
 from typing import NoReturn
 
 
 _CMD = {
-	"submodule": "git submodule update --remote --recursive --merge",
-	"push": "git push origin --all",
-	"fetch": "git fetch --all",
+    "submodule": "git submodule update --remote --recursive --merge",
+    "push": "git push origin --all",
+    "fetch": "git fetch --all",
 }
 
 
 def get_parser() -> dict:
-    """
-    """
-    description = "predefined and custom git operations, in order to cope with DNS spoofing"
+    """ """
+    description = (
+        "predefined and custom git operations, in order to cope with DNS spoofing"
+    )
     parser = argparse.ArgumentParser(
         description=description,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "-s", "--submodule", action="store_true",
-        help=f"submodule update",
+        "-s",
+        "--submodule",
+        action="store_true",
+        help="submodule update",
         dest="submodule",
     )
     parser.add_argument(
-        "-f", "--fetch", action="store_true",
-        help=f"fetch origin",
+        "-f",
+        "--fetch",
+        action="store_true",
+        help="fetch origin",
         dest="fetch",
     )
     parser.add_argument(
-        "-p", "--push", action="store_true",
-        help=f"push origin",
+        "-p",
+        "--push",
+        action="store_true",
+        help="push origin",
         dest="push",
     )
     parser.add_argument(
-        "-c", "--custom", type=str,
-        help=f"custom git command, enclosed within \"",
+        "-c",
+        "--custom",
+        type=str,
+        help='custom git command, enclosed within "',
         dest="custom",
     )
 
@@ -47,8 +59,8 @@ def get_parser() -> dict:
     return args
 
 
-def run(action:str) -> NoReturn:
-    """ finished, checked,
+def run(action: str) -> NoReturn:
+    """finished, checked,
 
     Parameters
     ----------
@@ -65,12 +77,20 @@ def run(action:str) -> NoReturn:
         ret_code = os.system(cmd)
         n_iter += 1
     print("Execution success")
-	
+
 
 if __name__ == "__main__":
     args = get_parser()
     custom = args.get("custom", None)
-    args = [k for k,v in args.items() if v and k not in ["custom",]]
+    args = [
+        k
+        for k, v in args.items()
+        if v
+        and k
+        not in [
+            "custom",
+        ]
+    ]
     if custom:
         if len(args) > 0:
             warnings.warn("custom command is given, additional arguments are ignored!")

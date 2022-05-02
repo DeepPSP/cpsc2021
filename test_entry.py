@@ -1,7 +1,8 @@
 """
 """
 
-import os, zipfile, glob
+import os
+import glob
 
 from entry_2021 import challenge_entry
 from utils.misc import save_dict
@@ -18,12 +19,11 @@ os.makedirs(_SAMPLE_RESULTS_DIR, exist_ok=True)
 
 
 def run_test():
-    """
-    """
+    """ """
     extract_sample_data_if_needed()
     sample_set = [
-        os.path.splitext(os.path.basename(item))[0] \
-            for item in glob.glob(os.path.join(_SAMPLE_DATA_DIR, "*.dat"))
+        os.path.splitext(os.path.basename(item))[0]
+        for item in glob.glob(os.path.join(_SAMPLE_DATA_DIR, "*.dat"))
     ]
 
     for i, sample in enumerate(sample_set):
@@ -31,7 +31,7 @@ def run_test():
         sample_path = os.path.join(_SAMPLE_DATA_DIR, sample)
         pred_dict = challenge_entry(sample_path)
 
-        save_dict(os.path.join(_SAMPLE_RESULTS_DIR, sample+'.json'), pred_dict)
+        save_dict(os.path.join(_SAMPLE_RESULTS_DIR, sample + ".json"), pred_dict)
 
 
 if __name__ == "__main__":
