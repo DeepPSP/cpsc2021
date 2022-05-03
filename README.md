@@ -1,6 +1,8 @@
 # CPSC2021
 Paroxysmal Atrial Fibrillation Events Detection from Dynamic ECG Recordings: The 4th China Physiological Signal Challenge 2021
 
+![format-check](https://github.com/DeepPSP/cpsc2021/actions/workflows/check-formatting.yml/badge.svg)
+
 ## Offline generated training data
 
 [CPSC2021-sliced](https://www.kaggle.com/wenh06/cpsc2021-sliced) on Kaggle.
