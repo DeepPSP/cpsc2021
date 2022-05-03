@@ -31,5 +31,5 @@ jobs:
         python -m pip install torch==1.10.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
     - name: Check code format with black and flake8
       run: |
-        black . --extend-exclude .ipynb -v --exclude "/build|dist|torch_ecg|official_entry/|entry_2021\.py|score_2021\.py|pantompkins\.py"
+        black . --check --extend-exclude .ipynb -v --exclude "/build|dist|torch_ecg|official_entry/|entry_2021\.py|score_2021\.py|pantompkins\.py"
         flake8 . --count --ignore="E501 W503 E203 F841 E402 E731" --show-source --statistics --exclude=./.*,build,dist,torch_ecg,official_entry,entry_2021.py,score_2021.py,pantompkins.py,*.ipynb
