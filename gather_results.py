@@ -141,6 +141,7 @@ def plot_confusion_matrix(
     normalize: bool = False,
     title: Optional[str] = None,
     cmap: mpl.colors.Colormap = plt.cm.Blues,
+    savefig: bool = False,
     fmt: str = "pdf",
 ) -> Any:
     """
@@ -178,7 +179,7 @@ def plot_confusion_matrix(
     ax.tick_params(axis="both", which="major", labelsize=16)
 
     # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=30, ha="right", rotation_mode="anchor")
+    # plt.setp(ax.get_xticklabels(), rotation=30, ha="right", rotation_mode="anchor")
 
     # Loop over data dimensions and create text annotations.
     text_fmt = ".2f" if (normalize or cm.dtype == "float") else "d"
@@ -196,8 +197,12 @@ def plot_confusion_matrix(
             )
     fig.tight_layout()
     # plt.show()
-    plt.savefig(
-        os.path.join(_VAL_RES_DIR, save_name), format=fmt, dpi=1200, bbox_inches="tight"
-    )
+    if savefig:
+        plt.savefig(
+            os.path.join(_VAL_RES_DIR, save_name),
+            format=fmt,
+            dpi=1200,
+            bbox_inches="tight",
+        )
 
     return ax
