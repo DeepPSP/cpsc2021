@@ -11,7 +11,7 @@ from functools import reduce
 from collections import namedtuple
 from glob import glob
 from copy import deepcopy
-from typing import Union, Optional, List, Dict, Sequence, NoReturn, Any
+from typing import Union, Optional, List, Dict, Sequence, Any
 from numbers import Real, Number
 import json
 
@@ -468,7 +468,7 @@ def plot_single_lead(
     ax: Optional[Any] = None,
     ticks_granularity: int = 0,
     **kwargs,
-) -> NoReturn:
+) -> None:
     """finished, NOT checked,
 
     Parameters

@@ -9,7 +9,7 @@ import time
 import warnings
 import logging
 import json
-from typing import Union, Optional, Any, List, Tuple, Dict, Sequence, NoReturn
+from typing import Union, Optional, Any, List, Tuple, Dict, Sequence
 from numbers import Real
 
 import numpy as np
@@ -216,7 +216,7 @@ class CPSC2021Reader(object):
             raise NotImplementedError(f"not implemented for {sig_type}")
         return units
 
-    def _set_logger(self, prefix: Optional[str] = None) -> NoReturn:
+    def _set_logger(self, prefix: Optional[str] = None) -> None:
         """
 
         Parameters
@@ -265,7 +265,7 @@ class CPSC2021Reader(object):
             self._ls_rec()
         return self.__all_records
 
-    def _ls_rec(self) -> NoReturn:
+    def _ls_rec(self) -> None:
         """finished, checked,
 
         list all the records and load into `self._all_records`,
@@ -334,7 +334,7 @@ class CPSC2021Reader(object):
             list_sum(self._all_subjects.values()), key=lambda s: int(s)
         )
 
-    def _aggregate_stats(self) -> NoReturn:
+    def _aggregate_stats(self) -> None:
         """finished, checked,
 
         aggregate stats on the whole dataset
@@ -402,7 +402,7 @@ class CPSC2021Reader(object):
         """ """
         return self._stats
 
-    def _ls_diagnoses_records(self) -> NoReturn:
+    def _ls_diagnoses_records(self) -> None:
         """finished, checked,
 
         list all the records for all diagnoses
@@ -915,7 +915,7 @@ class CPSC2021Reader(object):
         leads: Optional[Union[str, List[str]]] = None,
         waves: Optional[Dict[str, Sequence[int]]] = None,
         **kwargs,
-    ) -> NoReturn:
+    ) -> None:
         """finished, checked, to improve,
 
         plot the signals of a record or external signals (units in μV),

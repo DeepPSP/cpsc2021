@@ -42,7 +42,7 @@ import time
 import random
 from itertools import repeat
 from copy import deepcopy
-from typing import Union, Optional, List, Tuple, Dict, Sequence, NoReturn
+from typing import Union, Optional, List, Tuple, Dict, Sequence
 
 import numpy as np
 
@@ -93,7 +93,7 @@ class CPSC2021(Dataset):
     __DEBUG__ = False
     __name__ = "CPSC2021"
 
-    def __init__(self, config: ED, task: str, training: bool = True) -> NoReturn:
+    def __init__(self, config: ED, task: str, training: bool = True) -> None:
         """finished, checked,
 
         Parameters
@@ -133,7 +133,7 @@ class CPSC2021(Dataset):
 
         self.__set_task(task)
 
-    def __set_task(self, task: str) -> NoReturn:
+    def __set_task(self, task: str) -> None:
         """finished, checked,
 
         Parameters
@@ -194,11 +194,11 @@ class CPSC2021(Dataset):
             2 / self.config.stretch_compress_prob - 2
         )
 
-    def reset_task(self, task: str) -> NoReturn:
+    def reset_task(self, task: str) -> None:
         """finished, checked,"""
         self.__set_task(task)
 
-    def _ls_segments(self) -> NoReturn:
+    def _ls_segments(self) -> None:
         """finished, checked,
 
         list all the segments
@@ -230,7 +230,7 @@ class CPSC2021(Dataset):
             with open(self.segments_json, "w") as f:
                 json.dump(self.__all_segments, f)
 
-    def _ls_rr_seq(self) -> NoReturn:
+    def _ls_rr_seq(self) -> None:
         """finished, checked,
 
         list all the rr sequences
@@ -571,11 +571,11 @@ class CPSC2021(Dataset):
         rr_seq["interval"] = rr_seq["interval"].flatten()
         return rr_seq
 
-    def disable_data_augmentation(self) -> NoReturn:
+    def disable_data_augmentation(self) -> None:
         """ """
         self.__data_aug = False
 
-    def enable_data_augmentation(self) -> NoReturn:
+    def enable_data_augmentation(self) -> None:
         """ """
         self.__data_aug = True
 
@@ -583,7 +583,7 @@ class CPSC2021(Dataset):
     def use_augmentation(self) -> bool:
         return self.__data_aug
 
-    def persistence(self, force_recompute: bool = False, verbose: int = 0) -> NoReturn:
+    def persistence(self, force_recompute: bool = False, verbose: int = 0) -> None:
         """finished, checked,
 
         make the dataset persistent w.r.t. the ratios in `self.config`
@@ -617,7 +617,7 @@ class CPSC2021(Dataset):
 
     def _preprocess_data(
         self, preproc: List[str], force_recompute: bool = False, verbose: int = 0
-    ) -> NoReturn:
+    ) -> None:
         """finished, checked,
 
         preprocesses the ecg data in advance for further use,
@@ -650,7 +650,7 @@ class CPSC2021(Dataset):
         preproc: List[str],
         force_recompute: bool = False,
         verbose: int = 0,
-    ) -> NoReturn:
+    ) -> None:
         """finished, checked,
 
         preprocesses the ecg data in advance for further use,
@@ -771,7 +771,7 @@ class CPSC2021(Dataset):
         suffix = "-".join(sorted([item.lower() for item in operations]))
         return suffix
 
-    def _slice_data(self, force_recompute: bool = False, verbose: int = 0) -> NoReturn:
+    def _slice_data(self, force_recompute: bool = False, verbose: int = 0) -> None:
         """finished, checked,
 
         slice all records into segments of length `self.seglen`,
@@ -816,7 +816,7 @@ class CPSC2021(Dataset):
         force_recompute: bool = False,
         update_segments_json: bool = False,
         verbose: int = 0,
-    ) -> NoReturn:
+    ) -> None:
         """finished, checked,
 
         slice one record into segments of length `self.seglen`,
@@ -1044,7 +1044,7 @@ class CPSC2021(Dataset):
 
     def __save_segments(
         self, rec: str, segments: List[ED], update_segments_json: bool = False
-    ) -> NoReturn:
+    ) -> None:
         """finished, checked,
 
         Parameters
@@ -1081,7 +1081,7 @@ class CPSC2021(Dataset):
             with open(self.segments_json, "w") as f:
                 json.dump(self.__all_segments, f)
 
-    def _clear_cached_segments(self, recs: Optional[Sequence[str]] = None) -> NoReturn:
+    def _clear_cached_segments(self, recs: Optional[Sequence[str]] = None) -> None:
         """finished, checked,
 
         Parameters
@@ -1126,9 +1126,7 @@ class CPSC2021(Dataset):
             [self.__all_segments[subject] for subject in self.subjects]
         )
 
-    def _slice_rr_seq(
-        self, force_recompute: bool = False, verbose: int = 0
-    ) -> NoReturn:
+    def _slice_rr_seq(self, force_recompute: bool = False, verbose: int = 0) -> None:
         """finished, checked,
 
         slice sequences of rr intervals into fixed length (sub)sequences
@@ -1162,7 +1160,7 @@ class CPSC2021(Dataset):
         force_recompute: bool = False,
         update_rr_seq_json: bool = False,
         verbose: int = 0,
-    ) -> NoReturn:
+    ) -> None:
         """finished, checked,"""
         self.__assert_task(["rr_lstm"])
         subject = self.reader.get_subject_id(rec)
@@ -1249,7 +1247,7 @@ class CPSC2021(Dataset):
             with open(self.rr_seq_json, "w") as f:
                 json.dump(self.__all_rr_seq, f)
 
-    def _clear_cached_rr_seq(self, recs: Optional[Sequence[str]] = None) -> NoReturn:
+    def _clear_cached_rr_seq(self, recs: Optional[Sequence[str]] = None) -> None:
         """finished, checked,
 
         Parameters
@@ -1410,13 +1408,13 @@ class CPSC2021(Dataset):
         )
         return split_res
 
-    def __assert_task(self, tasks: List[str]) -> NoReturn:
+    def __assert_task(self, tasks: List[str]) -> None:
         """ """
         assert (
             self.task in tasks
         ), f"DO NOT call this method when the current task is {self.task}. Switch task using `reset_task`"
 
-    def plot_seg(self, seg: str, ticks_granularity: int = 0) -> NoReturn:
+    def plot_seg(self, seg: str, ticks_granularity: int = 0) -> None:
         """finished, checked,
 
         Parameters

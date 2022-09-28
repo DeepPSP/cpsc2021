@@ -8,7 +8,7 @@ import argparse
 import textwrap
 from copy import deepcopy
 from collections import deque, OrderedDict
-from typing import Any, Optional, NoReturn, Dict
+from typing import Any, Optional, Dict
 
 import numpy as np
 
@@ -704,7 +704,7 @@ _MODEL_MAP = {
 }
 
 
-def _set_task(task: str, config: ED) -> NoReturn:
+def _set_task(task: str, config: ED) -> None:
     """finished, checked,"""
     assert task in config.tasks
     config.task = task

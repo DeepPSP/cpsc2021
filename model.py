@@ -10,7 +10,7 @@ Possible Solutions
 
 from itertools import repeat
 from numbers import Real
-from typing import Union, Optional, Sequence, Tuple, List, NoReturn, Any
+from typing import Union, Optional, Sequence, Tuple, List, Any
 
 import numpy as np
 import torch
@@ -41,7 +41,7 @@ class ECG_SEQ_LAB_NET_CPSC2021(ECG_SEQ_LAB_NET):
     __DEBUG__ = True
     __name__ = "ECG_SEQ_LAB_NET_CPSC2021"
 
-    def __init__(self, config: ED, **kwargs: Any) -> NoReturn:
+    def __init__(self, config: ED, **kwargs: Any) -> None:
         """finished, checked,
 
         Parameters
@@ -249,7 +249,7 @@ class ECG_UNET_CPSC2021(ECG_UNET):
     __DEBUG__ = True
     __name__ = "ECG_UNET_CPSC2021"
 
-    def __init__(self, config: ED, **kwargs: Any) -> NoReturn:
+    def __init__(self, config: ED, **kwargs: Any) -> None:
         """finished, checked,
 
         Parameters
@@ -457,7 +457,7 @@ class ECG_SUBTRACT_UNET_CPSC2021(ECG_SUBTRACT_UNET):
     __DEBUG__ = True
     __name__ = "ECG_SUBTRACT_UNET_CPSC2021"
 
-    def __init__(self, config: ED, **kwargs: Any) -> NoReturn:
+    def __init__(self, config: ED, **kwargs: Any) -> None:
         """finished, checked,
 
         Parameters
@@ -665,7 +665,7 @@ class RR_LSTM_CPSC2021(RR_LSTM):
     __DEBUG__ = True
     __name__ = "RR_LSTM_CPSC2021"
 
-    def __init__(self, config: ED, **kwargs: Any) -> NoReturn:
+    def __init__(self, config: ED, **kwargs: Any) -> None:
         """finished, checked,
 
         Parameters

@@ -5,10 +5,10 @@ import os
 import glob
 import textwrap
 import argparse
-from typing import Union, Optional, List, NoReturn
+from typing import Union, Optional, List
 
 
-def import_parents(level: int = 1) -> NoReturn:
+def import_parents(level: int = 1) -> None:
     # https://gist.github.com/vaultah/d63cb4c86be2774377aa674b009f759a
     import sys
     import importlib
@@ -221,7 +221,7 @@ def run_test(
     l_rec: Optional[List[str]] = None,
     classes: Optional[List[str]] = None,
     verbose: bool = False,
-) -> NoReturn:
+) -> None:
     """finished, checked,
 
     Parameters

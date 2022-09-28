@@ -6,7 +6,6 @@ import os
 import argparse
 import warnings
 import time
-from typing import NoReturn
 
 
 _CMD = {
@@ -59,7 +58,7 @@ def get_parser() -> dict:
     return args
 
 
-def run(action: str) -> NoReturn:
+def run(action: str) -> None:
     """finished, checked,
 
     Parameters

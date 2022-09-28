@@ -7,7 +7,7 @@ import time
 import glob
 import zipfile
 import json
-from typing import Sequence, NoReturn, Optional, Any, Tuple, List
+from typing import Sequence, Optional, Any, Tuple, List
 
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ _NEW_UNION_RES_DIR = os.path.join(_VAL_RES_DIR, "sample_results_new")
 
 
 # extract if needed
-def extract_val_res_if_needed() -> NoReturn:
+def extract_val_res_if_needed() -> None:
     print(_VAL_RES_DIR)
     if not os.path.exists(_VAL_RES_DIR):
         os.makedirs(_VAL_RES_DIR, exist_ok=True)
