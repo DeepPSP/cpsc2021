@@ -10,18 +10,13 @@ Paroxysmal Atrial Fibrillation Events Detection from Dynamic ECG Recordings: The
 
 ## Graphical Abstract of the Solution
 
-![res_pht](/images/graphical-abstract.svg)
-
+![res_pht](images/graphical-abstract.svg)
 
 ## Results (Rankings)
 
-### Results on the partial hidden test set (only the top of the table is included)
+### Results on the hidden test set
 
-to update...
-
-### Results on the partial hidden test set
-
-![res_pht](/images/cpsc2021-final_validation.png)
+See the [official website](http://2021.icbeb.org/CPSC2021)
 
 ### Results on the validation set
 
@@ -35,7 +30,7 @@ Raw results are gathered into one zip file, the `val_res.zip` in the [`results`]
 |  LSTM + U-Net     |  Union        |   1.7829                         | NA                     |
 |  LSTM + SeqTag    | Intersection  |   1.9287                         | NA                     |
 |  LSTM + SeqTag    |  Union        |   1.9766                         | 2.1682                 |
-| **LSTM + SeqTag** | **New Union** |   ?                              | **2.2179**             |
+| **LSTM + SeqTag** | **New Union** |   **1.9972**                     | **2.2179**             |
 
 ### Confusion matrices of the LSTM model and the SeqTag model
 
@@ -52,6 +47,10 @@ Raw results are gathered into one zip file, the `val_res.zip` in the [`results`]
   <img src="/images/res_ana_2.png" width="110%" />
 </p>
 
+## Citation
+
+See the file [CITATIONS.bib](CITATIONS.bib). Also at [sciencedirect](https://www.sciencedirect.com/science/article/pii/S0022073622001972).
+
 ## References
 
-to add ...
+See the references listed on the [sciencedirect webpage](https://www.sciencedirect.com/science/article/pii/S0022073622001972).
