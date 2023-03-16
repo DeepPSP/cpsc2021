@@ -12,6 +12,31 @@ Paroxysmal Atrial Fibrillation Events Detection from Dynamic ECG Recordings: The
 
 ![res_pht](images/graphical-abstract.svg)
 
+## Main files
+
+<details>
+<summary>Click to view!</summary>
+
+* Files required by the submission system
+  - [`entry_2021.py`](entry_2021.py): entry file of the challenge
+  - [`score_2021.py`](score_2021.py): scoring function of the challenge
+* Files of the solution:
+  - [`cfg.py`](cfg.py): configurations for the preprocessing, augmentation, model, trainer, etc.
+  - [`data_reader.py`](data_reader.py): contains a class which makes reading data, annotations, etc. more easy
+  - [`dataset.py`](dataset.py): torch Dataset which generates tensors for training the models
+  - [`model.py`](model.py): models, adjustification of the architecture is highly flexible
+  - [`trainer.py`](trainer.py): contains a trainer class
+* Files for analyzing and visualizing experiments:
+  - [`gather_results.py`](gather_results.py)
+* Test files:
+  - [`test_entry.py`](test_entry.py)
+* Notebooks (the filenames imply the usages):
+  - [`inspect_data.ipynb`](inspect_data.ipynb)
+  - [`train_models.ipynb`](train_models.ipynb)
+  - [`aggregate_val_res.ipynb`](aggregate_val_res.ipynb)
+
+</details>
+
 ## Results (Rankings)
 
 ### Results on the hidden test set
