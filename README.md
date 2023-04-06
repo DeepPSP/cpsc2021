@@ -37,6 +37,8 @@ Paroxysmal Atrial Fibrillation Events Detection from Dynamic ECG Recordings: The
 
 </details>
 
+**Remember** to change [BaseCfg.db_dir](https://github.com/DeepPSP/cpsc2021/blob/master/cfg.py#L54) to your local data directory.
+
 ## Results (Rankings)
 
 ### Results on the hidden test set
