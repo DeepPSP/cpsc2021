@@ -1,10 +1,9 @@
 """
 """
 
+import glob
 import os
 import zipfile
-import glob
-
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _WORK_DIR = os.path.join(_BASE_DIR, "working_dir")
@@ -18,10 +17,7 @@ __all__ = [
 
 def extract_sample_data_if_needed():
     """ """
-    if (
-        os.path.exists(_SAMPLE_DATA_DIR)
-        and len(glob.glob(os.path.join(_SAMPLE_DATA_DIR, "*.dat"))) > 0
-    ):
+    if os.path.exists(_SAMPLE_DATA_DIR) and len(glob.glob(os.path.join(_SAMPLE_DATA_DIR, "*.dat"))) > 0:
         return
     os.makedirs(_SAMPLE_DATA_DIR, exist_ok=True)
     zf = zipfile.ZipFile(os.path.join(_SAMPLE_DATA_DIR, "sample_data.zip"))

@@ -35,40 +35,30 @@ for idx, seg in enumerate(err_list):
 and similarly for the task of `rr_lstm`
 """
 
-import os
 import json
+import os
+import random
 import re
 import time
-import random
-from itertools import repeat
 from copy import deepcopy
-from typing import Union, Optional, List, Tuple, Dict, Sequence
+from itertools import repeat
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 np.set_printoptions(precision=5, suppress=True)
-from scipy import signal as SS
-from easydict import EasyDict as ED
 import torch
-from torch.utils.data.dataset import Dataset
+from easydict import EasyDict as ED
+from scipy import signal as SS
 from scipy.io import loadmat, savemat
+from torch.utils.data.dataset import Dataset
 
-from cfg import (  # noqa: F401
-    TrainCfg,
-    ModelCfg,
-)
+from cfg import ModelCfg, TrainCfg  # noqa: F401
 from data_reader import CPSC2021Reader as CR
 from signal_processing.ecg_preproc import preprocess_multi_lead_signal
-from utils.utils_signal import normalize
+from utils.misc import dict_to_str, get_record_list_recursive3, list_sum, nildent, uniform  # noqa: F401
 from utils.utils_interval import mask_to_intervals
-from utils.misc import (  # noqa: F401
-    dict_to_str,
-    list_sum,
-    nildent,
-    uniform,
-    get_record_list_recursive3,
-)
-
+from utils.utils_signal import normalize
 
 if ModelCfg.torch_dtype.lower() == "double":
     torch.set_default_tensor_type(torch.DoubleTensor)
@@ -167,9 +157,7 @@ class CPSC2021(Dataset):
             self.__all_segments = ED()
             self.segments_json = os.path.join(self.segments_base_dir, "segments.json")
             self._ls_segments()
-            self.segments = list_sum(
-                [self.__all_segments[subject] for subject in self.subjects]
-            )
+            self.segments = list_sum([self.__all_segments[subject] for subject in self.subjects])
             if self.training:
                 random.shuffle(self.segments)
         elif self.task in [
@@ -179,20 +167,14 @@ class CPSC2021(Dataset):
             self.__all_rr_seq = ED()
             self.rr_seq_json = os.path.join(self.rr_seq_base_dir, "rr_seq.json")
             self._ls_rr_seq()
-            self.rr_seq = list_sum(
-                [self.__all_rr_seq[subject] for subject in self.subjects]
-            )
+            self.rr_seq = list_sum([self.__all_rr_seq[subject] for subject in self.subjects])
             if self.training:
                 random.shuffle(self.rr_seq)
         else:
-            raise NotImplementedError(
-                f"data generator for task \042{self.task}\042 not implemented"
-            )
+            raise NotImplementedError(f"data generator for task \042{self.task}\042 not implemented")
 
         # more aux config on offline augmentations
-        self.config.stretch_compress_choices = [-1, 1] + [0] * int(
-            2 / self.config.stretch_compress_prob - 2
-        )
+        self.config.stretch_compress_choices = [-1, 1] + [0] * int(2 / self.config.stretch_compress_prob - 2)
 
     def reset_task(self, task: str) -> None:
         """finished, checked,"""
@@ -206,25 +188,16 @@ class CPSC2021(Dataset):
         for item in ["data", "ann"]:
             self.segments_dirs[item] = ED()
             for s in self.reader.all_subjects:
-                self.segments_dirs[item][s] = os.path.join(
-                    self.segments_base_dir, item, s
-                )
+                self.segments_dirs[item][s] = os.path.join(self.segments_base_dir, item, s)
                 os.makedirs(self.segments_dirs[item][s], exist_ok=True)
         if os.path.isfile(self.segments_json):
             with open(self.segments_json, "r") as f:
                 self.__all_segments = json.load(f)
             return
-        print(
-            f"please allow the reader a few minutes to collect the segments from {self.segments_base_dir}..."
-        )
+        print(f"please allow the reader a few minutes to collect the segments from {self.segments_base_dir}...")
         seg_filename_pattern = f"{self.segment_name_pattern}.{self.segment_ext}"
         self.__all_segments = ED(
-            {
-                s: get_record_list_recursive3(
-                    self.segments_dirs.data[s], seg_filename_pattern
-                )
-                for s in self.reader.all_subjects
-            }
+            {s: get_record_list_recursive3(self.segments_dirs.data[s], seg_filename_pattern) for s in self.reader.all_subjects}
         )
         if all([len(self.__all_segments[s]) > 0 for s in self.reader.all_subjects]):
             with open(self.segments_json, "w") as f:
@@ -242,17 +215,10 @@ class CPSC2021(Dataset):
             with open(self.rr_seq_json, "r") as f:
                 self.__all_rr_seq = json.load(f)
             return
-        print(
-            f"please allow the reader a few minutes to collect the rr sequences from {self.rr_seq_base_dir}..."
-        )
+        print(f"please allow the reader a few minutes to collect the rr sequences from {self.rr_seq_base_dir}...")
         rr_seq_filename_pattern = f"{self.rr_seq_name_pattern}.{self.rr_seq_ext}"
         self.__all_rr_seq = ED(
-            {
-                s: get_record_list_recursive3(
-                    self.rr_seq_dirs[s], rr_seq_filename_pattern
-                )
-                for s in self.reader.all_subjects
-            }
+            {s: get_record_list_recursive3(self.rr_seq_dirs[s], rr_seq_filename_pattern) for s in self.reader.all_subjects}
         )
         if all([len(self.__all_rr_seq[s]) > 0 for s in self.reader.all_subjects]):
             with open(self.rr_seq_json, "w") as f:
@@ -288,9 +254,7 @@ class CPSC2021(Dataset):
             if self.config[self.task].model_name == "unet":
                 seg_label = self._load_seg_mask(seg_name)
             else:  # "seq_lab"
-                seg_label = self._load_seg_seq_lab(
-                    seg_name, reduction=self.config[self.task].reduction
-                )
+                seg_label = self._load_seg_seq_lab(seg_name, reduction=self.config[self.task].reduction)
             # augmentation
             if self.__data_aug:
                 if len(self.config.flip) > 0:
@@ -318,13 +282,11 @@ class CPSC2021(Dataset):
                         per_channel=True,
                     )
                 if self.config.label_smoothing > 0:
-                    seg_label = (
-                        1 - self.config.label_smoothing
-                    ) * seg_label + self.config.label_smoothing / (1 + self.n_classes)
+                    seg_label = (1 - self.config.label_smoothing) * seg_label + self.config.label_smoothing / (
+                        1 + self.n_classes
+                    )
             else:  # no augmentation
-                if (
-                    self.config.random_normalize
-                ):  # to keep consistency of data distribution
+                if self.config.random_normalize:  # to keep consistency of data distribution
                     seg_data = normalize(
                         sig=seg_data,
                         mean=list(
@@ -366,9 +328,7 @@ class CPSC2021(Dataset):
             )[..., np.newaxis]
             return rr_seq["rr"], rr_seq["label"], weight_mask
         else:
-            raise NotImplementedError(
-                f"data generator for task \042{self.task}\042 not implemented"
-            )
+            raise NotImplementedError(f"data generator for task \042{self.task}\042 not implemented")
 
     def __len__(self) -> int:
         """finished,"""
@@ -449,16 +409,10 @@ class CPSC2021(Dataset):
             - interval: interval ([start_idx, end_idx]) in the original ECG record of the segment
         """
         seg_ann_fp = self._get_seg_ann_path(seg)
-        seg_ann = {
-            k: v.flatten()
-            for k, v in loadmat(seg_ann_fp).items()
-            if not k.startswith("__")
-        }
+        seg_ann = {k: v.flatten() for k, v in loadmat(seg_ann_fp).items() if not k.startswith("__")}
         return seg_ann
 
-    def _load_seg_mask(
-        self, seg: str, task: Optional[str] = None
-    ) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+    def _load_seg_mask(self, seg: str, task: Optional[str] = None) -> Union[np.ndarray, Dict[str, np.ndarray]]:
         """finished, checked,
 
         Parameters
@@ -563,9 +517,7 @@ class CPSC2021(Dataset):
             - interval: interval of the current rr sequence in the whole rr sequence in the original record
         """
         rr_seq_path = self._get_rr_seq_path(seq_name)
-        rr_seq = {
-            k: v for k, v in loadmat(rr_seq_path).items() if not k.startswith("__")
-        }
+        rr_seq = {k: v for k, v in loadmat(rr_seq_path).items() if not k.startswith("__")}
         rr_seq["rr"] = rr_seq["rr"].reshape((self.seglen, 1))
         rr_seq["label"] = rr_seq["label"].reshape((self.seglen, self.n_classes))
         rr_seq["interval"] = rr_seq["interval"].flatten()
@@ -615,9 +567,7 @@ class CPSC2021(Dataset):
             verbose=verbose,
         )
 
-    def _preprocess_data(
-        self, preproc: List[str], force_recompute: bool = False, verbose: int = 0
-    ) -> None:
+    def _preprocess_data(self, preproc: List[str], force_recompute: bool = False, verbose: int = 0) -> None:
         """finished, checked,
 
         preprocesses the ecg data in advance for further use,
@@ -669,9 +619,7 @@ class CPSC2021(Dataset):
             print verbosity
         """
         suffix = self._get_rec_suffix(preproc)
-        save_fp = os.path.join(
-            self.preprocess_dir, f"{rec}-{suffix}.{self.segment_ext}"
-        )
+        save_fp = os.path.join(self.preprocess_dir, f"{rec}-{suffix}.{self.segment_ext}")
         if (not force_recompute) and os.path.isfile(save_fp):
             return
         # perform pre-process
@@ -692,9 +640,7 @@ class CPSC2021(Dataset):
         )
         savemat(save_fp, {"ecg": pps["filtered_ecg"]}, format="5")
 
-    def load_preprocessed_data(
-        self, rec: str, preproc: Optional[List[str]] = None
-    ) -> np.ndarray:
+    def load_preprocessed_data(self, rec: str, preproc: Optional[List[str]] = None) -> np.ndarray:
         """finished, checked,
 
         Parameters
@@ -716,17 +662,13 @@ class CPSC2021(Dataset):
         suffix = self._get_rec_suffix(preproc)
         fp = os.path.join(self.preprocess_dir, f"{rec}-{suffix}.{self.segment_ext}")
         if not os.path.exists(fp):
-            raise FileNotFoundError(
-                f"preprocess(es) \042{preproc}\042 not done for {rec} yet"
-            )
+            raise FileNotFoundError(f"preprocess(es) \042{preproc}\042 not done for {rec} yet")
         p_sig = loadmat(fp)["ecg"]
         if p_sig.shape[0] != 2:
             p_sig = p_sig.T
         return p_sig
 
-    def _normalize_preprocess_names(
-        self, preproc: List[str], ensure_nonempty: bool
-    ) -> List[str]:
+    def _normalize_preprocess_names(self, preproc: List[str], ensure_nonempty: bool) -> List[str]:
         """finished, checked,
 
         to transform all preproc into lower case,
@@ -842,11 +784,7 @@ class CPSC2021(Dataset):
             ]
         )
         subject = self.reader.get_subject_id(rec)
-        rec_segs = [
-            item
-            for item in self.__all_segments[subject]
-            if item.startswith(rec.replace("data", "S"))
-        ]
+        rec_segs = [item for item in self.__all_segments[subject] if item.startswith(rec.replace("data", "S"))]
         if (not force_recompute) and len(rec_segs) > 0:
             return
         elif force_recompute:
@@ -867,11 +805,7 @@ class CPSC2021(Dataset):
 
         # find critical points
         critical_points = np.where(np.diff(af_mask) != 0)[0]
-        critical_points = [
-            p
-            for p in critical_points
-            if critical_forward_len[1] <= p < siglen - critical_forward_len[1]
-        ]
+        critical_points = [p for p in critical_points if critical_forward_len[1] <= p < siglen - critical_forward_len[1]]
 
         segments = []
 
@@ -896,9 +830,7 @@ class CPSC2021(Dataset):
         for cp in critical_points:
             start_idx = max(
                 0,
-                cp
-                - self.seglen
-                + random.randint(critical_forward_len[0], critical_forward_len[1]),
+                cp - self.seglen + random.randint(critical_forward_len[0], critical_forward_len[1]),
             )
             while start_idx <= min(cp - critical_forward_len[1], siglen - self.seglen):
                 new_seg = self.__generate_segment(
@@ -907,9 +839,7 @@ class CPSC2021(Dataset):
                     start_idx=start_idx,
                 )
                 segments.append(new_seg)
-                start_idx += random.randint(
-                    critical_forward_len[0], critical_forward_len[1]
-                )
+                start_idx += random.randint(critical_forward_len[0], critical_forward_len[1])
 
         # return segments
         self.__save_segments(rec, segments, update_segments_json)
@@ -948,9 +878,7 @@ class CPSC2021(Dataset):
             - af_mask: mask of af episodes of the segment
             - interval: interval ([start_idx, end_idx]) in the original ECG record of the segment
         """
-        assert not all(
-            [start_idx is None, end_idx is None]
-        ), "at least one of `start_idx` and `end_idx` should be set"
+        assert not all([start_idx is None, end_idx is None]), "at least one of `start_idx` and `end_idx` should be set"
         siglen = data.shape[1]
         # offline augmentations are done, including strech-or-compress, ...
         if self.config.stretch_compress != 0:
@@ -1006,16 +934,12 @@ class CPSC2021(Dataset):
         seg_rpeaks = [
             int(round(r / sc_ratio))
             for r in seg_rpeaks
-            if self.config.rpeaks_dist2border
-            <= r
-            < self.seglen - self.config.rpeaks_dist2border
+            if self.config.rpeaks_dist2border <= r < self.seglen - self.config.rpeaks_dist2border
         ]
         # generate qrs_mask from rpeaks
         seg_qrs_mask = np.zeros((self.seglen,), dtype=int)
         for r in seg_rpeaks:
-            seg_qrs_mask[
-                r - self.config.qrs_mask_bias : r + self.config.qrs_mask_bias
-            ] = 1
+            seg_qrs_mask[r - self.config.qrs_mask_bias : r + self.config.qrs_mask_bias] = 1
         # adjust af_intervals
         seg_af_intervals = self.reader.load_af_episodes(
             rec=rec,
@@ -1024,10 +948,7 @@ class CPSC2021(Dataset):
             zero_start=True,
             fmt="intervals",
         )
-        seg_af_intervals = [
-            [int(round(itv[0] / sc_ratio)), int(round(itv[1] / sc_ratio))]
-            for itv in seg_af_intervals
-        ]
+        seg_af_intervals = [[int(round(itv[0] / sc_ratio)), int(round(itv[1] / sc_ratio))] for itv in seg_af_intervals]
         # generate af_mask from af_intervals
         seg_af_mask = np.zeros((self.seglen,), dtype=int)
         for itv in seg_af_intervals:
@@ -1042,9 +963,7 @@ class CPSC2021(Dataset):
         )
         return new_seg
 
-    def __save_segments(
-        self, rec: str, segments: List[ED], update_segments_json: bool = False
-    ) -> None:
+    def __save_segments(self, rec: str, segments: List[ED], update_segments_json: bool = False) -> None:
         """finished, checked,
 
         Parameters
@@ -1104,9 +1023,7 @@ class CPSC2021(Dataset):
                     "ann",
                 ]:
                     path = self.segments_dirs[item][subject]
-                    for f in [
-                        n for n in os.listdir(path) if n.endswith(self.segment_ext)
-                    ]:
+                    for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
                         if self._get_rec_name(f) == rec:
                             os.remove(os.path.join(path, f))
                             self.__all_segments[subject].remove(os.path.splitext(f)[0])
@@ -1117,14 +1034,10 @@ class CPSC2021(Dataset):
                     "ann",
                 ]:
                     path = self.segments_dirs[item][subject]
-                    for f in [
-                        n for n in os.listdir(path) if n.endswith(self.segment_ext)
-                    ]:
+                    for f in [n for n in os.listdir(path) if n.endswith(self.segment_ext)]:
                         os.remove(os.path.join(path, f))
                         self.__all_segments[subject].remove(os.path.splitext(f)[0])
-        self.segments = list_sum(
-            [self.__all_segments[subject] for subject in self.subjects]
-        )
+        self.segments = list_sum([self.__all_segments[subject] for subject in self.subjects])
 
     def _slice_rr_seq(self, force_recompute: bool = False, verbose: int = 0) -> None:
         """finished, checked,
@@ -1164,11 +1077,7 @@ class CPSC2021(Dataset):
         """finished, checked,"""
         self.__assert_task(["rr_lstm"])
         subject = self.reader.get_subject_id(rec)
-        rec_rr_seq = [
-            item
-            for item in self.__all_rr_seq[subject]
-            if item.startswith(rec.replace("data", "R"))
-        ]
+        rec_rr_seq = [item for item in self.__all_rr_seq[subject] if item.startswith(rec.replace("data", "R"))]
         if (not force_recompute) and len(rec_rr_seq) > 0:
             return
         elif force_recompute:
@@ -1187,11 +1096,7 @@ class CPSC2021(Dataset):
 
         # find critical points
         critical_points = np.where(np.diff(label_seq) != 0)[0]
-        critical_points = [
-            p
-            for p in critical_points
-            if critical_forward_len[1] <= p < len(rr) - critical_forward_len[1]
-        ]
+        critical_points = [p for p in critical_points if critical_forward_len[1] <= p < len(rr) - critical_forward_len[1]]
 
         rr_seq = []
 
@@ -1219,9 +1124,7 @@ class CPSC2021(Dataset):
         for cp in critical_points:
             start_idx = max(
                 0,
-                cp
-                - self.seglen
-                + random.randint(critical_forward_len[0], critical_forward_len[1]),
+                cp - self.seglen + random.randint(critical_forward_len[0], critical_forward_len[1]),
             )
             while start_idx <= min(cp - critical_forward_len[1], len(rr) - self.seglen):
                 end_idx = start_idx + self.seglen
@@ -1231,9 +1134,7 @@ class CPSC2021(Dataset):
                     interval=[start_idx, end_idx],
                 )
                 rr_seq.append(new_rr_seq)
-                start_idx += random.randint(
-                    critical_forward_len[0], critical_forward_len[1]
-                )
+                start_idx += random.randint(critical_forward_len[0], critical_forward_len[1])
         # save rr sequences
         ordering = list(range(len(rr_seq)))
         random.shuffle(ordering)
@@ -1271,9 +1172,7 @@ class CPSC2021(Dataset):
                 for f in [n for n in os.listdir(path) if n.endswith(self.rr_seq_ext)]:
                     os.remove(os.path.join(path, f))
                     self.__all_rr_seq[subject].remove(os.path.splitext(f)[0])
-        self.rr_seq = list_sum(
-            [self.__all_rr_seq[subject] for subject in self.subjects]
-        )
+        self.rr_seq = list_sum([self.__all_rr_seq[subject] for subject in self.subjects])
 
     def _get_rec_name(self, seg_or_rr: str) -> str:
         """finished, checked,
@@ -1291,9 +1190,7 @@ class CPSC2021(Dataset):
         rec = re.sub("[RS]", "data", os.path.splitext(seg_or_rr)[0])[:-8]
         return rec
 
-    def _train_test_split(
-        self, train_ratio: float = 0.8, force_recompute: bool = False
-    ) -> Dict[str, List[str]]:
+    def _train_test_split(self, train_ratio: float = 0.8, force_recompute: bool = False) -> Dict[str, List[str]]:
         """finished, checked,
 
         do train test split,
@@ -1319,43 +1216,22 @@ class CPSC2021(Dataset):
         _test_ratio = 100 - _train_ratio
         assert _train_ratio * _test_ratio > 0
 
-        train_file = os.path.join(
-            self.reader.db_dir_base, f"train_ratio_{_train_ratio}.json"
-        )
-        test_file = os.path.join(
-            self.reader.db_dir_base, f"test_ratio_{_test_ratio}.json"
-        )
+        train_file = os.path.join(self.reader.db_dir_base, f"train_ratio_{_train_ratio}.json")
+        test_file = os.path.join(self.reader.db_dir_base, f"test_ratio_{_test_ratio}.json")
 
         if not all([os.path.isfile(train_file), os.path.isfile(test_file)]):
             train_file = os.path.join(_BASE_DIR, "utils", os.path.basename(train_file))
             test_file = os.path.join(_BASE_DIR, "utils", os.path.basename(test_file))
 
-        if force_recompute or not all(
-            [os.path.isfile(train_file), os.path.isfile(test_file)]
-        ):
+        if force_recompute or not all([os.path.isfile(train_file), os.path.isfile(test_file)]):
             all_subjects = set(self.reader.df_stats.subject_id.tolist())
-            afp_subjects = set(
-                self.reader.df_stats[
-                    self.reader.df_stats.label == "AFp"
-                ].subject_id.tolist()
-            )
-            aff_subjects = (
-                set(
-                    self.reader.df_stats[
-                        self.reader.df_stats.label == "AFf"
-                    ].subject_id.tolist()
-                )
-                - afp_subjects
-            )
+            afp_subjects = set(self.reader.df_stats[self.reader.df_stats.label == "AFp"].subject_id.tolist())
+            aff_subjects = set(self.reader.df_stats[self.reader.df_stats.label == "AFf"].subject_id.tolist()) - afp_subjects
             normal_subjects = all_subjects - afp_subjects - aff_subjects
 
             test_set = (
-                random.sample(
-                    afp_subjects, int(round(len(afp_subjects) * _test_ratio / 100))
-                )
-                + random.sample(
-                    aff_subjects, int(round(len(aff_subjects) * _test_ratio / 100))
-                )
+                random.sample(afp_subjects, int(round(len(afp_subjects) * _test_ratio / 100)))
+                + random.sample(aff_subjects, int(round(len(aff_subjects) * _test_ratio / 100)))
                 + random.sample(
                     normal_subjects,
                     int(round(len(normal_subjects) * _test_ratio / 100)),
@@ -1366,21 +1242,13 @@ class CPSC2021(Dataset):
             random.shuffle(test_set)
             random.shuffle(train_set)
 
-            train_file_1 = os.path.join(
-                self.reader.db_dir_base, f"train_ratio_{_train_ratio}.json"
-            )
-            train_file_2 = os.path.join(
-                _BASE_DIR, "utils", f"train_ratio_{_train_ratio}.json"
-            )
+            train_file_1 = os.path.join(self.reader.db_dir_base, f"train_ratio_{_train_ratio}.json")
+            train_file_2 = os.path.join(_BASE_DIR, "utils", f"train_ratio_{_train_ratio}.json")
             with open(train_file_1, "w") as f1, open(train_file_2, "w") as f2:
                 json.dump(train_set, f1, ensure_ascii=False)
                 json.dump(train_set, f2, ensure_ascii=False)
-            test_file_1 = os.path.join(
-                self.reader.db_dir_base, f"test_ratio_{_test_ratio}.json"
-            )
-            test_file_2 = os.path.join(
-                _BASE_DIR, "utils", f"test_ratio_{_test_ratio}.json"
-            )
+            test_file_1 = os.path.join(self.reader.db_dir_base, f"test_ratio_{_test_ratio}.json")
+            test_file_2 = os.path.join(_BASE_DIR, "utils", f"test_ratio_{_test_ratio}.json")
             with open(test_file_1, "w") as f1, open(test_file_2, "w") as f2:
                 json.dump(test_set, f1, ensure_ascii=False)
                 json.dump(test_set, f2, ensure_ascii=False)
@@ -1482,9 +1350,7 @@ def _generate_weight_mask(
         # weight = np.zeros_like(target_mask, dtype=float)
         # weight[max(0, idx-sigma): (idx+sigma)] = boundary_weight
         weight = np.full_like(target_mask, boundary_weight, dtype=float)
-        weight = weight * np.exp(
-            -np.power(np.arange(len(target_mask)) - idx, 2) / sigma**2
-        )
+        weight = weight * np.exp(-np.power(np.arange(len(target_mask)) - idx, 2) / sigma**2)
         weight_mask += weight
     if plot:
         import matplotlib.pyplot as plt

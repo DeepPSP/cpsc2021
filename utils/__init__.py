@@ -1,5 +1,6 @@
 """
 """
+
 import os
 import sys
 
@@ -11,8 +12,8 @@ copied from the official baseline entry repository
 """
 
 import json
-import numpy as np
 
+import numpy as np
 import peakutils
 from scipy import signal
 
@@ -71,9 +72,7 @@ def p_t_qrs(ecg_original, fs=1000, gr=1):
 
     # Squaring and Moving average
     ecg_s = np.power(ecg_d, 2)
-    ecg_m = np.convolve(
-        ecg_s, np.ones(int(np.around(0.150 * fs))) / np.around(0.150 * fs)
-    )
+    ecg_m = np.convolve(ecg_s, np.ones(int(np.around(0.150 * fs))) / np.around(0.150 * fs))
     delay = delay + np.around(0.150 * fs) / 2
     # Fiducial Marks
     locs = peakutils.indexes(ecg_m, thres=0, min_dist=np.around(0.2 * fs))
@@ -171,9 +170,7 @@ def p_t_qrs(ecg_original, fs=1000, gr=1):
 
                     if y_i_t > THR_NOISE1:
                         Beat_C1 += 1
-                        qrs_i_raw[Beat_C1] = (
-                            locs_temp - np.around(0.150 * fs) + (x_i_t - 1)
-                        )
+                        qrs_i_raw[Beat_C1] = locs_temp - np.around(0.150 * fs) + (x_i_t - 1)
                         qrs_amp_raw[Beat_C1] = y_i_t
                         SIG_LEV1 = 0.25 * y_i_t + 0.75 * SIG_LEV1
 
@@ -276,9 +273,7 @@ def qrs_detect(ECG, fs):
 
                 peak = p_t_qrs(ecg_data, fs)
                 peak = np.array(peak)
-                peak = np.delete(
-                    peak, np.where(peak >= winsize - 2 * fs)[0]
-                ).tolist()  # 删除5分钟窗口最后2sR波位置
+                peak = np.delete(peak, np.where(peak >= winsize - 2 * fs)[0]).tolist()  # 删除5分钟窗口最后2sR波位置
 
                 peaks.extend(map(lambda n: n + j * winsize, peak))
             elif j == count:
@@ -288,9 +283,7 @@ def qrs_detect(ECG, fs):
                 else:
                     peak = p_t_qrs(ecg_data, fs)
                     peak = np.array(peak)
-                    peak = np.delete(
-                        peak, np.where(peak <= 2 * fs)[0]
-                    ).tolist()  # 删除最后多余窗口前2sR波位置
+                    peak = np.delete(peak, np.where(peak <= 2 * fs)[0]).tolist()  # 删除最后多余窗口前2sR波位置
 
                     peaks.extend(map(lambda n: n + j * winsize - 5 * fs, peak))
             else:

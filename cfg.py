@@ -8,35 +8,34 @@ from easydict import EasyDict as ED
 
 from torch_ecg.torch_ecg.model_configs import (  # noqa: F401
     ECG_SEQ_LAB_NET_CONFIG,
-    RR_LSTM_CONFIG,
+    ECG_SUBTRACT_UNET_CONFIG,
+    ECG_UNET_VANILLA_CONFIG,
     RR_AF_CRF_CONFIG,
     RR_AF_VANILLA_CONFIG,
-    ECG_UNET_VANILLA_CONFIG,
-    ECG_SUBTRACT_UNET_CONFIG,
+    RR_LSTM_CONFIG,
+    attention,
+    dense_net_leadwise,
+    global_context,
+    linear,
+    lstm,
+    multi_scopic,
+    multi_scopic_block,
+    multi_scopic_leadwise,
+    non_local,
+    resnet,
+    resnet_block_basic,
+    resnet_block_stanford,
+    resnet_bottle_neck,
+    resnet_leadwise,
+    resnet_stanford,
+    squeeze_excitation,
+    vgg16,
+    vgg16_leadwise,
     vgg_block_basic,
     vgg_block_mish,
     vgg_block_swish,
-    vgg16,
-    vgg16_leadwise,
-    resnet_block_stanford,
-    resnet_stanford,
-    resnet_block_basic,
-    resnet_bottle_neck,
-    resnet,
-    resnet_leadwise,
-    multi_scopic_block,
-    multi_scopic,
-    multi_scopic_leadwise,
-    dense_net_leadwise,
     xception_leadwise,
-    lstm,
-    attention,
-    linear,
-    non_local,
-    squeeze_excitation,
-    global_context,
 )
-
 
 __all__ = [
     "BaseCfg",
@@ -72,13 +71,9 @@ BaseCfg.class_fn_map = {  # fullname to number
     "paroxysmal atrial fibrillation": 2,
     "persistent atrial fibrillation": 1,
 }
-BaseCfg.class_abbr_map = {
-    k: BaseCfg.class_fn_map[v] for k, v in BaseCfg.class_abbr2fn.items()
-}
+BaseCfg.class_abbr_map = {k: BaseCfg.class_fn_map[v] for k, v in BaseCfg.class_abbr2fn.items()}
 
-BaseCfg.bias_thr = (
-    0.15 * BaseCfg.fs
-)  # rhythm change annotations onsets or offset of corresponding R peaks
+BaseCfg.bias_thr = 0.15 * BaseCfg.fs  # rhythm change annotations onsets or offset of corresponding R peaks
 BaseCfg.beat_ann_bias_thr = 0.1 * BaseCfg.fs  # half width of broad qrs complex
 BaseCfg.beat_winL = 250 * BaseCfg.fs // 1000  # corr. to 250 ms
 BaseCfg.beat_winR = 250 * BaseCfg.fs // 1000  # corr. to 250 ms
@@ -129,9 +124,7 @@ TrainCfg.normalize_data = True
 
 TrainCfg.label_smoothing = 0.1
 TrainCfg.random_mask = int(TrainCfg.fs * 0.0)  # 1.0s, 0 for no masking
-TrainCfg.stretch_compress = (
-    5  # stretch or compress in time axis, units in percentage (0 - inf)
-)
+TrainCfg.stretch_compress = 5  # stretch or compress in time axis, units in percentage (0 - inf)
 TrainCfg.stretch_compress_prob = 0.3  # probability of performing stretch or compress
 TrainCfg.random_normalize = True  # (re-)normalize to random mean and std
 # valid segments has
@@ -160,9 +153,7 @@ TrainCfg.random_normalize_std = [0.08, 0.32]
 #     [0.0, 0.01],
 # ])
 
-TrainCfg.flip = [-1] + [
-    1
-] * 4  # making the signal upside down, with probability 1/(1+4)
+TrainCfg.flip = [-1] + [1] * 4  # making the signal upside down, with probability 1/(1+4)
 # TODO: explore and add more data augmentations
 
 # configs of training epochs, batch, etc.
@@ -228,9 +219,7 @@ TrainCfg.rr_lstm.final_model_name = None
 TrainCfg.rr_lstm.model_name = "lstm"  # "lstm", "lstm_crf"
 TrainCfg.rr_lstm.input_len = 30  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.overlap_len = 15  # number of rr intervals ( number of rpeaks - 1)
-TrainCfg.rr_lstm.critical_overlap_len = (
-    25  # number of rr intervals ( number of rpeaks - 1)
-)
+TrainCfg.rr_lstm.critical_overlap_len = 25  # number of rr intervals ( number of rpeaks - 1)
 TrainCfg.rr_lstm.classes = [
     "af",
 ]
@@ -352,12 +341,10 @@ ModelCfg.main.unet.fs = BaseCfg.fs
 ModelCfg.main.unet.reduction = 1
 ModelCfg.main.unet.init_num_filters = 16  # keep the same with n_classes
 ModelCfg.main.unet.down_num_filters = [
-    ModelCfg.main.unet.init_num_filters * (2**idx)
-    for idx in range(1, ModelCfg.main.unet.down_up_block_num + 1)
+    ModelCfg.main.unet.init_num_filters * (2**idx) for idx in range(1, ModelCfg.main.unet.down_up_block_num + 1)
 ]
 ModelCfg.main.unet.up_num_filters = [
-    ModelCfg.main.unet.init_num_filters * (2**idx)
-    for idx in range(ModelCfg.main.unet.down_up_block_num - 1, -1, -1)
+    ModelCfg.main.unet.init_num_filters * (2**idx) for idx in range(ModelCfg.main.unet.down_up_block_num - 1, -1, -1)
 ]
 ModelCfg.main.unet.up_mode = "deconv"
 

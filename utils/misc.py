@@ -1,28 +1,27 @@
 """
 """
 
-import os
-import sys
-import re
-import logging
 import datetime
-import random
-from functools import reduce
-from collections import namedtuple
-from glob import glob
-from copy import deepcopy
-from typing import Union, Optional, List, Dict, Sequence, Any
-from numbers import Real, Number
 import json
+import logging
+import os
+import random
+import re
+import sys
+from collections import namedtuple
+from copy import deepcopy
+from functools import reduce
+from glob import glob
+from numbers import Number, Real
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
 np.set_printoptions(precision=5, suppress=True)
-from wfdb.io import _header
-from wfdb import Record, MultiRecord
 from easydict import EasyDict as ED
 from sklearn.utils import compute_class_weight
-
+from wfdb import MultiRecord, Record
+from wfdb.io import _header
 
 __all__ = [
     "get_record_list_recursive",
@@ -74,9 +73,7 @@ def get_record_list_recursive(db_dir: str, rec_ext: str) -> List[str]:
         list of records, in lexicographical order
     """
     res = []
-    db_dir = os.path.join(db_dir, "tmp").replace(
-        "tmp", ""
-    )  # make sure `db_dir` ends with a sep
+    db_dir = os.path.join(db_dir, "tmp").replace("tmp", "")  # make sure `db_dir` ends with a sep
     roots = [db_dir]
     while len(roots) > 0:
         new_roots = []
@@ -85,11 +82,7 @@ def get_record_list_recursive(db_dir: str, rec_ext: str) -> List[str]:
             res += [item for item in tmp if os.path.isfile(item)]
             new_roots += [item for item in tmp if os.path.isdir(item)]
         roots = deepcopy(new_roots)
-    res = [
-        os.path.splitext(item)[0].replace(db_dir, "")
-        for item in res
-        if item.endswith(rec_ext)
-    ]
+    res = [os.path.splitext(item)[0].replace(db_dir, "") for item in res if item.endswith(rec_ext)]
     res = sorted(res)
 
     return res
@@ -117,9 +110,7 @@ def get_record_list_recursive2(db_dir: str, rec_pattern: str) -> List[str]:
         list of records, in lexicographical order
     """
     res = []
-    db_dir = os.path.join(db_dir, "tmp").replace(
-        "tmp", ""
-    )  # make sure `db_dir` ends with a sep
+    db_dir = os.path.join(db_dir, "tmp").replace("tmp", "")  # make sure `db_dir` ends with a sep
     roots = [db_dir]
     while len(roots) > 0:
         new_roots = []
@@ -135,9 +126,7 @@ def get_record_list_recursive2(db_dir: str, rec_pattern: str) -> List[str]:
     return res
 
 
-def get_record_list_recursive3(
-    db_dir: str, rec_patterns: Union[str, Dict[str, str]]
-) -> Union[List[str], Dict[str, List[str]]]:
+def get_record_list_recursive3(db_dir: str, rec_patterns: Union[str, Dict[str, str]]) -> Union[List[str], Dict[str, List[str]]]:
     r"""finished, checked,
 
     get the list of records in `db_dir` recursively,
@@ -163,9 +152,7 @@ def get_record_list_recursive3(
         res = []
     elif isinstance(rec_patterns, dict):
         res = {k: [] for k in rec_patterns.keys()}
-    db_dir = os.path.join(db_dir, "tmp").replace(
-        "tmp", ""
-    )  # make sure `db_dir` ends with a sep
+    db_dir = os.path.join(db_dir, "tmp").replace("tmp", "")  # make sure `db_dir` ends with a sep
     roots = [db_dir]
     while len(roots) > 0:
         new_roots = []
@@ -180,11 +167,7 @@ def get_record_list_recursive3(
                 for k in rec_patterns.keys():
                     to_add = list(filter(re.compile(rec_patterns[k]).search, tmp))
                     res[k] += [os.path.join(r, item) for item in to_add]
-            new_roots += [
-                os.path.join(r, item)
-                for item in tmp
-                if os.path.isdir(os.path.join(r, item))
-            ]
+            new_roots += [os.path.join(r, item) for item in tmp if os.path.isdir(os.path.join(r, item))]
         roots = deepcopy(new_roots)
     if isinstance(rec_patterns, str):
         res = [os.path.splitext(item)[0].replace(db_dir, "") for item in res]
@@ -196,9 +179,7 @@ def get_record_list_recursive3(
     return res
 
 
-def dict_to_str(
-    d: Union[dict, list, tuple], current_depth: int = 1, indent_spaces: int = 4
-) -> str:
+def dict_to_str(d: Union[dict, list, tuple], current_depth: int = 1, indent_spaces: int = 4) -> str:
     """finished, checked,
 
     convert a (possibly) nested dict into a `str` of json-like formatted form,
@@ -327,9 +308,7 @@ def diff_with_step(a: np.ndarray, step: int = 1, **kwargs) -> np.ndarray:
         the difference array
     """
     if step >= len(a):
-        raise ValueError(
-            f"step ({step}) should be less than the length ({len(a)}) of `a`"
-        )
+        raise ValueError(f"step ({step}) should be less than the length ({len(a)}) of `a`")
     d = a[step:] - a[:-step]
     return d
 
@@ -408,10 +387,7 @@ def get_mask(
     """
     if isinstance(shape, int):
         shape = (shape,)
-    l_itv = [
-        [max(0, cp - left_bias), min(shape[-1], cp + right_bias)]
-        for cp in critical_points
-    ]
+    l_itv = [[max(0, cp - left_bias), min(shape[-1], cp + right_bias)] for cp in critical_points]
     if return_fmt.lower() == "mask":
         mask = np.zeros(shape=shape, dtype=int)
         for itv in l_itv:
@@ -516,9 +492,7 @@ def plot_single_lead(
     ax.set_ylabel("Voltage [μV]")
 
 
-def init_logger(
-    log_dir: str, log_file: Optional[str] = None, mode: str = "a", verbose: int = 0
-) -> logging.Logger:
+def init_logger(log_dir: str, log_file: Optional[str] = None, mode: str = "a", verbose: int = 0) -> logging.Logger:
     """finished, checked,
 
     Parameters
@@ -738,13 +712,9 @@ def masks_to_waveforms(
         else:
             _masks = masks.copy()
     else:
-        raise ValueError(
-            f"masks should be of dim 1 or 2, but got a {masks.ndim}d array"
-        )
+        raise ValueError(f"masks should be of dim 1 or 2, but got a {masks.ndim}d array")
 
-    _leads = (
-        [f"lead_{idx+1}" for idx in range(_masks.shape[0])] if leads is None else leads
-    )
+    _leads = [f"lead_{idx+1}" for idx in range(_masks.shape[0])] if leads is None else leads
     assert len(_leads) == _masks.shape[0]
 
     _class_map = ED(deepcopy(class_map))
@@ -842,9 +812,7 @@ def nildent(text: str) -> str:
     kill all leading white spaces in each line of `text`,
     while keeping all lines (including empty)
     """
-    new_text = "\n".join([line.lstrip() for line in text.splitlines()]) + (
-        "\n" if text.endswith("\n") else ""
-    )
+    new_text = "\n".join([line.lstrip() for line in text.splitlines()]) + ("\n" if text.endswith("\n") else "")
     return new_text
 
 

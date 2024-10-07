@@ -15,14 +15,13 @@ References:
 to add
 """
 
-from typing import List
 from numbers import Real
+from typing import List
 
 import numpy as np
 from easydict import EasyDict as ED
 
 from utils.misc import mask_to_intervals
-
 
 __all__ = [
     "remove_spikes_naive",
@@ -61,9 +60,7 @@ def remove_spikes_naive(sig: np.ndarray) -> np.ndarray:
     return filtered_sig
 
 
-def ecg_denoise_naive(
-    filtered_sig: np.ndarray, fs: Real, config: ED
-) -> List[List[int]]:
+def ecg_denoise_naive(filtered_sig: np.ndarray, fs: Real, config: ED) -> List[List[int]]:
     """finished, checked,
 
     a naive function removing non-ECG segments (flat and motion artefact)

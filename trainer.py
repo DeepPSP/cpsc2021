@@ -1,59 +1,40 @@
 """
 """
 
+import argparse
+import logging
 import os
 import sys
-import logging
-import argparse
 import textwrap
+from collections import OrderedDict, deque
 from copy import deepcopy
-from collections import deque, OrderedDict
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
 
 np.set_printoptions(precision=5, suppress=True)
+import torch
+from easydict import EasyDict as ED
+from tensorboardX import SummaryWriter
+from torch import nn, optim
+from torch.nn.parallel import DataParallel as DP
+from torch.nn.parallel import DistributedDataParallel as DDP  # noqa: F401
+from torch.utils.data import DataLoader
+
 # try:
 #     from tqdm.auto import tqdm
 # except ModuleNotFoundError:
 #     from tqdm import tqdm
 from tqdm import tqdm
-import torch
-from torch import nn
-from torch import optim
-from torch.utils.data import DataLoader
-from torch.nn.parallel import (  # noqa: F401
-    DistributedDataParallel as DDP,
-    DataParallel as DP,
-)  # noqa: F401
-from tensorboardX import SummaryWriter
-from easydict import EasyDict as ED
 
-from torch_ecg.torch_ecg.models.loss import (
-    BCEWithLogitsWithClassWeightLoss,
-    MaskedBCEWithLogitsLoss,
-)
-from torch_ecg.torch_ecg.utils.utils_nn import default_collate_fn as collate_fn
-from torch_ecg.torch_ecg.utils.misc import (
-    init_logger,
-    get_date_str,
-    dict_to_str,
-    str2bool,
-)
-from model import (  # noqa: F401
-    ECG_SEQ_LAB_NET_CPSC2021,
-    ECG_UNET_CPSC2021,
-    ECG_SUBTRACT_UNET_CPSC2021,
-    RR_LSTM_CPSC2021,
-)
-from utils.aux_metrics import (
-    compute_rpeak_metric,
-    compute_rr_metric,
-    compute_main_task_metric,
-)
-from utils.misc import mask_to_intervals
-from cfg import BaseCfg, TrainCfg, ModelCfg
+from cfg import BaseCfg, ModelCfg, TrainCfg
 from dataset import CPSC2021
+from model import ECG_SEQ_LAB_NET_CPSC2021, ECG_SUBTRACT_UNET_CPSC2021, ECG_UNET_CPSC2021, RR_LSTM_CPSC2021  # noqa: F401
+from torch_ecg.torch_ecg.models.loss import BCEWithLogitsWithClassWeightLoss, MaskedBCEWithLogitsLoss
+from torch_ecg.torch_ecg.utils.misc import dict_to_str, get_date_str, init_logger, str2bool
+from torch_ecg.torch_ecg.utils.utils_nn import default_collate_fn as collate_fn
+from utils.aux_metrics import compute_main_task_metric, compute_rpeak_metric, compute_rr_metric
+from utils.misc import mask_to_intervals
 
 if BaseCfg.torch_dtype.lower() == "double":
     torch.set_default_tensor_type(torch.DoubleTensor)
@@ -214,9 +195,7 @@ def train(
             weight_decay=config.decay,
         )
     else:
-        raise NotImplementedError(
-            f"optimizer `{config.train_optimizer}` not implemented!"
-        )
+        raise NotImplementedError(f"optimizer `{config.train_optimizer}` not implemented!")
     # scheduler = optim.lr_scheduler.LambdaLR(optimizer, burnin_schedule)
 
     if config.lr_scheduler is None:
@@ -224,9 +203,7 @@ def train(
     elif config.lr_scheduler.lower() == "plateau":
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "max", patience=2)
     elif config.lr_scheduler.lower() == "step":
-        scheduler = optim.lr_scheduler.StepLR(
-            optimizer, config.lr_step_size, config.lr_gamma
-        )
+        scheduler = optim.lr_scheduler.StepLR(optimizer, config.lr_step_size, config.lr_gamma)
     elif config.lr_scheduler.lower() in [
         "one_cycle",
         "onecycle",
@@ -238,16 +215,12 @@ def train(
             steps_per_epoch=len(train_loader),
         )
     else:
-        raise NotImplementedError(
-            f"lr scheduler `{config.lr_scheduler.lower()}` not implemented for training"
-        )
+        raise NotImplementedError(f"lr scheduler `{config.lr_scheduler.lower()}` not implemented for training")
 
     if config.loss == "BCEWithLogitsLoss":
         criterion = nn.BCEWithLogitsLoss()
     elif config.loss == "BCEWithLogitsWithClassWeightLoss":
-        criterion = BCEWithLogitsWithClassWeightLoss(
-            class_weight=train_dataset.class_weights.to(device=device, dtype=_DTYPE)
-        )
+        criterion = BCEWithLogitsWithClassWeightLoss(class_weight=train_dataset.class_weights.to(device=device, dtype=_DTYPE))
     elif config.loss == "BCELoss":
         criterion = nn.BCELoss()
     elif config.loss == "MaskedBCEWithLogitsLoss":
@@ -257,9 +230,7 @@ def train(
     # scheduler = ReduceLROnPlateau(optimizer, mode="max", verbose=True, patience=6, min_lr=1e-7)
     # scheduler = CosineAnnealingWarmRestarts(optimizer, 0.001, 1e-6, 20)
 
-    save_prefix = (
-        f"{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_epoch"
-    )
+    save_prefix = f"{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_epoch"
 
     os.makedirs(config.checkpoints, exist_ok=True)
     os.makedirs(config.model_dir, exist_ok=True)
@@ -282,9 +253,7 @@ def train(
         model.train()
         epoch_loss = 0
 
-        with tqdm(
-            total=n_train, desc=f"Epoch {epoch + 1}/{n_epochs}", ncols=100
-        ) as pbar:
+        with tqdm(total=n_train, desc=f"Epoch {epoch + 1}/{n_epochs}", ncols=100) as pbar:
             for epoch_step, data in enumerate(train_loader):
                 global_step += 1
                 if config.task == "rr_lstm":
@@ -348,9 +317,7 @@ def train(
 
             # eval for each epoch using `evaluate`
             if debug:
-                eval_train_res = evaluate(
-                    model, val_train_loader, config, device, debug, logger=logger
-                )
+                eval_train_res = evaluate(model, val_train_loader, config, device, debug, logger=logger)
                 for k, v in eval_train_res.items():
                     writer.add_scalar(f"train/task_metric_{k}", v, global_step)
 
@@ -401,10 +368,7 @@ def train(
                 best_epoch = epoch + 1
                 pseudo_best_epoch = epoch + 1
             elif config.early_stopping:
-                if (
-                    eval_res[config.monitor]
-                    >= best_metric - config.early_stopping.min_delta
-                ):
+                if eval_res[config.monitor] >= best_metric - config.early_stopping.min_delta:
                     pseudo_best_epoch = epoch + 1
                 elif epoch - pseudo_best_epoch >= config.early_stopping.patience:
                     msg = f"early stopping is triggered at epoch {epoch + 1}"
@@ -429,12 +393,8 @@ def train(
                 os.makedirs(config.checkpoints, exist_ok=True)
             except OSError:
                 pass
-            save_suffix = (
-                f"epochloss_{epoch_loss:.5f}_metric_{eval_res[config.monitor]:.2f}"
-            )
-            save_filename = (
-                f"{save_prefix}{epoch + 1}_{get_date_str()}_{save_suffix}.pth.tar"
-            )
+            save_suffix = f"epochloss_{epoch_loss:.5f}_metric_{eval_res[config.monitor]:.2f}"
+            save_filename = f"{save_prefix}{epoch + 1}_{get_date_str()}_{save_suffix}.pth.tar"
             save_path = os.path.join(config.checkpoints, save_filename)
             torch.save(
                 {
@@ -538,25 +498,16 @@ def evaluate(
         for signals, labels in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
             labels = labels.numpy()
-            labels = [
-                mask_to_intervals(item, 1) for item in labels
-            ]  # intervals of qrs complexes
+            labels = [mask_to_intervals(item, 1) for item in labels]  # intervals of qrs complexes
             labels = [  # to indices of rpeaks in the original signal sequence
-                (
-                    config.qrs_detection.reduction
-                    * np.array([itv[0] + itv[1] for itv in item])
-                    / 2
-                ).astype(int)
+                (config.qrs_detection.reduction * np.array([itv[0] + itv[1] for itv in item]) / 2).astype(int)
                 for item in labels
             ]
             labels = [
                 item[
                     np.where(
                         (item >= config.rpeaks_dist2border)
-                        & (
-                            item
-                            < config.qrs_detection.input_len - config.rpeaks_dist2border
-                        )
+                        & (item < config.qrs_detection.input_len - config.rpeaks_dist2border)
                     )[0]
                 ]
                 for item in labels
@@ -582,12 +533,8 @@ def evaluate(
         all_weight_masks = np.array([]).reshape((0, config[config.task].input_len))
         for signals, labels, weight_masks in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
-            labels = labels.numpy().squeeze(
-                -1
-            )  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
-            weight_masks = weight_masks.numpy().squeeze(
-                -1
-            )  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            weight_masks = weight_masks.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
             all_labels = np.concatenate((all_labels, labels))
             all_weight_masks = np.concatenate((all_weight_masks, weight_masks))
             if torch.cuda.is_available():
@@ -599,23 +546,13 @@ def evaluate(
         eval_res = compute_rr_metric(all_labels, all_preds, all_weight_masks)
         # eval_res = {"rr_score": eval_res}  # to dict
     elif config.task == "main":
-        all_preds = np.array([]).reshape(
-            (0, config.main.input_len // config.main.reduction)
-        )
-        all_labels = np.array([]).reshape(
-            (0, config.main.input_len // config.main.reduction)
-        )
-        all_weight_masks = np.array([]).reshape(
-            (0, config.main.input_len // config.main.reduction)
-        )
+        all_preds = np.array([]).reshape((0, config.main.input_len // config.main.reduction))
+        all_labels = np.array([]).reshape((0, config.main.input_len // config.main.reduction))
+        all_weight_masks = np.array([]).reshape((0, config.main.input_len // config.main.reduction))
         for signals, labels, weight_masks in data_loader:
             signals = signals.to(device=device, dtype=_DTYPE)
-            labels = labels.numpy().squeeze(
-                -1
-            )  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
-            weight_masks = weight_masks.numpy().squeeze(
-                -1
-            )  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            labels = labels.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
+            weight_masks = weight_masks.numpy().squeeze(-1)  # (batch_size, seq_len, 1) -> (batch_size, seq_len)
             all_labels = np.concatenate((all_labels, labels))
             all_weight_masks = np.concatenate((all_weight_masks, weight_masks))
             if torch.cuda.is_available():

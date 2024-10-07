@@ -1,22 +1,21 @@
 """
 """
 
+import glob
+import json
 import os
 import re
 import time
-import glob
 import zipfile
-import json
-from typing import Sequence, Optional, Any, Tuple, List
+from typing import Any, List, Optional, Sequence, Tuple
 
-import numpy as np
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
-from data_reader import CPSC2021Reader as DR
 from cfg import BaseCfg
-
+from data_reader import CPSC2021Reader as DR
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _WORK_DIR = os.path.join(_BASE_DIR, "working_dir")
@@ -42,10 +41,7 @@ def gather_val_res(
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, List[str]]:
     """ """
     extract_val_res_if_needed()
-    val_set = [
-        os.path.splitext(os.path.basename(item))[0]
-        for item in glob.glob(os.path.join(_UNION_RES_DIR, "*.json"))
-    ]
+    val_set = [os.path.splitext(os.path.basename(item))[0] for item in glob.glob(os.path.join(_UNION_RES_DIR, "*.json"))]
     dr = DR(dataset_dir or BaseCfg.db_dir)
 
     agg_res = []
@@ -65,9 +61,7 @@ def gather_val_res(
             val_res_final_new = json.load(f)["predict_endpoints"]
         if len(val_res_final_new) == 0:
             val_res_final_new_cls = "N"
-        elif (
-            len(val_res_final_new) == 1 and np.diff(val_res_final_new)[-1] == siglen - 1
-        ):
+        elif len(val_res_final_new) == 1 and np.diff(val_res_final_new)[-1] == siglen - 1:
             val_res_final_new_cls = "AFf"
         else:
             val_res_final_new_cls = "AFp"
@@ -127,9 +121,7 @@ def gather_val_res(
     cm_rr_lstm = np.zeros((3, 3), dtype=int)
     cm_seq = np.zeros((3, 3), dtype=int)
     for idx, row in df_agg_res.iterrows():
-        cm_rr_lstm[
-            classes.index(row["rr_pred_cls"]), classes.index(row["truth_cls"])
-        ] += 1
+        cm_rr_lstm[classes.index(row["rr_pred_cls"]), classes.index(row["truth_cls"])] += 1
         cm_seq[classes.index(row["seq_pred_cls"]), classes.index(row["truth_cls"])] += 1
 
     return df_agg_res, cm_rr_lstm, cm_seq, classes

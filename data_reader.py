@@ -2,38 +2,36 @@
 """
 """
 
+import json
+import logging
+import math
 import os
 import sys
-import math
 import time
 import warnings
-import logging
-import json
-from typing import Union, Optional, Any, List, Tuple, Dict, Sequence
 from numbers import Real
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 np.set_printoptions(precision=5, suppress=True)
 import pandas as pd
-from scipy.signal import resample_poly
-from easydict import EasyDict as ED
 import wfdb
+from easydict import EasyDict as ED
+from scipy.signal import resample_poly
 
-from utils.misc import (  # noqa: F401
-    get_record_list_recursive,
-    get_record_list_recursive3,
-    ms2samples,
-    samples2ms,
-    list_sum,
-    # init_logger,
+from utils.misc import (  # noqa: F401; init_logger,
     WFDB_Beat_Annotations,
     WFDB_Non_Beat_Annotations,
     WFDB_Rhythm_Annotations,
+    get_record_list_recursive,
+    get_record_list_recursive3,
+    list_sum,
+    ms2samples,
+    samples2ms,
 )
-from utils.utils_interval import generalized_intervals_intersection
 from utils.scoring_metrics import gen_endpoint_score_mask
-
+from utils.utils_interval import generalized_intervals_intersection
 
 __all__ = [
     "CPSC2021Reader",
@@ -114,9 +112,7 @@ class CPSC2021Reader(object):
     [2] https://archive.physionet.org/physiobank/annotations.shtml
     """
 
-    def __init__(
-        self, db_dir: str, working_dir: Optional[str] = None, verbose: int = 2, **kwargs
-    ):
+    def __init__(self, db_dir: str, working_dir: Optional[str] = None, verbose: int = 2, **kwargs):
         """finished, checked,
 
         Parameters
@@ -249,9 +245,7 @@ class CPSC2021Reader(object):
 
         # Create formatters and add it to handlers
         c_format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-        f_format = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        f_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         c_handler.setFormatter(c_format)
         f_handler.setFormatter(f_format)
 
@@ -278,9 +272,7 @@ class CPSC2021Reader(object):
         fn = "RECORDS"
         rev_fn = "REVISED_RECORDS"
         for t in self.db_tranches:
-            dir_candidate = os.path.join(
-                self.db_dir_base, t.replace("training_", "training"), t
-            )
+            dir_candidate = os.path.join(self.db_dir_base, t.replace("training_", "training"), t)
             if os.path.isdir(dir_candidate):
                 dir_tranche = dir_candidate
             else:
@@ -299,9 +291,7 @@ class CPSC2021Reader(object):
                 print("Please wait patiently to let the reader find all records...")
                 start = time.time()
                 rec_patterns_with_ext = f"^data_(?:\\d+)_(?:\\d+).{self.rec_ext}$"
-                self._all_records[t] = get_record_list_recursive3(
-                    dir_tranche, rec_patterns_with_ext
-                )
+                self._all_records[t] = get_record_list_recursive3(dir_tranche, rec_patterns_with_ext)
                 print(f"Done in {time.time() - start:.5f} seconds!")
                 with open(record_list_fp, "w") as f:
                     f.write("\n".join(self._all_records[t]))
@@ -316,23 +306,12 @@ class CPSC2021Reader(object):
                 key=lambda s: int(s),
             )
             self._subject_records[t] = ED(
-                {
-                    sid: [
-                        rec for rec in self._all_records[t] if rec.split("_")[1] == sid
-                    ]
-                    for sid in self._all_subjects[t]
-                }
+                {sid: [rec for rec in self._all_records[t] if rec.split("_")[1] == sid] for sid in self._all_subjects[t]}
             )
-        self._all_records_inv = {
-            r: t for t, l_r in self._all_records.items() for r in l_r
-        }
-        self._all_subjects_inv = {
-            s: t for t, l_s in self._all_subjects.items() for s in l_s
-        }
+        self._all_records_inv = {r: t for t, l_r in self._all_records.items() for r in l_r}
+        self._all_subjects_inv = {s: t for t, l_s in self._all_subjects.items() for s in l_s}
         self.__all_records = sorted(list_sum(self._all_records.values()))
-        self.__all_subjects = sorted(
-            list_sum(self._all_subjects.values()), key=lambda s: int(s)
-        )
+        self.__all_subjects = sorted(list_sum(self._all_subjects.values()), key=lambda s: int(s))
 
     def _aggregate_stats(self) -> None:
         """finished, checked,
@@ -348,36 +327,18 @@ class CPSC2021Reader(object):
             self._stats = pd.read_csv(stats_file_fp_aux)
 
         if self._stats.empty or set(self._stats_columns) != set(self._stats.columns):
-            print(
-                "Please wait patiently to let the reader aggregate statistics on the whole dataset..."
-            )
+            print("Please wait patiently to let the reader aggregate statistics on the whole dataset...")
             start = time.time()
-            self._stats = pd.DataFrame(
-                self.all_records, columns=["record"]
-            )  # use self.all_records to ensure it's computed
-            self._stats["tranche"] = self._stats["record"].apply(
-                lambda s: self._all_records_inv[s]
-            )
-            self._stats["subject_id"] = self._stats["record"].apply(
-                lambda s: int(s.split("_")[1])
-            )
-            self._stats["record_id"] = self._stats["record"].apply(
-                lambda s: int(s.split("_")[2])
-            )
-            self._stats["label"] = self._stats["record"].apply(
-                lambda s: self.load_label(s)
-            )
+            self._stats = pd.DataFrame(self.all_records, columns=["record"])  # use self.all_records to ensure it's computed
+            self._stats["tranche"] = self._stats["record"].apply(lambda s: self._all_records_inv[s])
+            self._stats["subject_id"] = self._stats["record"].apply(lambda s: int(s.split("_")[1]))
+            self._stats["record_id"] = self._stats["record"].apply(lambda s: int(s.split("_")[2]))
+            self._stats["label"] = self._stats["record"].apply(lambda s: self.load_label(s))
             self._stats["fs"] = self.fs
-            self._stats["sig_len"] = self._stats["record"].apply(
-                lambda s: wfdb.rdheader(self._get_path(s)).sig_len
-            )
+            self._stats["sig_len"] = self._stats["record"].apply(lambda s: wfdb.rdheader(self._get_path(s)).sig_len)
             self._stats["sig_len_sec"] = self._stats["sig_len"] / self._stats["fs"]
-            self._stats["revised"] = self._stats["record"].apply(
-                lambda s: 1 if s in self.__revised_records else 0
-            )
-            self._stats = self._stats.sort_values(
-                by=["subject_id", "record_id"], ignore_index=True
-            )
+            self._stats["revised"] = self._stats["record"].apply(lambda s: 1 if s in self.__revised_records else 0)
+            self._stats = self._stats.sort_values(by=["subject_id", "record_id"], ignore_index=True)
             self._stats = self._stats[self._stats_columns]
             self._stats.to_csv(stats_file_fp, index=False)
             self._stats.to_csv(stats_file_fp_aux, index=False)
@@ -419,20 +380,15 @@ class CPSC2021Reader(object):
         else:
             start = time.time()
             if self.df_stats.empty:
-                print(
-                    "Please wait several minutes patiently to let the reader list records for each diagnosis..."
-                )
-                self._diagnoses_records_list = {
-                    d: [] for d in self._labels_f2a.values()
-                }
+                print("Please wait several minutes patiently to let the reader list records for each diagnosis...")
+                self._diagnoses_records_list = {d: [] for d in self._labels_f2a.values()}
                 for rec in self.all_records:
                     lb = self.load_label(rec)
                     self._diagnoses_records_list[lb].append(rec)
                 print(f"Done in {time.time() - start:.5f} seconds!")
             else:
                 self._diagnoses_records_list = {
-                    d: self.df_stats[self.df_stats["label"] == d]["record"].tolist()
-                    for d in self._labels_f2a.values()
+                    d: self.df_stats[self.df_stats["label"] == d]["record"].tolist() for d in self._labels_f2a.values()
                 }
             with open(dr_fp, "w") as f:
                 json.dump(self._diagnoses_records_list, f)
@@ -572,9 +528,7 @@ class CPSC2021Reader(object):
 
         rec_fp = self._get_path(rec)
         sf, st = self._validate_samp_interval(rec, sampfrom, sampto)
-        wfdb_rec = wfdb.rdrecord(
-            rec_fp, sampfrom=sf, sampto=st, physical=True, channel_names=_leads
-        )
+        wfdb_rec = wfdb.rdrecord(rec_fp, sampfrom=sf, sampto=st, physical=True, channel_names=_leads)
         data = np.asarray(wfdb_rec.p_signal.T)
         # lead_units = np.vectorize(lambda s: s.lower())(wfdb_rec.units)
 
@@ -629,9 +583,7 @@ class CPSC2021Reader(object):
             annotaton of the record
         """
         sf, st = self._validate_samp_interval(rec, sampfrom, sampto)
-        ann = wfdb.rdann(
-            self._get_path(rec), extension=self.ann_ext, sampfrom=sf, sampto=st
-        )
+        ann = wfdb.rdann(self._get_path(rec), extension=self.ann_ext, sampfrom=sf, sampto=st)
         # `load_af_episodes` should not use sampfrom, sampto
         func = {
             "rpeaks": self.load_rpeaks,
@@ -641,9 +593,7 @@ class CPSC2021Reader(object):
         if field is None:
             ann = {k: f(rec, ann, sf, st) for k, f in func.items()}
             if kwargs:
-                warnings.warn(
-                    f"key word arguments {list(kwargs.keys())} ignored when field is not specified!"
-                )
+                warnings.warn(f"key word arguments {list(kwargs.keys())} ignored when field is not specified!")
             return ann
         elif field.lower() in [
             "raw",
@@ -696,18 +646,14 @@ class CPSC2021Reader(object):
         """
         if ann is None:
             sf, st = self._validate_samp_interval(rec, sampfrom, sampto)
-            ann = wfdb.rdann(
-                self._get_path(rec), extension=self.ann_ext, sampfrom=sf, sampto=st
-            )
+            ann = wfdb.rdann(self._get_path(rec), extension=self.ann_ext, sampfrom=sf, sampto=st)
         critical_points = ann.sample
         symbols = ann.symbol
         rpeaks_valid = np.isin(symbols, list(WFDB_Beat_Annotations.keys()))
         if sampfrom and zero_start:
             critical_points = critical_points - sampfrom
         if fs is not None and fs != self.fs:
-            critical_points = np.round(
-                critical_points * fs / self.fs + self._epsilon
-            ).astype(int)
+            critical_points = np.round(critical_points * fs / self.fs + self._epsilon).astype(int)
         rpeaks = critical_points[rpeaks_valid]
         return rpeaks
 
@@ -763,24 +709,16 @@ class CPSC2021Reader(object):
         sf, st = self._validate_samp_interval(rec, sampfrom, sampto)
         aux_note = np.array(_ann.aux_note)
         critical_points = _ann.sample
-        af_start_inds = np.where((aux_note == "(AFIB") | (aux_note == "(AFL"))[
-            0
-        ]  # ref. NOTE 3.
+        af_start_inds = np.where((aux_note == "(AFIB") | (aux_note == "(AFL"))[0]  # ref. NOTE 3.
         af_end_inds = np.where(aux_note == "(N")[0]
-        assert len(af_start_inds) == len(
-            af_end_inds
-        ), "unequal number of af period start indices and af period end indices"
+        assert len(af_start_inds) == len(af_end_inds), "unequal number of af period start indices and af period end indices"
 
         if fmt.lower() in [
             "c_intervals",
         ]:
             if sf > 0 or st < siglen:
-                raise ValueError(
-                    "when `fmt` is `c_intervals`, `sampfrom` and `sampto` should never be used!"
-                )
-            af_episodes = [
-                [start, end] for start, end in zip(af_start_inds, af_end_inds)
-            ]
+                raise ValueError("when `fmt` is `c_intervals`, `sampfrom` and `sampto` should never be used!")
+            af_episodes = [[start, end] for start, end in zip(af_start_inds, af_end_inds)]
             return af_episodes
 
         intervals = []
@@ -868,9 +806,7 @@ class CPSC2021Reader(object):
             raise ValueError(f"format `{fmt}` of labels is not supported!")
         return label
 
-    def gen_endpoint_score_mask(
-        self, rec: str, bias: dict = {1: 1, 2: 0.5}
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def gen_endpoint_score_mask(self, rec: str, bias: dict = {1: 1, 2: 0.5}) -> Tuple[np.ndarray, np.ndarray]:
         """finished, checked,
 
         generate the scoring mask for the onsets and offsets of af episodes,
@@ -895,9 +831,7 @@ class CPSC2021Reader(object):
         """
         masks = gen_endpoint_score_mask(
             siglen=self.df_stats[self.df_stats.record == rec].iloc[0].sig_len,
-            critical_points=wfdb.rdann(
-                self._get_path(rec), extension=self.ann_ext
-            ).sample,
+            critical_points=wfdb.rdann(self._get_path(rec), extension=self.ann_ext).sample,
             af_intervals=self.load_af_episodes(rec, fmt="c_intervals"),
             bias=bias,
             verbose=self.verbose,
@@ -1000,34 +934,24 @@ class CPSC2021Reader(object):
 
         if waves:
             if waves.get("p_onsets", None) and waves.get("p_offsets", None):
-                p_waves = [
-                    [onset, offset]
-                    for onset, offset in zip(waves["p_onsets"], waves["p_offsets"])
-                ]
+                p_waves = [[onset, offset] for onset, offset in zip(waves["p_onsets"], waves["p_offsets"])]
             elif waves.get("p_peaks", None):
                 p_waves = [
                     [
                         max(0, p + ms2samples(PlotCfg.p_onset, fs=self.fs)),
-                        min(
-                            _data.shape[1], p + ms2samples(PlotCfg.p_offset, fs=self.fs)
-                        ),
+                        min(_data.shape[1], p + ms2samples(PlotCfg.p_offset, fs=self.fs)),
                     ]
                     for p in waves["p_peaks"]
                 ]
             else:
                 p_waves = []
             if waves.get("q_onsets", None) and waves.get("s_offsets", None):
-                qrs = [
-                    [onset, offset]
-                    for onset, offset in zip(waves["q_onsets"], waves["s_offsets"])
-                ]
+                qrs = [[onset, offset] for onset, offset in zip(waves["q_onsets"], waves["s_offsets"])]
             elif waves.get("q_peaks", None) and waves.get("s_peaks", None):
                 qrs = [
                     [
                         max(0, q + ms2samples(PlotCfg.q_onset, fs=self.fs)),
-                        min(
-                            _data.shape[1], s + ms2samples(PlotCfg.s_offset, fs=self.fs)
-                        ),
+                        min(_data.shape[1], s + ms2samples(PlotCfg.s_offset, fs=self.fs)),
                     ]
                     for q, s in zip(waves["q_peaks"], waves["s_peaks"])
                 ]
@@ -1045,17 +969,12 @@ class CPSC2021Reader(object):
             else:
                 qrs = []
             if waves.get("t_onsets", None) and waves.get("t_offsets", None):
-                t_waves = [
-                    [onset, offset]
-                    for onset, offset in zip(waves["t_onsets"], waves["t_offsets"])
-                ]
+                t_waves = [[onset, offset] for onset, offset in zip(waves["t_onsets"], waves["t_offsets"])]
             elif waves.get("t_peaks", None):
                 t_waves = [
                     [
                         max(0, t + ms2samples(PlotCfg.t_onset, fs=self.fs)),
-                        min(
-                            _data.shape[1], t + ms2samples(PlotCfg.t_offset, fs=self.fs)
-                        ),
+                        min(_data.shape[1], t + ms2samples(PlotCfg.t_offset, fs=self.fs)),
                     ]
                     for t in waves["t_peaks"]
                 ]
@@ -1099,44 +1018,28 @@ class CPSC2021Reader(object):
             # else:
             #     y_ranges = np.max(np.abs(seg), axis=1) + 100
             # fig_sz_h = 6 * y_ranges / 1500
-            fig_sz_h = (
-                6
-                * sum([seg_lead.max() - seg_lead.min() + 200 for seg_lead in seg])
-                / 1500
-            )
-            fig, axes = plt.subplots(
-                nb_leads, 1, sharex=True, figsize=(fig_sz_w, np.sum(fig_sz_h))
-            )
+            fig_sz_h = 6 * sum([seg_lead.max() - seg_lead.min() + 200 for seg_lead in seg]) / 1500
+            fig, axes = plt.subplots(nb_leads, 1, sharex=True, figsize=(fig_sz_w, np.sum(fig_sz_h)))
             if nb_leads == 1:
                 axes = [axes]
 
             for ax_idx in range(nb_leads):
-                axes[ax_idx].plot(
-                    secs, seg[ax_idx], color="black", label=f"lead - {_leads[ax_idx]}"
-                )
+                axes[ax_idx].plot(secs, seg[ax_idx], color="black", label=f"lead - {_leads[ax_idx]}")
                 # axes[ax_idx].axhline(y=0, linestyle="-", linewidth="1.0", color="red")
                 # NOTE that `Locator` has default `MAXTICKS` equal to 1000
                 if ticks_granularity >= 1:
                     axes[ax_idx].xaxis.set_major_locator(plt.MultipleLocator(0.2))
                     axes[ax_idx].yaxis.set_major_locator(plt.MultipleLocator(500))
-                    axes[ax_idx].grid(
-                        which="major", linestyle="-", linewidth="0.5", color="red"
-                    )
+                    axes[ax_idx].grid(which="major", linestyle="-", linewidth="0.5", color="red")
                 if ticks_granularity >= 2:
                     axes[ax_idx].xaxis.set_minor_locator(plt.MultipleLocator(0.04))
                     axes[ax_idx].yaxis.set_minor_locator(plt.MultipleLocator(100))
-                    axes[ax_idx].grid(
-                        which="minor", linestyle=":", linewidth="0.5", color="black"
-                    )
+                    axes[ax_idx].grid(which="minor", linestyle=":", linewidth="0.5", color="black")
                 # add extra info. to legend
                 # https://stackoverflow.com/questions/16826711/is-it-possible-to-add-a-string-as-a-legend-item-in-matplotlib
                 if label:
                     axes[ax_idx].plot([], [], " ", label=f"label - {label}")
-                seg_rpeaks = [
-                    r / self.fs
-                    for r in rpeaks
-                    if idx * line_len <= r < (idx + 1) * line_len
-                ]
+                seg_rpeaks = [r / self.fs for r in rpeaks if idx * line_len <= r < (idx + 1) * line_len]
                 for r in seg_rpeaks:
                     axes[ax_idx].axvspan(
                         max(secs[0], r - bias_thr),
@@ -1148,10 +1051,7 @@ class CPSC2021Reader(object):
                     af_episodes,
                     [[idx * line_len, (idx + 1) * line_len]],
                 )
-                seg_af_episodes = [
-                    [itv[0] - idx * line_len, itv[1] - idx * line_len]
-                    for itv in seg_af_episodes
-                ]
+                seg_af_episodes = [[itv[0] - idx * line_len, itv[1] - idx * line_len] for itv in seg_af_episodes]
                 for itv_start, itv_end in seg_af_episodes:
                     axes[ax_idx].plot(
                         secs[itv_start:itv_end],
@@ -1160,9 +1060,7 @@ class CPSC2021Reader(object):
                     )
                 for w in ["p_waves", "qrs", "t_waves"]:
                     for itv in eval(w):
-                        axes[ax_idx].axvspan(
-                            itv[0], itv[1], color=palette[w], alpha=plot_alpha
-                        )
+                        axes[ax_idx].axvspan(itv[0], itv[1], color=palette[w], alpha=plot_alpha)
                 axes[ax_idx].legend(loc="upper left")
                 axes[ax_idx].set_xlim(secs[0], secs[-1])
                 # axes[ax_idx].set_ylim(-y_ranges[ax_idx], y_ranges[ax_idx])

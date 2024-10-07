@@ -7,28 +7,19 @@ biosppy
 
 """
 
-from .ecg_preproc import (
-    preprocess_multi_lead_signal,
-    preprocess_single_lead_signal,
-    rpeaks_detect_multi_leads,
-    merge_rpeaks,
-)
+from .ecg_denoise import ecg_denoise_naive, remove_spikes_naive
+from .ecg_preproc import merge_rpeaks, preprocess_multi_lead_signal, preprocess_single_lead_signal, rpeaks_detect_multi_leads
 from .ecg_rpeaks import (
-    xqrs_detect,
-    gqrs_detect,
-    pantompkins_detect,
-    hamilton_detect,
-    ssf_detect,
     christov_detect,
     engzee_detect,
     gamboa_detect,
+    gqrs_detect,
+    hamilton_detect,
+    pantompkins_detect,
+    ssf_detect,
+    xqrs_detect,
 )
 from .ecg_rpeaks_dl import seq_lab_net_detect
-from .ecg_denoise import (
-    remove_spikes_naive,
-    ecg_denoise_naive,
-)
-
 
 # __all__ = [s for s in dir() if not s.startswith('_')]
 

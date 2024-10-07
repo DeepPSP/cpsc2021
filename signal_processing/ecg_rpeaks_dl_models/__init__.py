@@ -11,18 +11,17 @@ References:
 """
 
 import os
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 try:
-    from keras.models import model_from_json, Model
+    from keras.models import Model, model_from_json
 except Exception:
     try:
         # in case tensorflow, keras are not installed
-        from tensorflow.keras.models import model_from_json, Model
+        from tensorflow.keras.models import Model, model_from_json
     except Exception:
         model_from_json, Model = None, None
 from torch import nn
-
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -32,9 +31,7 @@ __all__ = [
 ]
 
 
-def load_model(
-    name: str, **kwargs
-) -> Union[Model, Tuple[Model, ...], nn.Module, Tuple[nn.Module, ...]]:
+def load_model(name: str, **kwargs) -> Union[Model, Tuple[Model, ...], nn.Module, Tuple[nn.Module, ...]]:
     """finished, checked,
 
     Parameters
@@ -55,9 +52,7 @@ def load_model(
         raise NotImplementedError
 
 
-def _load_keras_ecg_seq_lab_net(
-    which: str = "both", **kwargs
-) -> Union[Tuple[Model, Model], Model]:
+def _load_keras_ecg_seq_lab_net(which: str = "both", **kwargs) -> Union[Tuple[Model, Model], Model]:
     """finished, checked,
 
     load the CNN model and CRNN model from the entry 0416 of CPSC2019

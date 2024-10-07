@@ -1,13 +1,12 @@
 """
 """
 
-import os
 import glob
+import os
 
 from entry_2021 import challenge_entry
-from utils.misc import save_dict
 from sample_data import extract_sample_data_if_needed
-
+from utils.misc import save_dict
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _WORK_DIR = os.path.join(_BASE_DIR, "working_dir")
@@ -21,10 +20,7 @@ os.makedirs(_SAMPLE_RESULTS_DIR, exist_ok=True)
 def run_test():
     """ """
     extract_sample_data_if_needed()
-    sample_set = [
-        os.path.splitext(os.path.basename(item))[0]
-        for item in glob.glob(os.path.join(_SAMPLE_DATA_DIR, "*.dat"))
-    ]
+    sample_set = [os.path.splitext(os.path.basename(item))[0] for item in glob.glob(os.path.join(_SAMPLE_DATA_DIR, "*.dat"))]
 
     for i, sample in enumerate(sample_set):
         print(sample)

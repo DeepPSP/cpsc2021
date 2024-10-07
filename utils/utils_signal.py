@@ -4,12 +4,12 @@ including spatial, temporal, spatio-temporal domains
 """
 
 from copy import deepcopy
-from typing import Union, Optional, Tuple, Sequence, Iterable
 from numbers import Real
+from typing import Iterable, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from scipy import interpolate
-from scipy.signal import peak_prominences, butter, filtfilt
+from scipy.signal import butter, filtfilt, peak_prominences
 
 np.set_printoptions(precision=5, suppress=True)
 
@@ -95,9 +95,7 @@ def smooth(
         return x
 
     if window not in ["flat", "hanning", "hamming", "bartlett", "blackman"]:
-        raise ValueError(
-            "Window is on of \042flat\042, \042hanning\042, \042hamming\042, \042bartlett\042, \042blackman\042"
-        )
+        raise ValueError("Window is on of \042flat\042, \042hanning\042, \042hamming\042, \042bartlett\042, \042blackman\042")
 
     s = np.r_[x[radius - 1 : 0 : -1], x, x[-2 : -radius - 1 : -1]]
     # print(len(s))
@@ -303,9 +301,7 @@ def resample_irregular_timeseries(
         xnew = np.array(tnew)
 
     if verbose >= 1:
-        print(
-            f"time_series start ts = {time_series[0][0]}, end ts = {time_series[-1][0]}"
-        )
+        print(f"time_series start ts = {time_series[0][0]}, end ts = {time_series[-1][0]}")
         print(f"tot_len = {tot_len}")
         print(f"xnew start = {xnew[0]}, end = {xnew[-1]}")
 
@@ -465,9 +461,7 @@ def detect_peaks(
     ind = np.unique(np.hstack((ine, ire, ife)))
 
     if verbose >= 1:
-        print(
-            f"before filtering by mpd = {mpd}, and threshold = {threshold}, ind = {ind.tolist()}"
-        )
+        print(f"before filtering by mpd = {mpd}, and threshold = {threshold}, ind = {ind.tolist()}")
         print(
             f"additionally, left_threshold = {left_threshold}, right_threshold = {right_threshold}, length of data = {len(data)}"
         )
@@ -475,11 +469,7 @@ def detect_peaks(
     # handle NaN's
     if ind.size and indnan.size:
         # NaN's and values close to NaN's cannot be peaks
-        ind = ind[
-            np.in1d(
-                ind, np.unique(np.hstack((indnan, indnan - 1, indnan + 1))), invert=True
-            )
-        ]
+        ind = ind[np.in1d(ind, np.unique(np.hstack((indnan, indnan - 1, indnan + 1))), invert=True)]
 
     if verbose >= 1:
         print(f"after handling nan values, ind = {ind.tolist()}")
@@ -488,9 +478,7 @@ def detect_peaks(
     ind = np.array([pos for pos in ind if mpd <= pos < len(data) - mpd])
 
     if verbose >= 1:
-        print(
-            f"after fitering out elements too close to border by mpd = {mpd}, ind = {ind.tolist()}"
-        )
+        print(f"after fitering out elements too close to border by mpd = {mpd}, ind = {ind.tolist()}")
 
     # first and last values of data cannot be peaks
     # if ind.size and ind[0] == 0:
@@ -509,15 +497,11 @@ def detect_peaks(
     _right_threshold = right_threshold if right_threshold > 0 else threshold
     if ind.size and (_left_threshold > 0 and _right_threshold > 0):
         # dx = np.min(np.vstack([data[ind]-data[ind-1], data[ind]-data[ind+1]]), axis=0)
-        dx = np.max(
-            np.vstack([data[ind] - data[ind + idx] for idx in range(-mpd, 0)]), axis=0
-        )
+        dx = np.max(np.vstack([data[ind] - data[ind + idx] for idx in range(-mpd, 0)]), axis=0)
         ind = np.delete(ind, np.where(dx < _left_threshold)[0])
         if verbose >= 2:
             print(f"from left, dx = {dx.tolist()}")
-            print(
-                f"after deleting those dx < _left_threshold = {_left_threshold}, ind = {ind.tolist()}"
-            )
+            print(f"after deleting those dx < _left_threshold = {_left_threshold}, ind = {ind.tolist()}")
         dx = np.max(
             np.vstack([data[ind] - data[ind + idx] for idx in range(1, mpd + 1)]),
             axis=0,
@@ -525,9 +509,7 @@ def detect_peaks(
         ind = np.delete(ind, np.where(dx < _right_threshold)[0])
         if verbose >= 2:
             print(f"from right, dx = {dx.tolist()}")
-            print(
-                f"after deleting those dx < _right_threshold = {_right_threshold}, ind = {ind.tolist()}"
-            )
+            print(f"after deleting those dx < _right_threshold = {_right_threshold}, ind = {ind.tolist()}")
     if verbose >= 1:
         print(f"after filtering by threshold, ind = {ind.tolist()}")
     # detect small peaks closer than minimum peak distance
@@ -537,20 +519,12 @@ def detect_peaks(
         for i in range(ind.size):
             if not idel[i]:
                 # keep peaks with the same height if kpsh is True
-                idel = idel | (ind >= ind[i] - mpd) & (ind <= ind[i] + mpd) & (
-                    data[ind[i]] > data[ind] if kpsh else True
-                )
+                idel = idel | (ind >= ind[i] - mpd) & (ind <= ind[i] + mpd) & (data[ind[i]] > data[ind] if kpsh else True)
                 idel[i] = 0  # Keep current peak
         # remove the small peaks and sort back the indices by their occurrence
         ind = np.sort(ind[~idel])
 
-    ind = np.array(
-        [
-            item
-            for item in ind
-            if data[item] == np.max(data[item - mpd : item + mpd + 1])
-        ]
-    )
+    ind = np.array([item for item in ind if data[item] == np.max(data[item - mpd : item + mpd + 1])])
 
     if verbose >= 1:
         print(f"after filtering by mpd, ind = {ind.tolist()}")
@@ -609,17 +583,12 @@ def _plot(x, mph, mpd, threshold, edge, valley, ax, ind):
     ax.set_xlabel("Data #", fontsize=14)
     ax.set_ylabel("Amplitude", fontsize=14)
     mode = "Valley detection" if valley else "Peak detection"
-    ax.set_title(
-        "%s (mph=%s, mpd=%d, threshold=%s, edge='%s')"
-        % (mode, str(mph), mpd, str(threshold), edge)
-    )
+    ax.set_title("%s (mph=%s, mpd=%d, threshold=%s, edge='%s')" % (mode, str(mph), mpd, str(threshold), edge))
     # plt.grid()
     plt.show()
 
 
-def butter_bandpass(
-    lowcut: Real, highcut: Real, fs: Real, order: int, verbose: int = 0
-) -> Tuple[np.ndarray, np.ndarray]:
+def butter_bandpass(lowcut: Real, highcut: Real, fs: Real, order: int, verbose: int = 0) -> Tuple[np.ndarray, np.ndarray]:
     """
     Butterworth Bandpass Filter Design
 
@@ -673,9 +642,7 @@ def butter_bandpass(
         btype = "band"
 
     if verbose >= 1:
-        print(
-            f"by the setup of lowcut and highcut, the filter type falls to {btype}, with Wn = {Wn}"
-        )
+        print(f"by the setup of lowcut and highcut, the filter type falls to {btype}, with Wn = {Wn}")
 
     b, a = butter(order, Wn, btype=btype)
     return b, a
@@ -721,9 +688,7 @@ def butter_bandpass_filter(
     return y
 
 
-def ensure_lead_fmt(
-    values: Sequence[Real], n_leads: int = 12, fmt: str = "lead_first"
-) -> np.ndarray:
+def ensure_lead_fmt(values: Sequence[Real], n_leads: int = 12, fmt: str = "lead_first") -> np.ndarray:
     """finished, checked,
 
     ensure the `n_leads`-lead (ECG) signal to be of the format of `fmt`
@@ -756,9 +721,7 @@ def ensure_lead_fmt(
     return out_values
 
 
-def ensure_siglen(
-    values: Sequence[Real], siglen: int, fmt: str = "lead_first"
-) -> np.ndarray:
+def ensure_siglen(values: Sequence[Real], siglen: int, fmt: str = "lead_first") -> np.ndarray:
     """finished, checked,
 
     ensure the (ECG) signal to be of length `siglen`,
@@ -873,10 +836,7 @@ def get_ampl(
         #     ampl = np.max(np.array([ampl, np.max(s,axis=-1) - np.min(s,axis=-1)]), axis=0)
     else:
         s = np.stack(
-            [
-                _sig[..., idx * half_window : idx * half_window + _window]
-                for idx in range(_sig.shape[-1] // half_window - 1)
-            ],
+            [_sig[..., idx * half_window : idx * half_window + _window] for idx in range(_sig.shape[-1] // half_window - 1)],
             axis=-1,
         )
         # the following is much slower
@@ -991,9 +951,7 @@ def normalize(
             else:
                 options = dict(axis=0, keepdims=True)
 
-        nm_sig = (
-            (sig - np.mean(sig, **options)) / (np.std(sig, **options) + eps)
-        ) * _std + _mean
+        nm_sig = ((sig - np.mean(sig, **options)) / (np.std(sig, **options) + eps)) * _std + _mean
     else:
         nm_sig = (sig - _mean) / _std
     return nm_sig

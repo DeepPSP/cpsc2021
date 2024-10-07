@@ -1,17 +1,17 @@
 """
 """
 
-import os
-import glob
-import textwrap
 import argparse
-from typing import Union, Optional, List
+import glob
+import os
+import textwrap
+from typing import List, Optional, Union
 
 
 def import_parents(level: int = 1) -> None:
     # https://gist.github.com/vaultah/d63cb4c86be2774377aa674b009f759a
-    import sys
     import importlib
+    import sys
     from pathlib import Path
 
     global __package__
@@ -33,24 +33,23 @@ if __name__ == "__main__" and __package__ is None:
 import numpy as np
 import wfdb
 
+from cfg import BaseCfg
+from sample_data import extract_sample_data_if_needed
+
 from .scoring_metrics import (  # noqa: F401
     RefInfo,
+    compute_challenge_metric,
+    gen_endpoint_score_mask,
     load_ans,
     score,
     ue_calculate,
     ur_calculate,
-    compute_challenge_metric,
-    gen_endpoint_score_mask,
 )
-from cfg import BaseCfg
-from sample_data import extract_sample_data_if_needed
-
 
 extract_sample_data_if_needed()
 # _l_test_records = list(set([os.path.splitext(item)[0] for item in os.listdir(BaseCfg.test_data_dir)]))
 _l_test_records = [
-    os.path.splitext(os.path.basename(item))[0]
-    for item in glob.glob(os.path.join(BaseCfg.test_data_dir, "*.dat"))
+    os.path.splitext(os.path.basename(item))[0] for item in glob.glob(os.path.join(BaseCfg.test_data_dir, "*.dat"))
 ]
 
 
@@ -88,9 +87,7 @@ def get_parser() -> dict:
     return args
 
 
-def _load_af_episodes(
-    fp: str, fmt: str = "c_intervals"
-) -> Union[List[List[int]], np.ndarray]:
+def _load_af_episodes(fp: str, fmt: str = "c_intervals") -> Union[List[List[int]], np.ndarray]:
     """finished, checked,
 
     load the episodes of atrial fibrillation, in terms of intervals or mask,
@@ -115,9 +112,7 @@ def _load_af_episodes(
     critical_points = ann.sample
     af_start_inds = np.where((aux_note == "(AFIB") | (aux_note == "(AFL"))[0]
     af_end_inds = np.where(aux_note == "(N")[0]
-    assert len(af_start_inds) == len(
-        af_end_inds
-    ), "unequal number of af period start indices and af period end indices"
+    assert len(af_start_inds) == len(af_end_inds), "unequal number of af period start indices and af period end indices"
 
     if fmt.lower() in [
         "c_intervals",
@@ -142,9 +137,7 @@ def _load_af_episodes(
     return af_episodes
 
 
-def run_single_test(
-    rec: str, classes: Optional[List[str]] = None, verbose: bool = False
-) -> bool:
+def run_single_test(rec: str, classes: Optional[List[str]] = None, verbose: bool = False) -> bool:
     """finished, checked,
 
     Parameters
@@ -167,12 +160,8 @@ def run_single_test(
     ann = wfdb.rdann(rec, extension="atr")
     official_ref_info = RefInfo(rec)
 
-    if classes and BaseCfg.class_fn2abbr[header.comments[0]].lower() not in [
-        c.lower() for c in classes
-    ]:
-        print(
-            f"class of {os.path.basename(rec)} is {BaseCfg.class_fn2abbr[header.comments[0]]}, hence skipped"
-        )
+    if classes and BaseCfg.class_fn2abbr[header.comments[0]].lower() not in [c.lower() for c in classes]:
+        print(f"class of {os.path.basename(rec)} is {BaseCfg.class_fn2abbr[header.comments[0]]}, hence skipped")
         return
 
     print(f"  {os.path.basename(rec)} starts ".center(30, "-"))
@@ -208,9 +197,7 @@ def run_single_test(
     offsets = (official_offset_scoring_mask == custom_offset_scoring_mask).all()
     print(f"offset masks agree: {offsets}")
     if not offsets:
-        print(
-            f"{np.where(official_offset_scoring_mask!=custom_offset_scoring_mask)[0]}"
-        )
+        print(f"{np.where(official_offset_scoring_mask!=custom_offset_scoring_mask)[0]}")
     print("\n" + f"  {os.path.basename(rec)} finishes ".center(30, "-") + "\n")
 
     masks_agree = onsets and offsets
