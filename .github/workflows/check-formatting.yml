@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Formatting with black & flake8
+name: Formatting with pre-commit
 
 on:
   push:
@@ -19,18 +19,16 @@ jobs:
         python-version: [3.8, 3.9]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
         python -m pip install -r requirements.txt
-        python -m pip install black==22.3.0 flake8 # Testing packages
+        python -m pip install importlib-metadata==4.8.3 # Testing packages
         python -m pip install torch==1.10.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
-    - name: Check code format with black and flake8
-      run: |
-        black . --check --extend-exclude .ipynb -v --exclude "/build|dist|torch_ecg|official_entry/|entry_2021\.py|score_2021\.py|pantompkins\.py"
-        flake8 . --count --ignore="E501 W503 E203 F841 E402 E731" --show-source --statistics --exclude=./.*,build,dist,torch_ecg,official_entry,entry_2021.py,score_2021.py,pantompkins.py,*.ipynb
+    - name: Check code format with pre-commit
+      uses: pre-commit/action@v3.0.1
