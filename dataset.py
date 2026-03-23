@@ -1252,14 +1252,10 @@ class CPSC2021(Dataset):
             with open(test_file_1, "w") as f1, open(test_file_2, "w") as f2:
                 json.dump(test_set, f1, ensure_ascii=False)
                 json.dump(test_set, f2, ensure_ascii=False)
-            print(
-                nildent(
-                    f"""
+            print(nildent(f"""
                 train set saved to \n\042{train_file_1}\042and\n\042{train_file_2}\042
                 test set saved to \n\042{test_file_1}\042and\n\042{test_file_2}\042
-                """
-                )
-            )
+                """))
         else:
             with open(train_file, "r") as f:
                 train_set = json.load(f)
