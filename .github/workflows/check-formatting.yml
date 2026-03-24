@@ -28,7 +28,5 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install -r requirements.txt
-        python -m pip install importlib-metadata==4.8.3 # Testing packages
-        python -m pip install torch==1.10.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
     - name: Check code format with pre-commit
       uses: pre-commit/action@v3.0.1
