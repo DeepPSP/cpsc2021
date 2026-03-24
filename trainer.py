@@ -1,5 +1,4 @@
-"""
-"""
+""" """
 
 import argparse
 import logging
@@ -149,8 +148,7 @@ def train(
         comment=f"OPT_{config.task}_{_model.__name__}{cnn_name}{rnn_name}{attn_name}_{config.train_optimizer}_LR_{lr}_BS_{batch_size}",
     )
 
-    msg = textwrap.dedent(
-        f"""
+    msg = textwrap.dedent(f"""
         Starting training:
         ------------------
         Task:            {config.task}
@@ -163,8 +161,7 @@ def train(
         Optimizer:       {config.train_optimizer}
         Dataset classes: {train_dataset.all_classes}
         ---------------------------------------------------
-        """
-    )
+        """)
 
     if logger:
         logger.info(msg)
@@ -347,15 +344,13 @@ def train(
             else:
                 eval_train_msg = ""
             for k, v in eval_res.items():
-                msg = textwrap.dedent(
-                    f"""
+                msg = textwrap.dedent(f"""
                     Train epoch_{epoch + 1}:
                     --------------------
                     train/epoch_loss:        {epoch_loss}{eval_train_msg}
                     test/task_metric_{k}:    {v}
                     ---------------------------------
-                    """
-                )
+                    """)
             if logger:
                 logger.info(msg)
             else:
@@ -378,12 +373,10 @@ def train(
                         print(msg)
                     break
 
-            msg = textwrap.dedent(
-                f"""
+            msg = textwrap.dedent(f"""
                 best metric = {best_metric},
                 obtained at epoch {best_epoch}
-            """
-            )
+            """)
             if logger:
                 logger.info(msg)
             else:

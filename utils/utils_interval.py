@@ -10,6 +10,7 @@ TODO:
     2. distinguish openness and closedness
 
 """
+
 import time
 from copy import deepcopy
 from numbers import Real

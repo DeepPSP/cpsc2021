@@ -1,5 +1,4 @@
-"""
-"""
+""" """
 
 import argparse
 import glob
@@ -165,14 +164,10 @@ def run_single_test(rec: str, classes: Optional[List[str]] = None, verbose: bool
         return
 
     print(f"  {os.path.basename(rec)} starts ".center(30, "-"))
-    print(
-        textwrap.dedent(
-            f"""
+    print(textwrap.dedent(f"""
         record = {os.path.basename(rec)},
         class = {header.comments[0]},
-        """
-        )
-    )
+        """))
 
     custom_onset_scoring_mask, custom_offset_scoring_mask = gen_endpoint_score_mask(
         siglen=header.sig_len,
