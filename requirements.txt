@@ -1,10 +1,10 @@
-numpy==1.22.0
-scipy==1.6.1
-joblib==1.2.0
+numpy
+scipy
+joblib
 # Cython==0.29.10
-pandas==1.2.2
-scikit-learn==0.24.1
-wfdb==3.2.0
+pandas<3.0.0
+scikit-learn
+wfdb
 # biosppy==0.6.1
 biosppy
 opencv-python
@@ -12,7 +12,7 @@ opencv-python
 # keras==2.3.1
 packaging
 easydict
-torch==1.8.0  # see Dockerfile
+torch
 torchsummary
 tensorboardX
 tqdm
