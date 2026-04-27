@@ -19,7 +19,7 @@ repos:
       - id: flake8
         args: [--max-line-length=128, '--exclude=./.*,build,dist,official*,torch_ecg,references,*.ipynb', '--ignore=E501,W503,E203,F841,E402,E231,E731,E226,E225', --count, --statistics, --show-source]
   - repo: https://github.com/pycqa/isort
-    rev: 8.0.1
+    rev: 9.0.0a3
     hooks:
       - id: isort
         args: [--profile=black, --line-length=128]
